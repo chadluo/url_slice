@@ -42,15 +42,10 @@ export function parseTextFragment(raw: string): TextFragment {
 
   // Check for prefix: starts with something ending in `-,`
   // prefix separator is `-,` at the beginning
-  const prefixMatch = /^(.*?)-,(.+)$/.exec(rest)
-  if (prefixMatch) {
-    // There might also be a suffix; we need to find the right split
-    // prefix is before the first `-,`
-    const dashCommaIdx = rest.indexOf('-,')
-    if (dashCommaIdx !== -1) {
-      prefix = rest.slice(0, dashCommaIdx)
-      rest = rest.slice(dashCommaIdx + 2)
-    }
+  const dashCommaIdx = rest.indexOf('-,')
+  if (dashCommaIdx !== -1) {
+    prefix = rest.slice(0, dashCommaIdx)
+    rest = rest.slice(dashCommaIdx + 2)
   }
 
   // Check for suffix: ends with `,-something`

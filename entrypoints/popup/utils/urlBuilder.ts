@@ -20,7 +20,7 @@ export function buildFragment(model: UrlModel): string {
   }
 
   // Both present
-  return '#' + mediaParts.join('&') + '&:~:' + textParts.join('&')
+  return '#' + mediaParts.join('&') + ':~:' + textParts.join('&')
 }
 
 export function buildUrl(model: UrlModel): string {
