@@ -66,7 +66,7 @@ export function Dropdown({
     >
       {trigger}
       {open && (
-        <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded shadow-md max-h-48 overflow-y-auto">
+        <ul className="absolute z-50 mt-1 w-max min-w-full bg-white border border-gray-200 rounded shadow-md max-h-48 overflow-y-auto">
           {items.length === 0 && placeholder ? (
             <li className="px-3 py-1.5 text-sm text-gray-400 italic">
               {placeholder}

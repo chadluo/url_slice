@@ -2,23 +2,29 @@ import { useState, useEffect } from 'react';
 
 export function useHistorySuggestions(
   prefix: string,
-  field: 'host' | 'path' | 'port',
+  field: 'host' | 'path' | 'port' | 'subdomain' | 'path-segment',
   currentHost: string,
+  excludeValue?: string,
 ): string[] {
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
   useEffect(() => {
-    // Return early if prefix is empty or less than 1 character
     if (!prefix || prefix.length < 1) {
       setSuggestions([]);
       return;
     }
 
-    // Set up debounce timer
     const debounceTimer = setTimeout(async () => {
       try {
+        let searchText = prefix;
+        if (field === 'subdomain') {
+          searchText = currentHost;
+        } else if (field === 'path-segment' && prefix === '/') {
+          searchText = currentHost;
+        }
+
         const results = await browser.history.search({
-          text: prefix,
+          text: searchText,
           maxResults: 50,
           startTime: 0,
         });
@@ -32,26 +38,29 @@ export function useHistorySuggestions(
             const url = new URL(item.url);
 
             if (field === 'host') {
-              // Extract hostname
               const hostname = url.hostname;
-              if (hostname) {
-                extracted.add(hostname);
+              if (hostname) extracted.add(hostname);
+            } else if (field === 'subdomain') {
+              if (url.hostname.endsWith(`.${currentHost}`)) {
+                const subdomain = url.hostname.slice(0, -(currentHost.length + 1));
+                if (subdomain) extracted.add(subdomain);
+              }
+            } else if (field === 'path-segment') {
+              // Extract the single segment at this depth from matching paths on the same host
+              if (url.hostname === currentHost && url.pathname.startsWith(prefix)) {
+                const rest = url.pathname.slice(prefix.length);
+                const segment = rest.split('/')[0];
+                if (segment) extracted.add(segment);
               }
             } else if (field === 'path') {
-              // Only include paths from URLs matching the current host
               if (url.hostname === currentHost) {
                 const pathname = url.pathname;
-                if (pathname) {
-                  extracted.add(pathname);
-                }
+                if (pathname) extracted.add(pathname);
               }
             } else if (field === 'port') {
-              // Only include ports from URLs matching the current host
               if (url.hostname === currentHost) {
                 const port = url.port;
-                if (port) {
-                  extracted.add(port);
-                }
+                if (port) extracted.add(port);
               }
             }
           } catch {
@@ -59,26 +68,23 @@ export function useHistorySuggestions(
           }
         }
 
-        // Convert to array, filter out empty strings, deduplicate
         let filtered = Array.from(extracted).filter((s) => s !== '');
 
-        // Filter out the current prefix if it's an exact match
-        filtered = filtered.filter((s) => s !== prefix);
+        // Exclude the current value (explicit override or fall back to prefix)
+        const toExclude = excludeValue !== undefined ? excludeValue : prefix;
+        filtered = filtered.filter((s) => s !== toExclude);
 
-        // Sort and limit to 10 results
         const sorted = filtered.sort().slice(0, 10);
-
         setSuggestions(sorted);
       } catch {
-        // Handle browser API errors gracefully - just set empty suggestions
         setSuggestions([]);
       }
-    }, 150); // 150ms debounce
+    }, 150);
 
     return () => {
       clearTimeout(debounceTimer);
     };
-  }, [prefix, field, currentHost]);
+  }, [prefix, field, currentHost, excludeValue]);
 
   return suggestions;
 }

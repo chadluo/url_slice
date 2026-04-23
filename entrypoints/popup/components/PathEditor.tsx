@@ -10,6 +10,7 @@ interface EditorProps {
 
 interface SegmentChipProps {
   value: string
+  pathPrefix: string
   currentHost: string
   onSelect: (suggestion: string) => void
   onEdit: (value: string) => void
@@ -18,6 +19,7 @@ interface SegmentChipProps {
 
 function SegmentChip({
   value,
+  pathPrefix,
   currentHost,
   onSelect,
   onEdit,
@@ -28,7 +30,7 @@ function SegmentChip({
   const [editValue, setEditValue] = useState(value)
   const [hovering, setHovering] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const suggestions = useHistorySuggestions(value, 'path', currentHost)
+  const suggestions = useHistorySuggestions(pathPrefix, 'path-segment', currentHost, value)
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -117,16 +119,18 @@ function SegmentChip({
 }
 
 interface NewSegmentChipProps {
+  pathPrefix: string
   currentHost: string
   onCommit: (value: string) => void
   onCancel: () => void
 }
 
-function NewSegmentChip({ currentHost, onCommit, onCancel }: NewSegmentChipProps): JSX.Element {
+function NewSegmentChip({ pathPrefix, currentHost, onCommit, onCancel }: NewSegmentChipProps): JSX.Element {
   const [open, setOpen] = useState(true)
   const [value, setValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
-  const suggestions = useHistorySuggestions(value, 'path', currentHost)
+  const allSuggestions = useHistorySuggestions(pathPrefix, 'path-segment', currentHost)
+  const suggestions = value ? allSuggestions.filter((s) => s.startsWith(value)) : allSuggestions
 
   useEffect(() => {
     if (inputRef.current) {
@@ -178,6 +182,11 @@ function NewSegmentChip({ currentHost, onCommit, onCancel }: NewSegmentChipProps
   )
 }
 
+function segmentPathPrefix(segments: string[], upToIndex: number): string {
+  const parts = segments.slice(0, upToIndex)
+  return parts.length === 0 ? '/' : '/' + parts.join('/') + '/'
+}
+
 export function PathEditor({ model, onChange }: EditorProps): JSX.Element {
   const [addingNew, setAddingNew] = useState(false)
   const fullHostname = [...model.subdomains, model.domain].join('.')
@@ -210,6 +219,7 @@ export function PathEditor({ model, onChange }: EditorProps): JSX.Element {
         <span key={i} className="flex items-center gap-0.5">
           <SegmentChip
             value={seg}
+            pathPrefix={segmentPathPrefix(model.pathSegments, i)}
             currentHost={fullHostname}
             onSelect={(s) => handleSegmentSelect(i, s)}
             onEdit={(v) => handleSegmentEdit(i, v)}
@@ -224,6 +234,7 @@ export function PathEditor({ model, onChange }: EditorProps): JSX.Element {
         <span className="flex items-center gap-0.5">
           {model.pathSegments.length > 0 && <span className="text-gray-400">/</span>}
           <NewSegmentChip
+            pathPrefix={segmentPathPrefix(model.pathSegments, model.pathSegments.length)}
             currentHost={fullHostname}
             onCommit={handleAddSegment}
             onCancel={() => setAddingNew(false)}

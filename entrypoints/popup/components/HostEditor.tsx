@@ -8,15 +8,19 @@ interface EditorProps {
   onChange: (updated: UrlModel) => void
 }
 
+const CLEAR_SENTINEL = '(none)'
+
 interface SubdomainChipProps {
   value: string
   currentHost: string
   onSelect: (suggestion: string) => void
+  onClear: () => void
 }
 
-function SubdomainChip({ value, currentHost, onSelect }: SubdomainChipProps): JSX.Element {
+function SubdomainChip({ value, currentHost, onSelect, onClear }: SubdomainChipProps): JSX.Element {
   const [open, setOpen] = useState(false)
-  const suggestions = useHistorySuggestions(value, 'host', currentHost)
+  const suggestions = useHistorySuggestions(value, 'subdomain', currentHost)
+  const items = [CLEAR_SENTINEL, ...suggestions]
 
   return (
     <Dropdown
@@ -29,9 +33,13 @@ function SubdomainChip({ value, currentHost, onSelect }: SubdomainChipProps): JS
           {value}
         </button>
       }
-      items={suggestions}
+      items={items}
       onSelect={(s) => {
-        onSelect(s)
+        if (s === CLEAR_SENTINEL) {
+          onClear()
+        } else {
+          onSelect(s)
+        }
         setOpen(false)
       }}
       open={open}
@@ -41,59 +49,24 @@ function SubdomainChip({ value, currentHost, onSelect }: SubdomainChipProps): JS
   )
 }
 
-interface DomainChipProps {
-  value: string
-  onSelect: (suggestion: string) => void
-}
-
-function DomainChip({ value, onSelect }: DomainChipProps): JSX.Element {
-  const [open, setOpen] = useState(false)
-  const suggestions = useHistorySuggestions(value, 'host', value)
-
+function DomainChip({ value }: { value: string }): JSX.Element {
   return (
-    <Dropdown
-      trigger={
-        <button
-          type="button"
-          onClick={() => setOpen((o) => !o)}
-          className="px-1.5 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-sm font-mono text-blue-800 border border-blue-200"
-        >
-          {value}
-        </button>
-      }
-      items={suggestions}
-      onSelect={(s) => {
-        onSelect(s)
-        setOpen(false)
-      }}
-      open={open}
-      onOpenChange={setOpen}
-      placeholder="No suggestions"
-    />
+    <span className="px-1.5 py-0.5 rounded bg-blue-50 text-sm font-mono text-blue-800 border border-blue-200 select-all">
+      {value}
+    </span>
   )
 }
 
 export function HostEditor({ model, onChange }: EditorProps): JSX.Element {
-  const fullHostname = [...model.subdomains, model.domain].join('.')
-
   function handleSubdomainSelect(index: number, suggestion: string) {
     const newSubdomains = [...model.subdomains]
     newSubdomains[index] = suggestion
     onChange({ ...model, subdomains: newSubdomains })
   }
 
-  function handleDomainSelect(suggestion: string) {
-    // Parse the full hostname suggestion into subdomains + domain
-    const parts = suggestion.split('.')
-    if (parts.length <= 2) {
-      onChange({ ...model, subdomains: [], domain: suggestion })
-    } else {
-      onChange({
-        ...model,
-        subdomains: parts.slice(0, -2),
-        domain: parts.slice(-2).join('.'),
-      })
-    }
+  function handleSubdomainClear(index: number) {
+    const newSubdomains = model.subdomains.filter((_, i) => i !== index)
+    onChange({ ...model, subdomains: newSubdomains })
   }
 
   return (
@@ -105,11 +78,12 @@ export function HostEditor({ model, onChange }: EditorProps): JSX.Element {
             value={sub}
             currentHost={model.domain}
             onSelect={(s) => handleSubdomainSelect(i, s)}
+            onClear={() => handleSubdomainClear(i)}
           />
           <span className="text-gray-400">.</span>
         </span>
       ))}
-      <DomainChip value={model.domain} onSelect={handleDomainSelect} />
+      <DomainChip value={model.domain} />
     </div>
   )
 }
