@@ -28,7 +28,7 @@ export function buildUrl(model: UrlModel): string {
   const portSuffix = model.port ? ':' + model.port : ''
   const origin = `${model.protocol}//${hostname}${portSuffix}`
 
-  const path = '/' + model.pathSegments.join('/')
+  const path = '/' + model.pathSegments.map(encodeURIComponent).join('/')
 
   const searchParams = new URLSearchParams()
   for (const [key, value] of model.searchParams) {

@@ -205,8 +205,10 @@ export function parseUrl(raw: string): UrlModel {
 
   const port = url.port
 
-  // Path segments: split by '/', filter empty strings
-  const pathSegments = url.pathname.split('/').filter((s) => s !== '')
+  // Path segments: split by '/', filter empty strings, decode percent-encoding
+  const pathSegments = url.pathname.split('/').filter((s) => s !== '').map((s) => {
+    try { return decodeURIComponent(s) } catch { return s }
+  })
 
   // Search params: ordered pairs
   const searchParams: [string, string][] = []
