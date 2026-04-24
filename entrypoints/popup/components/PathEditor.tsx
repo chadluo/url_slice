@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, type JSX } from 'react'
+import { useState, useRef, useEffect, useCallback, type JSX } from 'react'
 import type { UrlModel } from '../utils/urlParser.js'
 import { Dropdown } from './Dropdown.js'
 import { useHistorySuggestions } from '../hooks/useHistorySuggestions.js'
@@ -28,9 +28,14 @@ function SegmentChip({
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
   const [editValue, setEditValue] = useState(value)
+  const [filterValue, setFilterValue] = useState('')
   const [hovering, setHovering] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const dropdownInputRef = useRef<HTMLInputElement>(null)
   const suggestions = useHistorySuggestions(pathPrefix, 'path-segment', currentHost, value)
+  const filteredSuggestions = filterValue
+    ? suggestions.filter((s) => s.toLowerCase().includes(filterValue.toLowerCase()))
+    : suggestions
 
   useEffect(() => {
     if (editing && inputRef.current) {
@@ -38,6 +43,26 @@ function SegmentChip({
       inputRef.current.select()
     }
   }, [editing])
+
+  useEffect(() => {
+    if (open) {
+      setFilterValue('')
+      setTimeout(() => dropdownInputRef.current?.focus(), 0)
+    }
+  }, [open])
+
+  const handleDropdownInputKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.stopPropagation()
+        if (filterValue.trim()) {
+          onSelect(filterValue.trim())
+          setOpen(false)
+        }
+      }
+    },
+    [filterValue, onSelect],
+  )
 
   function commitEdit() {
     setEditing(false)
@@ -105,7 +130,19 @@ function SegmentChip({
             {value}
           </button>
         }
-        items={suggestions}
+        header={
+          <input
+            ref={dropdownInputRef}
+            type="text"
+            value={filterValue}
+            onChange={(e) => setFilterValue(e.target.value)}
+            onKeyDown={handleDropdownInputKeyDown}
+            onMouseDown={(e) => e.stopPropagation()}
+            placeholder="type to filter or enter value…"
+            className="w-full px-1.5 py-0.5 text-sm font-mono border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+          />
+        }
+        items={filteredSuggestions}
         onSelect={(s) => {
           onSelect(s)
           setOpen(false)

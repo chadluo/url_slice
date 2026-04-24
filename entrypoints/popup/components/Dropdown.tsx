@@ -7,6 +7,7 @@ interface DropdownProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   placeholder?: string;
+  header?: React.ReactNode;
 }
 
 export function Dropdown({
@@ -16,6 +17,7 @@ export function Dropdown({
   open,
   onOpenChange,
   placeholder,
+  header,
 }: DropdownProps): JSX.Element {
   const containerRef = useRef<HTMLDivElement>(null);
   const [highlightIndex, setHighlightIndex] = useState(-1);
@@ -67,6 +69,9 @@ export function Dropdown({
       {trigger}
       {open && (
         <ul className="absolute z-50 mt-1 w-max min-w-full bg-white border border-gray-200 rounded shadow-md max-h-48 overflow-y-auto">
+          {header && (
+            <li className="px-2 py-1 border-b border-gray-100">{header}</li>
+          )}
           {items.length === 0 && placeholder ? (
             <li className="px-3 py-1.5 text-sm text-gray-400 italic">
               {placeholder}
