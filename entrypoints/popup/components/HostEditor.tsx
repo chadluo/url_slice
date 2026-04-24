@@ -12,14 +12,14 @@ const CLEAR_SENTINEL = '(none)'
 
 interface SubdomainChipProps {
   value: string
-  currentHost: string
+  subdomainSuffix: string
   onSelect: (suggestion: string) => void
   onClear: () => void
 }
 
-function SubdomainChip({ value, currentHost, onSelect, onClear }: SubdomainChipProps): JSX.Element {
+function SubdomainChip({ value, subdomainSuffix, onSelect, onClear }: SubdomainChipProps): JSX.Element {
   const [open, setOpen] = useState(false)
-  const suggestions = useHistorySuggestions(value, 'subdomain', currentHost)
+  const suggestions = useHistorySuggestions(subdomainSuffix, 'subdomain-segment', subdomainSuffix, value)
   const items = [CLEAR_SENTINEL, ...suggestions]
 
   return (
@@ -76,7 +76,7 @@ export function HostEditor({ model, onChange }: EditorProps): JSX.Element {
         <span key={i} className="flex items-center gap-0.5">
           <SubdomainChip
             value={sub}
-            currentHost={model.domain}
+            subdomainSuffix={[...model.subdomains.slice(i + 1), model.domain].join('.')}
             onSelect={(s) => handleSubdomainSelect(i, s)}
             onClear={() => handleSubdomainClear(i)}
           />

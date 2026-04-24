@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 export function useHistorySuggestions(
   prefix: string,
-  field: 'host' | 'path' | 'port' | 'subdomain' | 'path-segment',
+  field: 'host' | 'path' | 'port' | 'subdomain' | 'path-segment' | 'subdomain-segment',
   currentHost: string,
   excludeValue?: string,
 ): string[] {
@@ -19,6 +19,8 @@ export function useHistorySuggestions(
         let searchText = prefix;
         if (field === 'subdomain') {
           searchText = currentHost;
+        } else if (field === 'subdomain-segment') {
+          searchText = prefix; // prefix IS the subdomain suffix (e.g. 'spec.whatwg.org')
         } else if (field === 'path-segment' && prefix === '/') {
           searchText = currentHost;
         }
@@ -44,6 +46,13 @@ export function useHistorySuggestions(
               if (url.hostname.endsWith(`.${currentHost}`)) {
                 const subdomain = url.hostname.slice(0, -(currentHost.length + 1));
                 if (subdomain) extracted.add(subdomain);
+              }
+            } else if (field === 'subdomain-segment') {
+              // prefix is the suffix to the right of this chip (e.g. 'spec.whatwg.org')
+              if (url.hostname.endsWith(`.${prefix}`)) {
+                const before = url.hostname.slice(0, -(prefix.length + 1));
+                const segment = before.split('.')[0];
+                if (segment) extracted.add(segment);
               }
             } else if (field === 'path-segment') {
               // Extract the single segment at this depth from matching paths on the same host
