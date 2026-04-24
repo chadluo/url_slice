@@ -6,16 +6,20 @@ import { useHistorySuggestions } from '../hooks/useHistorySuggestions';
 interface SearchParamsEditorProps {
   model: UrlModel;
   onChange: (updated: UrlModel) => void;
+  disabledParams: [string, string][];
+  onDisabledParamsChange: (params: [string, string][]) => void;
 }
 
 interface ParamRowProps {
   index: number;
   paramKey: string;
   paramValue: string;
+  enabled: boolean;
   hostname: string;
   onCommitKey: (index: number, newKey: string) => void;
   onCommitValue: (index: number, newValue: string) => void;
   onRemove: (index: number) => void;
+  onToggle: (index: number) => void;
   autoFocusKey?: boolean;
 }
 
@@ -23,10 +27,12 @@ function ParamRow({
   index,
   paramKey,
   paramValue,
+  enabled,
   hostname,
   onCommitKey,
   onCommitValue,
   onRemove,
+  onToggle,
   autoFocusKey,
 }: ParamRowProps): JSX.Element {
   const [localKey, setLocalKey] = useState(paramKey);
@@ -37,30 +43,19 @@ function ParamRow({
   const keyInputRef = useRef<HTMLInputElement>(null);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
-  // Sync local state when props change from outside
-  useEffect(() => {
-    setLocalKey(paramKey);
-  }, [paramKey]);
+  useEffect(() => { setLocalKey(paramKey); }, [paramKey]);
+  useEffect(() => { setLocalValue(paramValue); }, [paramValue]);
 
-  useEffect(() => {
-    setLocalValue(paramValue);
-  }, [paramValue]);
-
-  // Auto-focus key input for newly added rows
   useEffect(() => {
     if (autoFocusKey && keyInputRef.current) {
       keyInputRef.current.focus();
     }
   }, [autoFocusKey]);
 
-  // Close context menu on outside click
   useEffect(() => {
     if (!contextMenuOpen) return;
     const handleMouseDown = (e: MouseEvent) => {
-      if (
-        contextMenuRef.current &&
-        !contextMenuRef.current.contains(e.target as Node)
-      ) {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
         setContextMenuOpen(false);
       }
     };
@@ -68,7 +63,6 @@ function ParamRow({
     return () => document.removeEventListener('mousedown', handleMouseDown);
   }, [contextMenuOpen]);
 
-  // Value suggestions: use path field as proxy for same-host history
   const valueSuggestions = useHistorySuggestions(localValue, 'path', hostname);
 
   const handleKeyKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -97,8 +91,19 @@ function ParamRow({
     }
   };
 
+  const inputCls = `w-full px-2 py-0.5 border border-gray-200 rounded text-sm font-mono bg-white focus:outline-none focus:border-blue-400 ${!enabled ? 'opacity-50' : ''}`;
+
   return (
     <div className="flex items-center gap-1 py-0.5">
+      {/* Enable/disable checkbox */}
+      <input
+        type="checkbox"
+        checked={enabled}
+        onChange={() => onToggle(index)}
+        className="shrink-0 cursor-pointer"
+        title={enabled ? 'Disable param' : 'Enable param'}
+      />
+
       {/* Key input with context menu */}
       <div className="relative flex-1 min-w-0" ref={contextMenuRef}>
         <input
@@ -112,7 +117,7 @@ function ParamRow({
             e.preventDefault();
             setContextMenuOpen((v) => !v);
           }}
-          className="w-full px-2 py-0.5 border border-gray-200 rounded text-sm font-mono bg-white focus:outline-none focus:border-blue-400"
+          className={inputCls}
           placeholder="key"
           spellCheck={false}
         />
@@ -164,11 +169,10 @@ function ParamRow({
               onFocus={() => setValueDropdownOpen(true)}
               onBlur={() => {
                 onCommitValue(index, localValue);
-                // delay close so dropdown onSelect fires first
                 setTimeout(() => setValueDropdownOpen(false), 150);
               }}
               onKeyDown={handleValueKeyDown}
-              className="w-full px-2 py-0.5 border border-gray-200 rounded text-sm font-mono bg-white focus:outline-none focus:border-blue-400"
+              className={inputCls}
               placeholder="value"
               spellCheck={false}
             />
@@ -180,7 +184,7 @@ function ParamRow({
       <button
         type="button"
         onClick={() => onRemove(index)}
-        className="text-gray-400 hover:text-red-500 text-xs px-1 flex-shrink-0"
+        className="shrink-0 w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-500 border border-transparent hover:border-red-200"
         title="Remove param"
       >
         ×
@@ -192,15 +196,14 @@ function ParamRow({
 export function SearchParamsEditor({
   model,
   onChange,
+  disabledParams,
+  onDisabledParamsChange,
 }: SearchParamsEditorProps): JSX.Element {
   const [newRowIndex, setNewRowIndex] = useState<number | null>(null);
 
-  const hostname = [
-    ...model.subdomains,
-    model.domain,
-  ]
-    .filter(Boolean)
-    .join('.');
+  const hostname = [...model.subdomains, model.domain].filter(Boolean).join('.');
+
+  // ── Enabled param handlers ──────────────────────────────────────────────
 
   const handleCommitKey = useCallback(
     (index: number, newKey: string) => {
@@ -226,20 +229,68 @@ export function SearchParamsEditor({
 
   const handleRemove = useCallback(
     (index: number) => {
-      const updated = model.searchParams.filter((_, i) => i !== index);
-      onChange({ ...model, searchParams: updated });
+      onChange({ ...model, searchParams: model.searchParams.filter((_, i) => i !== index) });
     },
     [model, onChange],
   );
 
+  const handleDisable = useCallback(
+    (index: number) => {
+      const param = model.searchParams[index];
+      if (!param) return;
+      onChange({ ...model, searchParams: model.searchParams.filter((_, i) => i !== index) });
+      onDisabledParamsChange([...disabledParams, param]);
+    },
+    [model, onChange, disabledParams, onDisabledParamsChange],
+  );
+
+  // ── Disabled param handlers ─────────────────────────────────────────────
+
+  const handleDisabledCommitKey = useCallback(
+    (index: number, newKey: string) => {
+      if (newKey === disabledParams[index]?.[0]) return;
+      onDisabledParamsChange(disabledParams.map((pair, i) =>
+        i === index ? [newKey, pair[1]] : pair,
+      ));
+    },
+    [disabledParams, onDisabledParamsChange],
+  );
+
+  const handleDisabledCommitValue = useCallback(
+    (index: number, newValue: string) => {
+      if (newValue === disabledParams[index]?.[1]) return;
+      onDisabledParamsChange(disabledParams.map((pair, i) =>
+        i === index ? [pair[0], newValue] : pair,
+      ));
+    },
+    [disabledParams, onDisabledParamsChange],
+  );
+
+  const handleDisabledRemove = useCallback(
+    (index: number) => {
+      onDisabledParamsChange(disabledParams.filter((_, i) => i !== index));
+    },
+    [disabledParams, onDisabledParamsChange],
+  );
+
+  const handleEnable = useCallback(
+    (index: number) => {
+      const param = disabledParams[index];
+      if (!param) return;
+      onDisabledParamsChange(disabledParams.filter((_, i) => i !== index));
+      onChange({ ...model, searchParams: [...model.searchParams, param] });
+    },
+    [model, onChange, disabledParams, onDisabledParamsChange],
+  );
+
+  // ── Add param ───────────────────────────────────────────────────────────
+
   const handleAddParam = () => {
     const updated: [string, string][] = [...model.searchParams, ['', '']];
-    const addedIndex = updated.length - 1;
     onChange({ ...model, searchParams: updated });
-    setNewRowIndex(addedIndex);
+    setNewRowIndex(updated.length - 1);
   };
 
-  // Clear newRowIndex after focus has been given
   useEffect(() => {
     if (newRowIndex !== null) {
       const timer = setTimeout(() => setNewRowIndex(null), 300);
@@ -255,22 +306,39 @@ export function SearchParamsEditor({
         <span className="text-xs text-gray-500 font-medium">Query params</span>
       </div>
 
-      {/* Param rows */}
+      {/* Enabled params */}
       {model.searchParams.map(([key, value], index) => (
         <ParamRow
-          key={index}
+          key={`e-${index}`}
           index={index}
           paramKey={key}
           paramValue={value}
+          enabled={true}
           hostname={hostname}
           onCommitKey={handleCommitKey}
           onCommitValue={handleCommitValue}
           onRemove={handleRemove}
+          onToggle={handleDisable}
           autoFocusKey={index === newRowIndex}
         />
       ))}
 
-      {/* Add param button */}
+      {/* Disabled params */}
+      {disabledParams.map(([key, value], index) => (
+        <ParamRow
+          key={`d-${index}`}
+          index={index}
+          paramKey={key}
+          paramValue={value}
+          enabled={false}
+          hostname={hostname}
+          onCommitKey={handleDisabledCommitKey}
+          onCommitValue={handleDisabledCommitValue}
+          onRemove={handleDisabledRemove}
+          onToggle={handleEnable}
+        />
+      ))}
+
       <button
         type="button"
         onClick={handleAddParam}

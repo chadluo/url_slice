@@ -8,18 +8,49 @@ import { PathEditor } from './components/PathEditor';
 import { SearchParamsEditor } from './components/SearchParamsEditor';
 import { FragmentEditor } from './components/FragmentEditor';
 
+function storageKey(model: UrlModel): string {
+  const host = [...model.subdomains, model.domain].join('.')
+  const path = model.pathSegments.length ? '/' + model.pathSegments.join('/') : ''
+  return `disabledParams:${host}${path}`
+}
+
+function loadDisabledParams(model: UrlModel): [string, string][] {
+  try {
+    const raw = localStorage.getItem(storageKey(model))
+    if (raw) return JSON.parse(raw) as [string, string][]
+  } catch {}
+  return []
+}
+
+function saveDisabledParams(model: UrlModel, params: [string, string][]) {
+  const key = storageKey(model)
+  if (params.length > 0) {
+    localStorage.setItem(key, JSON.stringify(params))
+  } else {
+    localStorage.removeItem(key)
+  }
+}
+
 export default function App() {
   const { model, tabId, error } = useCurrentUrl();
   const [localModel, setLocalModel] = useState<UrlModel | null>(null);
+  const [disabledParams, setDisabledParams] = useState<[string, string][]>([]);
 
   useEffect(() => {
     if (model !== null && localModel === null) {
       setLocalModel(model);
+      setDisabledParams(loadDisabledParams(model));
     }
   }, [model]);
 
+  const handleDisabledParamsChange = (params: [string, string][]) => {
+    setDisabledParams(params)
+    if (localModel) saveDisabledParams(localModel, params)
+  }
+
   const handleReset = () => {
     setLocalModel(model);
+    if (model) setDisabledParams(loadDisabledParams(model));
   };
 
   const handleApply = async () => {
@@ -81,7 +112,12 @@ export default function App() {
 
       <hr className="border-gray-100 my-2" />
 
-      <SearchParamsEditor model={localModel} onChange={setLocalModel} />
+      <SearchParamsEditor
+        model={localModel}
+        onChange={setLocalModel}
+        disabledParams={disabledParams}
+        onDisabledParamsChange={handleDisabledParamsChange}
+      />
 
       <hr className="border-gray-100 my-2" />
 
