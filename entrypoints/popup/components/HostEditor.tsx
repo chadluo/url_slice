@@ -51,7 +51,7 @@ function SubdomainChip({ value, subdomainSuffix, onSelect, onClear }: SubdomainC
 
 function DomainChip({ value }: { value: string }): JSX.Element {
   return (
-    <span className="px-1.5 py-0.5 rounded bg-blue-50 text-sm font-mono text-blue-800 border border-blue-200 select-all">
+    <span className="text-sm font-mono text-gray-800 select-all">
       {value}
     </span>
   )
