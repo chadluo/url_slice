@@ -32,8 +32,10 @@ pnpm compile      # TypeScript check only
 - **Text fragments**: parsed from `#:~:text=prefix-,start,end,-suffix` per MDN spec.
 - **Media fragments**: `#t=N,M` (time), `#xywh=x,y,w,h` (spatial), `#track=value`.
 - **Content script**: uses CSS Custom Highlight API with `window.find` fallback for `HIGHLIGHT_TEXT`; sets `video.currentTime` for `SEEK_VIDEO`.
+- **Query param disabled state**: `SearchParamsEditor` shows a checkbox per pair (default checked). Unchecked pairs are excluded from `buildUrl` but stored in `localStorage` keyed by `hostname+path` so they survive popup close/reopen. `App.tsx` holds `disabledParams: [string, string][]` alongside `localModel`.
 - **Apply flow**: popup keeps local model state; Apply button calls `browser.tabs.update({ url })` then closes.
-- **Font**: root popup uses CSS `monospace` generic family (`font-[monospace]` in Tailwind).
+- **Font**: `style.css` sets `--font-mono: monospace` via `@theme` (browser default monospace). Root popup uses `font-sans`; URL components (host, port, path, params, fragments preview) apply `font-mono` explicitly.
+- **Dark mode**: `color-scheme: light dark` on `:root`; all components carry `dark:` Tailwind variants, responding automatically to `prefers-color-scheme`.
 
 ## Permissions
 
