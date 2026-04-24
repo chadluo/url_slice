@@ -35,7 +35,7 @@ export default function App() {
 
   if (error) {
     return (
-      <div className="w-105 min-h-50 max-h-150 overflow-y-auto p-4 bg-white text-gray-900 text-sm font-[monospace]">
+      <div className="w-105 min-h-50 max-h-150 overflow-y-auto p-4 bg-white text-gray-900 text-sm font-sans">
         <p className="text-red-500">{error}</p>
       </div>
     );
@@ -43,7 +43,7 @@ export default function App() {
 
   if (localModel === null) {
     return (
-      <div className="w-105 min-h-50 max-h-150 overflow-y-auto p-4 bg-white text-gray-900 text-sm font-[monospace]">
+      <div className="w-105 min-h-50 max-h-150 overflow-y-auto p-4 bg-white text-gray-900 text-sm font-sans">
         <p>Loading…</p>
       </div>
     );
@@ -52,10 +52,10 @@ export default function App() {
   const builtUrl = buildUrl(localModel);
 
   return (
-    <div className="w-105 min-h-50 max-h-150 overflow-y-auto p-4 bg-white text-gray-900 text-sm font-[monospace]">
+    <div className="w-105 min-h-50 max-h-150 overflow-y-auto p-4 bg-white text-gray-900 text-sm font-sans">
       {/* Full URL display */}
       <div className="flex items-center gap-1 mb-3">
-        <code className="flex-1 text-gray-500 text-xs truncate overflow-hidden whitespace-nowrap">
+        <code className="flex-1 text-gray-500 text-xs truncate overflow-hidden whitespace-nowrap font-mono">
           {builtUrl}
         </code>
         <button

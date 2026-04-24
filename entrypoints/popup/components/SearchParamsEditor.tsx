@@ -112,7 +112,7 @@ function ParamRow({
             e.preventDefault();
             setContextMenuOpen((v) => !v);
           }}
-          className="w-full px-2 py-0.5 border border-gray-200 rounded text-sm bg-white focus:outline-none focus:border-blue-400"
+          className="w-full px-2 py-0.5 border border-gray-200 rounded text-sm font-mono bg-white focus:outline-none focus:border-blue-400"
           placeholder="key"
           spellCheck={false}
         />
@@ -168,7 +168,7 @@ function ParamRow({
                 setTimeout(() => setValueDropdownOpen(false), 150);
               }}
               onKeyDown={handleValueKeyDown}
-              className="w-full px-2 py-0.5 border border-gray-200 rounded text-sm bg-white focus:outline-none focus:border-blue-400"
+              className="w-full px-2 py-0.5 border border-gray-200 rounded text-sm font-mono bg-white focus:outline-none focus:border-blue-400"
               placeholder="value"
               spellCheck={false}
             />

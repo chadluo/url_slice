@@ -72,7 +72,7 @@ function TextFragRow({
   };
 
   const inputClass =
-    'px-1.5 py-0.5 border border-gray-200 rounded text-sm bg-white focus:outline-none focus:border-blue-400';
+    'px-1.5 py-0.5 border border-gray-200 rounded text-sm font-mono bg-white focus:outline-none focus:border-blue-400';
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
@@ -203,7 +203,7 @@ function MediaFragRow({
   );
 
   const inputClass =
-    'px-1.5 py-0.5 border border-gray-200 rounded text-sm bg-white focus:outline-none focus:border-blue-400';
+    'px-1.5 py-0.5 border border-gray-200 rounded text-sm font-mono bg-white focus:outline-none focus:border-blue-400';
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
