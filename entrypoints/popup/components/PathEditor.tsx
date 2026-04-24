@@ -246,7 +246,12 @@ export function PathEditor({ model, onChange }: EditorProps): JSX.Element {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 font-mono text-sm">
+    <div>
+      <div className="flex items-center gap-1 mb-1">
+        <span className="text-gray-400 text-xs font-mono">/</span>
+        <span className="text-xs text-gray-500 font-medium">Path</span>
+      </div>
+      <div className="flex flex-wrap items-center gap-0.5 font-mono text-sm">
       <span className="text-gray-400">/</span>
       {model.pathSegments.map((seg, i) => (
         <span key={i} className="flex items-center gap-0.5">
@@ -284,6 +289,7 @@ export function PathEditor({ model, onChange }: EditorProps): JSX.Element {
           +
         </button>
       )}
+      </div>
     </div>
   )
 }

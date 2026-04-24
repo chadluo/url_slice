@@ -56,8 +56,12 @@ export function PortEditor({ model, onChange }: EditorProps): JSX.Element | null
   }
 
   return (
-    <div className="flex items-center gap-0.5 font-mono text-sm">
-      <span className="text-gray-400">:</span>
+    <div>
+      <div className="flex items-center gap-1 mb-1">
+        <span className="text-gray-400 text-xs font-mono">:</span>
+        <span className="text-xs text-gray-500 font-medium">Port</span>
+      </div>
+      <div className="flex items-center gap-0.5 font-mono text-sm">
       <button
         type="button"
         onClick={handleDecrement}
@@ -103,6 +107,7 @@ export function PortEditor({ model, onChange }: EditorProps): JSX.Element | null
         onOpenChange={setOpen}
         placeholder="No suggestions"
       />
+      </div>
     </div>
   )
 }
