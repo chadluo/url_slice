@@ -192,15 +192,11 @@ export function PathEditor({ model, onChange }: EditorProps): JSX.Element {
   const fullHostname = [...model.subdomains, model.domain].join('.')
 
   function handleSegmentSelect(index: number, suggestion: string) {
-    const newSegments = [...model.pathSegments]
-    newSegments[index] = suggestion
-    onChange({ ...model, pathSegments: newSegments })
+    onChange({ ...model, pathSegments: [...model.pathSegments.slice(0, index), suggestion] })
   }
 
   function handleSegmentEdit(index: number, value: string) {
-    const newSegments = [...model.pathSegments]
-    newSegments[index] = value
-    onChange({ ...model, pathSegments: newSegments })
+    onChange({ ...model, pathSegments: [...model.pathSegments.slice(0, index), value] })
   }
 
   function handleTruncateBefore(index: number) {
