@@ -66,7 +66,7 @@ export default function App() {
 
   if (error) {
     return (
-      <div className="w-105 min-h-50 max-h-150 overflow-y-auto p-4 bg-white text-gray-900 text-sm font-sans">
+      <div className="w-105 min-h-50 max-h-150 overflow-y-auto p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm font-sans">
         <p className="text-red-500">{error}</p>
       </div>
     );
@@ -74,7 +74,7 @@ export default function App() {
 
   if (localModel === null) {
     return (
-      <div className="w-105 min-h-50 max-h-150 overflow-y-auto p-4 bg-white text-gray-900 text-sm font-sans">
+      <div className="w-105 min-h-50 max-h-150 overflow-y-auto p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm font-sans">
         <p>Loading…</p>
       </div>
     );
@@ -83,34 +83,34 @@ export default function App() {
   const builtUrl = buildUrl(localModel);
 
   return (
-    <div className="w-105 min-h-50 max-h-150 overflow-y-auto p-4 bg-white text-gray-900 text-sm font-sans">
+    <div className="w-105 min-h-50 max-h-150 overflow-y-auto p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm font-sans">
       {/* Full URL display */}
       <div className="flex items-center gap-1 mb-3">
-        <code className="flex-1 text-gray-500 text-xs truncate overflow-hidden whitespace-nowrap font-mono">
+        <code className="flex-1 text-gray-500 dark:text-gray-400 text-xs truncate overflow-hidden whitespace-nowrap font-mono">
           {builtUrl}
         </code>
         <button
           onClick={handleCopy}
           title="Copy URL"
-          className="shrink-0 text-gray-400 hover:text-gray-600 cursor-pointer"
+          className="shrink-0 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 cursor-pointer"
         >
           📋
         </button>
       </div>
 
-      <hr className="border-gray-100 my-2" />
+      <hr className="border-gray-100 dark:border-gray-700 my-2" />
 
       <HostEditor model={localModel} onChange={setLocalModel} />
 
-      <hr className="border-gray-100 my-2" />
+      <hr className="border-gray-100 dark:border-gray-700 my-2" />
 
       <PortEditor model={localModel} onChange={setLocalModel} />
 
-      <hr className="border-gray-100 my-2" />
+      <hr className="border-gray-100 dark:border-gray-700 my-2" />
 
       <PathEditor model={localModel} onChange={setLocalModel} />
 
-      <hr className="border-gray-100 my-2" />
+      <hr className="border-gray-100 dark:border-gray-700 my-2" />
 
       <SearchParamsEditor
         model={localModel}
@@ -119,11 +119,11 @@ export default function App() {
         onDisabledParamsChange={handleDisabledParamsChange}
       />
 
-      <hr className="border-gray-100 my-2" />
+      <hr className="border-gray-100 dark:border-gray-700 my-2" />
 
       <FragmentEditor model={localModel} tabId={tabId} onChange={setLocalModel} />
 
-      <hr className="border-gray-100 my-2" />
+      <hr className="border-gray-100 dark:border-gray-700 my-2" />
 
       {/* Action buttons */}
       <div className="flex items-center gap-2 mt-3">
@@ -135,7 +135,7 @@ export default function App() {
         </button>
         <button
           onClick={handleReset}
-          className="text-gray-500 hover:text-gray-700 text-xs py-1.5 px-3 border border-gray-200 rounded cursor-pointer"
+          className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 dark:border-gray-600 text-xs py-1.5 px-3 border border-gray-200 rounded cursor-pointer"
         >
           Reset
         </button>

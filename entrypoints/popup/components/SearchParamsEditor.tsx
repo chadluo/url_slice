@@ -91,7 +91,7 @@ function ParamRow({
     }
   };
 
-  const inputCls = `w-full px-2 py-0.5 border border-gray-200 rounded text-sm font-mono bg-white focus:outline-none focus:border-blue-400 ${!enabled ? 'opacity-50' : ''}`;
+  const inputCls = `w-full px-2 py-0.5 border border-gray-200 dark:border-gray-600 rounded text-sm font-mono bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-400 ${!enabled ? 'opacity-50' : ''}`;
 
   return (
     <div className="flex items-center gap-1 py-0.5">
@@ -122,9 +122,9 @@ function ParamRow({
           spellCheck={false}
         />
         {contextMenuOpen && (
-          <ul className="absolute z-50 mt-1 left-0 bg-white border border-gray-200 rounded shadow-md text-sm min-w-[120px]">
+          <ul className="absolute z-50 mt-1 left-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-md text-sm min-w-30">
             <li
-              className="px-3 py-1.5 cursor-pointer hover:bg-blue-50 text-gray-700"
+              className="px-3 py-1.5 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/40 text-gray-700 dark:text-gray-300"
               onMouseDown={(e) => {
                 e.preventDefault();
                 setContextMenuOpen(false);
@@ -135,7 +135,7 @@ function ParamRow({
               Rename
             </li>
             <li
-              className="px-3 py-1.5 cursor-pointer hover:bg-red-50 text-red-600"
+              className="px-3 py-1.5 cursor-pointer hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400"
               onMouseDown={(e) => {
                 e.preventDefault();
                 setContextMenuOpen(false);
@@ -148,7 +148,7 @@ function ParamRow({
         )}
       </div>
 
-      <span className="text-gray-400 text-xs select-none">=</span>
+      <span className="text-gray-400 dark:text-gray-500 text-xs select-none">=</span>
 
       {/* Value input with dropdown suggestions */}
       <div className="flex-[2] min-w-0">
@@ -184,7 +184,7 @@ function ParamRow({
       <button
         type="button"
         onClick={() => onRemove(index)}
-        className="shrink-0 w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-500 border border-transparent hover:border-red-200"
+        className="shrink-0 w-5 h-5 flex items-center justify-center rounded text-gray-400 dark:text-gray-500 hover:bg-red-50 dark:hover:bg-red-900/30 hover:text-red-500 dark:hover:text-red-400 border border-transparent hover:border-red-200 dark:hover:border-red-800"
         title="Remove param"
       >
         ×
@@ -302,8 +302,8 @@ export function SearchParamsEditor({
     <div>
       {/* Section header */}
       <div className="flex items-center gap-1 mb-1">
-        <span className="text-gray-400 text-xs font-mono">?</span>
-        <span className="text-xs text-gray-500 font-medium">Query params</span>
+        <span className="text-gray-400 dark:text-gray-500 text-xs font-mono">?</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Query params</span>
       </div>
 
       {/* Enabled params */}
@@ -342,7 +342,7 @@ export function SearchParamsEditor({
       <button
         type="button"
         onClick={handleAddParam}
-        className="text-blue-500 hover:text-blue-700 text-sm mt-1"
+        className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm mt-1"
       >
         + Add param
       </button>

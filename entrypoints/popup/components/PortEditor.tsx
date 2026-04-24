@@ -58,14 +58,14 @@ export function PortEditor({ model, onChange }: EditorProps): JSX.Element | null
   return (
     <div>
       <div className="flex items-center gap-1 mb-1">
-        <span className="text-gray-400 text-xs font-mono">:</span>
-        <span className="text-xs text-gray-500 font-medium">Port</span>
+        <span className="text-gray-400 dark:text-gray-500 text-xs font-mono">:</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Port</span>
       </div>
       <div className="flex items-center gap-0.5 font-mono text-sm">
       <button
         type="button"
         onClick={handleDecrement}
-        className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs border border-gray-300"
+        className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs border border-gray-300 dark:border-gray-500"
         aria-label="Decrement port"
       >
         −
@@ -75,14 +75,14 @@ export function PortEditor({ model, onChange }: EditorProps): JSX.Element | null
         value={model.port}
         onChange={handleInputChange}
         placeholder="port"
-        className="w-16 px-1 py-0.5 text-center text-sm font-mono border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+        className="w-16 px-1 py-0.5 text-center text-sm font-mono border border-gray-300 dark:border-gray-500 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-400"
         inputMode="numeric"
         aria-label="Port number"
       />
       <button
         type="button"
         onClick={handleIncrement}
-        className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs border border-gray-300"
+        className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs border border-gray-300 dark:border-gray-500"
         aria-label="Increment port"
       >
         +
@@ -92,7 +92,7 @@ export function PortEditor({ model, onChange }: EditorProps): JSX.Element | null
           <button
             type="button"
             onClick={() => setOpen((o) => !o)}
-            className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 text-gray-500 text-xs border border-gray-300"
+            className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 text-xs border border-gray-300 dark:border-gray-500"
             aria-label="Port suggestions"
           >
             ▾

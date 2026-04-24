@@ -68,20 +68,20 @@ export function Dropdown({
     >
       {trigger}
       {open && (
-        <ul className="absolute z-50 mt-1 w-max min-w-full bg-white border border-gray-200 rounded shadow-md max-h-48 overflow-y-auto">
+        <ul className="absolute z-50 mt-1 w-max min-w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded shadow-md max-h-48 overflow-y-auto">
           {header && (
-            <li className="px-2 py-1 border-b border-gray-100">{header}</li>
+            <li className="px-2 py-1 border-b border-gray-100 dark:border-gray-700">{header}</li>
           )}
           {items.length === 0 && placeholder ? (
-            <li className="px-3 py-1.5 text-sm text-gray-400 italic">
+            <li className="px-3 py-1.5 text-sm text-gray-400 dark:text-gray-500 italic">
               {placeholder}
             </li>
           ) : (
             items.map((item, i) => (
               <li
                 key={i}
-                className={`px-3 py-1.5 cursor-pointer text-sm hover:bg-blue-50 ${
-                  i === highlightIndex ? "bg-blue-100" : ""
+                className={`px-3 py-1.5 cursor-pointer text-sm text-gray-800 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/40 ${
+                  i === highlightIndex ? "bg-blue-100 dark:bg-blue-900/60" : ""
                 }`}
                 onMouseDown={(e) => {
                   // Use mousedown to fire before blur events

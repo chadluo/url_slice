@@ -28,7 +28,7 @@ function SubdomainChip({ value, subdomainSuffix, onSelect, onClear }: SubdomainC
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-sm font-mono text-gray-800 border border-gray-300"
+          className="px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-sm font-mono text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-500"
         >
           {value}
         </button>
@@ -51,7 +51,7 @@ function SubdomainChip({ value, subdomainSuffix, onSelect, onClear }: SubdomainC
 
 function DomainChip({ value }: { value: string }): JSX.Element {
   return (
-    <span className="text-sm font-mono text-gray-800 select-all">
+    <span className="text-sm font-mono text-gray-800 dark:text-gray-200 select-all">
       {value}
     </span>
   )
@@ -70,8 +70,8 @@ export function HostEditor({ model, onChange }: EditorProps): JSX.Element {
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-0.5 font-mono text-sm">
-      <span className="text-gray-400">{model.protocol}//</span>
+    <div className="flex flex-wrap items-center gap-0.5 font-mono text-sm text-gray-400 dark:text-gray-500">
+      <span className="text-gray-400 dark:text-gray-500">{model.protocol}//</span>
       {model.subdomains.map((sub, i) => (
         <span key={i} className="flex items-center gap-0.5">
           <SubdomainChip
@@ -80,7 +80,7 @@ export function HostEditor({ model, onChange }: EditorProps): JSX.Element {
             onSelect={(s) => handleSubdomainSelect(i, s)}
             onClear={() => handleSubdomainClear(i)}
           />
-          <span className="text-gray-400">.</span>
+          <span className="text-gray-400 dark:text-gray-500">.</span>
         </span>
       ))}
       <DomainChip value={model.domain} />

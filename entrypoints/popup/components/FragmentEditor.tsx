@@ -72,7 +72,7 @@ function TextFragRow({
   };
 
   const inputClass =
-    'px-1.5 py-0.5 border border-gray-200 rounded text-sm font-mono bg-white focus:outline-none focus:border-blue-400';
+    'px-1.5 py-0.5 border border-gray-200 dark:border-gray-600 rounded text-sm font-mono bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-400';
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
@@ -144,7 +144,7 @@ function TextFragRow({
         type="button"
         onClick={handleHighlight}
         disabled={tabId === null || !local.textStart}
-        className="text-xs px-2 py-0.5 rounded border border-blue-300 text-blue-600 hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+        className="text-xs px-2 py-0.5 rounded border border-blue-300 dark:border-blue-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
         title="Highlight in page"
       >
         Highlight ▶
@@ -154,7 +154,7 @@ function TextFragRow({
       <button
         type="button"
         onClick={() => onRemove(index)}
-        className="text-gray-400 hover:text-red-500 text-xs px-1 flex-shrink-0"
+        className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 text-xs px-1 shrink-0"
         title="Remove fragment"
       >
         ×
@@ -203,7 +203,7 @@ function MediaFragRow({
   );
 
   const inputClass =
-    'px-1.5 py-0.5 border border-gray-200 rounded text-sm font-mono bg-white focus:outline-none focus:border-blue-400';
+    'px-1.5 py-0.5 border border-gray-200 dark:border-gray-600 rounded text-sm font-mono bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-400';
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
@@ -217,7 +217,7 @@ function MediaFragRow({
     <button
       type="button"
       onClick={() => onRemove(index)}
-      className="text-gray-400 hover:text-red-500 text-xs px-1 flex-shrink-0"
+      className="text-gray-400 hover:text-red-500 text-xs px-1 shrink-0"
       title="Remove fragment"
     >
       ×
@@ -404,14 +404,14 @@ export function FragmentEditor({
         <button
           type="button"
           onClick={handleAddText}
-          className="text-blue-500 hover:text-blue-700 text-sm"
+          className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
         >
           + Add text fragment
         </button>
         <button
           type="button"
           onClick={handleAddTime}
-          className="text-blue-500 hover:text-blue-700 text-sm"
+          className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
         >
           + Add media fragment
         </button>
@@ -425,8 +425,8 @@ export function FragmentEditor({
       onClick={() => setActiveTab(tab)}
       className={`text-xs px-3 py-1 rounded-t border-b-2 ${
         activeTab === tab
-          ? 'border-blue-500 text-blue-600 font-medium'
-          : 'border-transparent text-gray-500 hover:text-gray-700'
+          ? 'border-blue-500 text-blue-600 dark:text-blue-400 font-medium'
+          : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
       }`}
     >
       {label}
@@ -437,12 +437,12 @@ export function FragmentEditor({
     <div className="mt-1">
       {/* Section header */}
       <div className="flex items-center gap-1 mb-1">
-        <span className="text-gray-400 text-xs font-mono">#</span>
-        <span className="text-xs text-gray-500 font-medium">Fragments</span>
+        <span className="text-gray-400 dark:text-gray-500 text-xs font-mono">#</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Fragments</span>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-200 mb-2">
+      <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700 mb-2">
         {tabBtn('text', `Text${model.textFragments.length ? ` (${model.textFragments.length})` : ''}`)}
         {tabBtn('media', `Media${model.mediaFragments.length ? ` (${model.mediaFragments.length})` : ''}`)}
       </div>
@@ -463,7 +463,7 @@ export function FragmentEditor({
           <button
             type="button"
             onClick={handleAddText}
-            className="text-blue-500 hover:text-blue-700 text-sm mt-1"
+            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm mt-1"
           >
             + Add text fragment
           </button>
@@ -485,7 +485,7 @@ export function FragmentEditor({
           <button
             type="button"
             onClick={handleAddTime}
-            className="text-blue-500 hover:text-blue-700 text-sm mt-1"
+            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm mt-1"
           >
             + Add time fragment
           </button>

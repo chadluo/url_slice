@@ -3,3 +3,9 @@
 @theme {
   --font-mono: monospace;
 }
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+}

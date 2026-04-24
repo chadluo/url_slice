@@ -90,7 +90,7 @@ function SegmentChip({
         onChange={(e) => setEditValue(e.target.value)}
         onBlur={commitEdit}
         onKeyDown={handleKeyDown}
-        className="px-1.5 py-0.5 rounded border border-blue-400 text-sm font-mono text-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-400 min-w-8"
+        className="px-1.5 py-0.5 rounded border border-blue-400 text-sm font-mono text-gray-800 dark:text-gray-200 dark:bg-gray-800 focus:outline-none focus:ring-1 focus:ring-blue-400 min-w-8"
         style={{ width: `${Math.max(editValue.length, 3) + 2}ch` }}
       />
     )
@@ -106,7 +106,7 @@ function SegmentChip({
         <button
           type="button"
           onClick={onRemoveBefore}
-          className="absolute -left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 text-xs leading-none z-10"
+          className="absolute -left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 dark:bg-red-900/40 dark:hover:bg-red-900/60 text-red-500 dark:text-red-400 text-xs leading-none z-10"
           title="Truncate path here"
           aria-label="Truncate path before this segment"
         >
@@ -124,7 +124,7 @@ function SegmentChip({
               setEditValue(value)
               setEditing(true)
             }}
-            className="px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 text-sm font-mono text-gray-800 border border-gray-300"
+            className="px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-sm font-mono text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-500"
             title="Click to see suggestions, double-click to edit"
           >
             {value}
@@ -139,7 +139,7 @@ function SegmentChip({
             onKeyDown={handleDropdownInputKeyDown}
             onMouseDown={(e) => e.stopPropagation()}
             placeholder="type to filter or enter value…"
-            className="w-full px-1.5 py-0.5 text-sm font-mono border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+            className="w-full px-1.5 py-0.5 text-sm font-mono border border-gray-300 dark:border-gray-500 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-400"
           />
         }
         items={filteredSuggestions}
@@ -248,11 +248,11 @@ export function PathEditor({ model, onChange }: EditorProps): JSX.Element {
   return (
     <div>
       <div className="flex items-center gap-1 mb-1">
-        <span className="text-gray-400 text-xs font-mono">/</span>
-        <span className="text-xs text-gray-500 font-medium">Path</span>
+        <span className="text-gray-400 dark:text-gray-500 text-xs font-mono">/</span>
+        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Path</span>
       </div>
       <div className="flex flex-wrap items-center gap-0.5 font-mono text-sm">
-      <span className="text-gray-400">/</span>
+      <span className="text-gray-400 dark:text-gray-500">/</span>
       {model.pathSegments.map((seg, i) => (
         <span key={i} className="flex items-center gap-0.5">
           <SegmentChip
@@ -264,7 +264,7 @@ export function PathEditor({ model, onChange }: EditorProps): JSX.Element {
             onRemoveBefore={() => handleTruncateBefore(i)}
           />
           {i < model.pathSegments.length - 1 && (
-            <span className="text-gray-400">/</span>
+            <span className="text-gray-400 dark:text-gray-500">/</span>
           )}
         </span>
       ))}
@@ -282,7 +282,7 @@ export function PathEditor({ model, onChange }: EditorProps): JSX.Element {
         <button
           type="button"
           onClick={() => setAddingNew(true)}
-          className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 text-gray-500 text-xs border border-gray-300 ml-0.5"
+          className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-500 dark:text-gray-400 text-xs border border-gray-300 dark:border-gray-500 ml-0.5"
           aria-label="Add path segment"
           title="Add path segment"
         >
