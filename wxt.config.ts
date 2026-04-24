@@ -7,6 +7,6 @@ export default defineConfig({
     plugins: [tailwindcss()],
   }),
   manifest: {
-    permissions: ['tabs', 'history'],
+    permissions: ['tabs', 'history', 'contextMenus'],
   },
 });

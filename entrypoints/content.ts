@@ -11,6 +11,16 @@ export default defineContentScript({
           return;
         }
 
+        if (
+          msg.type === 'ADD_HIGHLIGHT' &&
+          typeof msg.text === 'string' &&
+          typeof msg.url === 'string'
+        ) {
+          history.replaceState(null, '', msg.url);
+          highlightText(msg.text);
+          return;
+        }
+
         if (msg.type === 'SEEK_VIDEO' && typeof msg.time === 'number') {
           seekVideo(msg.time);
           return;
