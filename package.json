@@ -1,6 +1,6 @@
 {
-  "name": "wxt-react-starter",
-  "description": "manifest.json description",
+  "name": "url_slice",
+  "description": "Decompose and edit the current page URL segment by segment",
   "private": true,
   "version": "0.0.0",
   "type": "module",
