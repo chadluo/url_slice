@@ -30,6 +30,11 @@ export function PortEditor({ model, onChange }: EditorProps): JSX.Element | null
     }
   }
 
+  function handleDecrementLarge() {
+    const n = parseInt(model.port, 10)
+    if (!isNaN(n)) setPort(String(Math.max(1, n - 1000)))
+  }
+
   function handleIncrement() {
     if (model.port === '') {
       setPort('3000')
@@ -39,6 +44,15 @@ export function PortEditor({ model, onChange }: EditorProps): JSX.Element | null
     if (!isNaN(n) && n < 65535) {
       setPort(String(n + 1))
     }
+  }
+
+  function handleIncrementLarge() {
+    if (model.port === '') {
+      setPort('3000')
+      return
+    }
+    const n = parseInt(model.port, 10)
+    if (!isNaN(n)) setPort(String(Math.min(65535, n + 1000)))
   }
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -64,6 +78,14 @@ export function PortEditor({ model, onChange }: EditorProps): JSX.Element | null
       <div className="flex items-center gap-0.5 font-mono text-sm">
       <button
         type="button"
+        onClick={handleDecrementLarge}
+        className="h-5 px-1 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs border border-gray-300 dark:border-gray-500"
+        aria-label="Decrement port by 1000"
+      >
+        −1k
+      </button>
+      <button
+        type="button"
         onClick={handleDecrement}
         className="w-5 h-5 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs border border-gray-300 dark:border-gray-500"
         aria-label="Decrement port"
@@ -86,6 +108,14 @@ export function PortEditor({ model, onChange }: EditorProps): JSX.Element | null
         aria-label="Increment port"
       >
         +
+      </button>
+      <button
+        type="button"
+        onClick={handleIncrementLarge}
+        className="h-5 px-1 flex items-center justify-center rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs border border-gray-300 dark:border-gray-500"
+        aria-label="Increment port by 1000"
+      >
+        +1k
       </button>
       <Dropdown
         trigger={
