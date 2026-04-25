@@ -9,6 +9,8 @@ interface FragmentEditorProps {
   model: UrlModel;
   tabId: number | null;
   onChange: (updated: UrlModel) => void;
+  disabledTextFragments: TextFragment[];
+  onDisabledTextFragmentsChange: (fragments: TextFragment[]) => void;
 }
 
 // ── helpers ────────────────────────────────────────────────────────────────
@@ -38,16 +40,20 @@ interface TextFragRowProps {
   index: number;
   fragment: TextFragment;
   tabId: number | null;
+  enabled: boolean;
   onCommit: (index: number, updated: TextFragment) => void;
   onRemove: (index: number) => void;
+  onToggle: (index: number) => void;
 }
 
 function TextFragRow({
   index,
   fragment,
   tabId,
+  enabled,
   onCommit,
   onRemove,
+  onToggle,
 }: TextFragRowProps): JSX.Element {
   const [local, setLocal] = useState<TextFragment>({ ...fragment });
 
@@ -72,7 +78,7 @@ function TextFragRow({
   };
 
   const inputClass =
-    'px-1.5 py-0.5 border border-gray-200 dark:border-gray-600 rounded text-sm font-mono bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-400';
+    `px-1.5 py-0.5 border border-gray-200 dark:border-gray-600 rounded text-sm font-mono bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:border-blue-400${!enabled ? ' opacity-50' : ''}`;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
@@ -83,7 +89,15 @@ function TextFragRow({
   };
 
   return (
-    <div className="flex items-center gap-1 py-0.5 flex-wrap">
+    <div className={`flex items-center gap-1 py-0.5 flex-wrap${!enabled ? ' opacity-60' : ''}`}>
+      {/* enable/disable checkbox */}
+      <input
+        type="checkbox"
+        checked={enabled}
+        onChange={() => onToggle(index)}
+        className="shrink-0 cursor-pointer"
+        title={enabled ? 'Disable fragment' : 'Enable fragment'}
+      />
       {/* prefix */}
       <input
         type="text"
@@ -318,6 +332,8 @@ export function FragmentEditor({
   model,
   tabId,
   onChange,
+  disabledTextFragments,
+  onDisabledTextFragmentsChange,
 }: FragmentEditorProps): JSX.Element {
   const [activeTab, setActiveTab] = useState<TabName>('text');
 
@@ -341,6 +357,40 @@ export function FragmentEditor({
       });
     },
     [model, onChange],
+  );
+
+  const handleDisableText = useCallback(
+    (index: number) => {
+      const frag = model.textFragments[index];
+      if (!frag) return;
+      onChange({ ...model, textFragments: model.textFragments.filter((_, i) => i !== index) });
+      onDisabledTextFragmentsChange([...disabledTextFragments, frag]);
+    },
+    [model, onChange, disabledTextFragments, onDisabledTextFragmentsChange],
+  );
+
+  const handleEnableText = useCallback(
+    (index: number) => {
+      const frag = disabledTextFragments[index];
+      if (!frag) return;
+      onDisabledTextFragmentsChange(disabledTextFragments.filter((_, i) => i !== index));
+      onChange({ ...model, textFragments: [...model.textFragments, frag] });
+    },
+    [model, onChange, disabledTextFragments, onDisabledTextFragmentsChange],
+  );
+
+  const handleRemoveDisabledText = useCallback(
+    (index: number) => {
+      onDisabledTextFragmentsChange(disabledTextFragments.filter((_, i) => i !== index));
+    },
+    [disabledTextFragments, onDisabledTextFragmentsChange],
+  );
+
+  const handleCommitDisabledText = useCallback(
+    (index: number, updated: TextFragment) => {
+      onDisabledTextFragmentsChange(disabledTextFragments.map((f, i) => i === index ? updated : f));
+    },
+    [disabledTextFragments, onDisabledTextFragmentsChange],
   );
 
   const handleAddText = () => {
@@ -419,12 +469,26 @@ export function FragmentEditor({
         <div>
           {model.textFragments.map((frag, i) => (
             <TextFragRow
-              key={i}
+              key={`e-${i}`}
               index={i}
               fragment={frag}
               tabId={tabId}
+              enabled={true}
               onCommit={handleCommitText}
               onRemove={handleRemoveText}
+              onToggle={handleDisableText}
+            />
+          ))}
+          {disabledTextFragments.map((frag, i) => (
+            <TextFragRow
+              key={`d-${i}`}
+              index={i}
+              fragment={frag}
+              tabId={tabId}
+              enabled={false}
+              onCommit={handleCommitDisabledText}
+              onRemove={handleRemoveDisabledText}
+              onToggle={handleEnableText}
             />
           ))}
           <button

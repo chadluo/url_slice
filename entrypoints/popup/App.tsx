@@ -1,31 +1,48 @@
 import { useState, useEffect } from 'react';
 import { useCurrentUrl } from './hooks/useCurrentUrl';
 import { buildUrl } from './utils/urlBuilder';
-import type { UrlModel } from './utils/urlParser';
+import type { UrlModel, TextFragment } from './utils/urlParser';
 import { HostEditor } from './components/HostEditor';
 import { PortEditor } from './components/PortEditor';
 import { PathEditor } from './components/PathEditor';
 import { SearchParamsEditor } from './components/SearchParamsEditor';
 import { FragmentEditor } from './components/FragmentEditor';
 
-function storageKey(model: UrlModel): string {
+function pageKey(model: UrlModel): string {
   const host = [...model.subdomains, model.domain].join('.')
   const path = model.pathSegments.length ? '/' + model.pathSegments.join('/') : ''
-  return `disabledParams:${host}${path}`
+  return `${host}${path}`
 }
 
 function loadDisabledParams(model: UrlModel): [string, string][] {
   try {
-    const raw = localStorage.getItem(storageKey(model))
+    const raw = localStorage.getItem(`disabledParams:${pageKey(model)}`)
     if (raw) return JSON.parse(raw) as [string, string][]
   } catch {}
   return []
 }
 
 function saveDisabledParams(model: UrlModel, params: [string, string][]) {
-  const key = storageKey(model)
+  const key = `disabledParams:${pageKey(model)}`
   if (params.length > 0) {
     localStorage.setItem(key, JSON.stringify(params))
+  } else {
+    localStorage.removeItem(key)
+  }
+}
+
+function loadDisabledTextFragments(model: UrlModel): TextFragment[] {
+  try {
+    const raw = localStorage.getItem(`disabledTextFragments:${pageKey(model)}`)
+    if (raw) return JSON.parse(raw) as TextFragment[]
+  } catch {}
+  return []
+}
+
+function saveDisabledTextFragments(model: UrlModel, fragments: TextFragment[]) {
+  const key = `disabledTextFragments:${pageKey(model)}`
+  if (fragments.length > 0) {
+    localStorage.setItem(key, JSON.stringify(fragments))
   } else {
     localStorage.removeItem(key)
   }
@@ -35,11 +52,13 @@ export default function App() {
   const { model, tabId, error } = useCurrentUrl();
   const [localModel, setLocalModel] = useState<UrlModel | null>(null);
   const [disabledParams, setDisabledParams] = useState<[string, string][]>([]);
+  const [disabledTextFragments, setDisabledTextFragments] = useState<TextFragment[]>([]);
 
   useEffect(() => {
     if (model !== null && localModel === null) {
       setLocalModel(model);
       setDisabledParams(loadDisabledParams(model));
+      setDisabledTextFragments(loadDisabledTextFragments(model));
     }
   }, [model]);
 
@@ -48,9 +67,17 @@ export default function App() {
     if (localModel) saveDisabledParams(localModel, params)
   }
 
+  const handleDisabledTextFragmentsChange = (fragments: TextFragment[]) => {
+    setDisabledTextFragments(fragments)
+    if (localModel) saveDisabledTextFragments(localModel, fragments)
+  }
+
   const handleReset = () => {
     setLocalModel(model);
-    if (model) setDisabledParams(loadDisabledParams(model));
+    if (model) {
+      setDisabledParams(loadDisabledParams(model));
+      setDisabledTextFragments(loadDisabledTextFragments(model));
+    }
   };
 
   const handleApply = async () => {
@@ -121,7 +148,13 @@ export default function App() {
 
       <hr className="border-gray-100 dark:border-gray-700 my-2" />
 
-      <FragmentEditor model={localModel} tabId={tabId} onChange={setLocalModel} />
+      <FragmentEditor
+        model={localModel}
+        tabId={tabId}
+        onChange={setLocalModel}
+        disabledTextFragments={disabledTextFragments}
+        onDisabledTextFragmentsChange={handleDisabledTextFragmentsChange}
+      />
 
       <hr className="border-gray-100 dark:border-gray-700 my-2" />
 
