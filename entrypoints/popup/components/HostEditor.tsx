@@ -10,6 +10,12 @@ interface EditorProps {
 
 const CLEAR_SENTINEL = '(none)'
 
+const CHROME_PAGES = [
+  'extensions', 'downloads', 'settings', 'history', 'bookmarks',
+  'newtab', 'flags', 'version', 'about', 'blank', 'apps',
+  'accessibility', 'print', 'network-errors', 'update', 'credits',
+]
+
 interface SubdomainChipProps {
   value: string
   subdomainSuffix: string
@@ -57,6 +63,38 @@ function DomainChip({ value }: { value: string }): JSX.Element {
   )
 }
 
+interface ChromeDomainChipProps {
+  value: string
+  onChange: (page: string) => void
+}
+
+function ChromeDomainChip({ value, onChange }: ChromeDomainChipProps): JSX.Element {
+  const [open, setOpen] = useState(false)
+  const items = CHROME_PAGES.filter((p) => p !== value)
+
+  return (
+    <Dropdown
+      trigger={
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          className="px-1.5 py-0.5 rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-sm font-mono text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-500"
+        >
+          {value}
+        </button>
+      }
+      items={items}
+      onSelect={(s) => {
+        onChange(s)
+        setOpen(false)
+      }}
+      open={open}
+      onOpenChange={setOpen}
+      placeholder="No suggestions"
+    />
+  )
+}
+
 export function HostEditor({ model, onChange }: EditorProps): JSX.Element {
   function handleSubdomainSelect(index: number, suggestion: string) {
     const newSubdomains = [...model.subdomains]
@@ -83,7 +121,14 @@ export function HostEditor({ model, onChange }: EditorProps): JSX.Element {
           <span className="text-gray-400 dark:text-gray-500">.</span>
         </span>
       ))}
-      <DomainChip value={model.domain} />
+      {model.protocol === 'chrome:' ? (
+        <ChromeDomainChip
+          value={model.domain}
+          onChange={(page) => onChange({ ...model, domain: page })}
+        />
+      ) : (
+        <DomainChip value={model.domain} />
+      )}
     </div>
   )
 }
