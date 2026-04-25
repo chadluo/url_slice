@@ -32,7 +32,7 @@ export function buildUrl(model: UrlModel): string {
 
   const searchParams = new URLSearchParams()
   for (const [key, value] of model.searchParams) {
-    searchParams.append(key, value)
+    if (key !== '') searchParams.append(key, value)
   }
   const searchString = searchParams.toString()
   const search = searchString ? '?' + searchString : ''
