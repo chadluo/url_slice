@@ -320,16 +320,6 @@ export function FragmentEditor({
   onChange,
 }: FragmentEditorProps): JSX.Element {
   const [activeTab, setActiveTab] = useState<TabName>('text');
-  const [visible, setVisible] = useState(
-    model.textFragments.length > 0 || model.mediaFragments.length > 0,
-  );
-
-  // Show automatically if fragments arrive from outside
-  useEffect(() => {
-    if (model.textFragments.length > 0 || model.mediaFragments.length > 0) {
-      setVisible(true);
-    }
-  }, [model.textFragments.length, model.mediaFragments.length]);
 
   // ── Text fragment handlers ──
 
@@ -359,7 +349,6 @@ export function FragmentEditor({
       textFragments: [...model.textFragments, { textStart: '' }],
     });
     setActiveTab('text');
-    setVisible(true);
   };
 
   // ── Media fragment handlers ──
@@ -393,37 +382,9 @@ export function FragmentEditor({
       ],
     });
     setActiveTab('media');
-    setVisible(true);
   };
 
   // ── Render ──
-
-  if (!visible) {
-    return (
-      <div className="mt-1">
-        <div className="flex items-center gap-1 mb-1">
-          <span className="text-gray-400 dark:text-gray-500 text-xs font-mono">#</span>
-          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">Fragments</span>
-        </div>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={handleAddText}
-            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
-          >
-            + Add text fragment
-          </button>
-          <button
-            type="button"
-            onClick={handleAddTime}
-            className="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
-          >
-            + Add media fragment
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   const tabBtn = (tab: TabName, label: string) => (
     <button
