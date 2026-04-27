@@ -103,7 +103,7 @@ export function HostEditor({ model, onChange }: EditorProps): JSX.Element {
 
   function handleSubdomainClear(index: number) {
     const newSubdomains = model.subdomains.filter((_, i) => i !== index)
-    onChange({ ...model, subdomains: newSubdomains })
+    onChange({ ...model, subdomains: newSubdomains, pathSegments: [] })
   }
 
   return (
