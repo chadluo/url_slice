@@ -7,7 +7,7 @@
 
 ## Interactions
 
-- [ ] for the Apply button, if the current URL is not changed, disable it; if any segment has been changed then
+- [x] for the Apply button, if the current URL is not changed, disable it; if any segment has been changed then
   re-enable it, even if it's later changed back and same as before
 
 ## Interfaces
