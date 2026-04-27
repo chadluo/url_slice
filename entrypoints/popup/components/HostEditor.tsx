@@ -97,9 +97,8 @@ function ChromeDomainChip({ value, onChange }: ChromeDomainChipProps): JSX.Eleme
 
 export function HostEditor({ model, onChange }: EditorProps): JSX.Element {
   function handleSubdomainSelect(index: number, suggestion: string) {
-    const newSubdomains = [...model.subdomains]
-    newSubdomains[index] = suggestion
-    onChange({ ...model, subdomains: newSubdomains })
+    const newSubdomains = [suggestion, ...model.subdomains.slice(index + 1)]
+    onChange({ ...model, subdomains: newSubdomains, pathSegments: [] })
   }
 
   function handleSubdomainClear(index: number) {
