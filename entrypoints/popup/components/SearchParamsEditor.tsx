@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type JSX } from 'react';
 import type { UrlModel } from '../utils/urlParser';
 import { Dropdown } from './Dropdown';
 import { useHistorySuggestions } from '../hooks/useHistorySuggestions';
+import { useHistorySearchParams } from '../hooks/useHistorySearchParams';
 
 interface SearchParamsEditorProps {
   model: UrlModel;
@@ -21,6 +22,8 @@ interface ParamRowProps {
   onRemove: (index: number) => void;
   onToggle: (index: number) => void;
   autoFocusKey?: boolean;
+  readonlyKey?: boolean;
+  historyValueSuggestions?: string[];
 }
 
 function ParamRow({
@@ -34,6 +37,8 @@ function ParamRow({
   onRemove,
   onToggle,
   autoFocusKey,
+  readonlyKey,
+  historyValueSuggestions,
 }: ParamRowProps): JSX.Element {
   const [localKey, setLocalKey] = useState(paramKey);
   const [localValue, setLocalValue] = useState(paramValue);
@@ -63,7 +68,8 @@ function ParamRow({
     return () => document.removeEventListener('mousedown', handleMouseDown);
   }, [contextMenuOpen]);
 
-  const valueSuggestions = useHistorySuggestions(localValue, 'path', hostname);
+  const defaultSuggestions = useHistorySuggestions(localValue, 'path', hostname);
+  const valueSuggestions = historyValueSuggestions ?? defaultSuggestions;
 
   const handleKeyKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -110,10 +116,11 @@ function ParamRow({
           ref={keyInputRef}
           type="text"
           value={localKey}
-          onChange={(e) => setLocalKey(e.target.value)}
-          onBlur={() => onCommitKey(index, localKey)}
-          onKeyDown={handleKeyKeyDown}
-          onContextMenu={(e) => {
+          readOnly={readonlyKey}
+          onChange={readonlyKey ? undefined : (e) => setLocalKey(e.target.value)}
+          onBlur={readonlyKey ? undefined : () => onCommitKey(index, localKey)}
+          onKeyDown={readonlyKey ? undefined : handleKeyKeyDown}
+          onContextMenu={readonlyKey ? undefined : (e) => {
             e.preventDefault();
             setContextMenuOpen((v) => !v);
           }}
@@ -200,8 +207,21 @@ export function SearchParamsEditor({
   onDisabledParamsChange,
 }: SearchParamsEditorProps): JSX.Element {
   const [newRowIndex, setNewRowIndex] = useState<number | null>(null);
+  const [dismissedHistoryKeys, setDismissedHistoryKeys] = useState<Set<string>>(new Set());
+  const [historyRowValues, setHistoryRowValues] = useState<Map<string, string>>(new Map());
 
   const hostname = [...model.subdomains, model.domain].filter(Boolean).join('.');
+  const path = '/' + model.pathSegments.map(encodeURIComponent).join('/');
+
+  const historyParams = useHistorySearchParams(hostname, path);
+
+  const activeKeys = new Set([
+    ...model.searchParams.map(([k]) => k),
+    ...disabledParams.map(([k]) => k),
+  ]);
+  const historyOnlyEntries: [string, string][] = Array.from(historyParams.entries())
+    .filter(([k]) => !activeKeys.has(k) && !dismissedHistoryKeys.has(k))
+    .map(([k, values]) => [k, historyRowValues.get(k) ?? values[0] ?? '']);
 
   // ── Enabled param handlers ──────────────────────────────────────────────
 
@@ -283,6 +303,25 @@ export function SearchParamsEditor({
     [model, onChange, disabledParams, onDisabledParamsChange],
   );
 
+  // ── History param handlers ──────────────────────────────────────────────
+
+  const handleHistoryCommitValue = (index: number, newValue: string) => {
+    const key = historyOnlyEntries[index]?.[0];
+    if (key) setHistoryRowValues((prev) => new Map(prev).set(key, newValue));
+  };
+
+  const handleHistoryRemove = (index: number) => {
+    const key = historyOnlyEntries[index]?.[0];
+    if (key) setDismissedHistoryKeys((prev) => new Set(prev).add(key));
+  };
+
+  const handleHistoryEnable = (index: number) => {
+    const entry = historyOnlyEntries[index];
+    if (!entry) return;
+    const [key, value] = entry;
+    onChange({ ...model, searchParams: [...model.searchParams, [key, value]] });
+  };
+
   // ── Add param ───────────────────────────────────────────────────────────
 
   const handleAddParam = () => {
@@ -336,6 +375,24 @@ export function SearchParamsEditor({
           onCommitValue={handleDisabledCommitValue}
           onRemove={handleDisabledRemove}
           onToggle={handleEnable}
+        />
+      ))}
+
+      {/* History-sourced params (unchecked by default) */}
+      {historyOnlyEntries.map(([key, value], index) => (
+        <ParamRow
+          key={`h-${key}`}
+          index={index}
+          paramKey={key}
+          paramValue={value}
+          enabled={false}
+          hostname={hostname}
+          onCommitKey={() => {}}
+          onCommitValue={handleHistoryCommitValue}
+          onRemove={handleHistoryRemove}
+          onToggle={handleHistoryEnable}
+          readonlyKey
+          historyValueSuggestions={historyParams.get(key) ?? []}
         />
       ))}
 
