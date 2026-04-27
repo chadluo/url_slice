@@ -48,7 +48,7 @@ function saveDisabledTextFragments(model: UrlModel, fragments: TextFragment[]) {
   }
 }
 
-export default function App() {
+export default function App({ mode = 'popup' }: { mode?: 'popup' | 'sidebar' }) {
   const { model, tabId, error } = useCurrentUrl();
   const [localModel, setLocalModel] = useState<UrlModel | null>(null);
   const [dirty, setDirty] = useState(false);
@@ -98,9 +98,11 @@ export default function App() {
     navigator.clipboard.writeText(buildUrl(localModel));
   };
 
+  const containerCls = `${mode === 'sidebar' ? 'w-full min-h-screen' : 'w-150 min-h-50 max-h-150'} overflow-y-auto p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm font-sans`;
+
   if (error) {
     return (
-      <div className="w-150 min-h-50 max-h-150 overflow-y-auto p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm font-sans">
+      <div className={containerCls}>
         <p className="text-red-500">{error}</p>
       </div>
     );
@@ -108,7 +110,7 @@ export default function App() {
 
   if (localModel === null) {
     return (
-      <div className="w-150 min-h-50 max-h-150 overflow-y-auto p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm font-sans">
+      <div className={containerCls}>
         <p>Loading…</p>
       </div>
     );
@@ -117,7 +119,7 @@ export default function App() {
   const builtUrl = buildUrl(localModel);
 
   return (
-    <div className="w-150 min-h-50 max-h-150 overflow-y-auto p-4 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 text-sm font-sans">
+    <div className={containerCls}>
       {/* Full URL display */}
       <div className="flex items-center gap-1 mb-3">
         <code className="flex-1 text-gray-500 dark:text-gray-400 text-xs truncate overflow-hidden whitespace-nowrap font-mono">
