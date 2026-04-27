@@ -51,6 +51,7 @@ function saveDisabledTextFragments(model: UrlModel, fragments: TextFragment[]) {
 export default function App() {
   const { model, tabId, error } = useCurrentUrl();
   const [localModel, setLocalModel] = useState<UrlModel | null>(null);
+  const [dirty, setDirty] = useState(false);
   const [disabledParams, setDisabledParams] = useState<[string, string][]>([]);
   const [disabledTextFragments, setDisabledTextFragments] = useState<TextFragment[]>([]);
 
@@ -72,8 +73,14 @@ export default function App() {
     if (localModel) saveDisabledTextFragments(localModel, fragments)
   }
 
+  const handleModelChange = (updated: UrlModel) => {
+    setLocalModel(updated);
+    setDirty(true);
+  };
+
   const handleReset = () => {
     setLocalModel(model);
+    setDirty(false);
     if (model) {
       setDisabledParams(loadDisabledParams(model));
       setDisabledTextFragments(loadDisabledTextFragments(model));
@@ -127,21 +134,21 @@ export default function App() {
 
       <hr className="border-gray-100 dark:border-gray-700 my-2" />
 
-      <HostEditor model={localModel} onChange={setLocalModel} />
+      <HostEditor model={localModel} onChange={handleModelChange} />
 
       <hr className="border-gray-100 dark:border-gray-700 my-2" />
 
-      <PortEditor model={localModel} onChange={setLocalModel} />
+      <PortEditor model={localModel} onChange={handleModelChange} />
 
       <hr className="border-gray-100 dark:border-gray-700 my-2" />
 
-      <PathEditor model={localModel} onChange={setLocalModel} />
+      <PathEditor model={localModel} onChange={handleModelChange} />
 
       <hr className="border-gray-100 dark:border-gray-700 my-2" />
 
       <SearchParamsEditor
         model={localModel}
-        onChange={setLocalModel}
+        onChange={handleModelChange}
         disabledParams={disabledParams}
         onDisabledParamsChange={handleDisabledParamsChange}
       />
@@ -151,7 +158,7 @@ export default function App() {
       <FragmentEditor
         model={localModel}
         tabId={tabId}
-        onChange={setLocalModel}
+        onChange={handleModelChange}
         disabledTextFragments={disabledTextFragments}
         onDisabledTextFragmentsChange={handleDisabledTextFragmentsChange}
       />
@@ -162,7 +169,8 @@ export default function App() {
       <div className="flex items-center gap-2 mt-3">
         <button
           onClick={handleApply}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-1.5 px-4 rounded cursor-pointer"
+          disabled={!dirty}
+          className={`flex-1 font-medium py-1.5 px-4 rounded ${dirty ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer' : 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed'}`}
         >
           Apply
         </button>
