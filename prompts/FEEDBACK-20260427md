@@ -1,0 +1,15 @@
+# Feedback
+
+## Logic
+
+- [x] when one subdomain segment is updated, clear up all subdomain segments before it and all path segments, similar to
+  cleaning up path segments.
+
+## Interactions
+
+- [ ] for the Apply button, if the current URL is not changed, disable it; if any segment has been changed then
+  re-enable it, even if it's later changed back and same as before
+
+## Interfaces
+
+- [ ] support sidebar mode in Chrome
