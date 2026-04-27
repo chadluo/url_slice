@@ -1,9 +1,3 @@
-export type { TextFragment, MediaFragment } from './urlParser.js'
-export {
-  parseTextFragment,
-  parseMediaFragment,
-} from './urlParser.js'
-
 import type { TextFragment, MediaFragment } from './urlParser.js'
 
 export function serializeTextFragment(f: TextFragment): string {
