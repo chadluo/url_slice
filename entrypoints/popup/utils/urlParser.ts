@@ -31,6 +31,17 @@ export interface UrlModel {
   mediaFragments: MediaFragment[]
 }
 
+export const EMPTY_URL_MODEL: UrlModel = {
+  protocol: 'https:',
+  subdomains: [],
+  domain: '',
+  port: '',
+  pathSegments: [],
+  searchParams: [],
+  textFragments: [],
+  mediaFragments: [],
+}
+
 export function parseTextFragment(raw: string): TextFragment {
   // Format: [prefix-,]textStart[,textEnd][,-suffix]
   // Decode percent-encoding
