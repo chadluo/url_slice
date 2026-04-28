@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useCurrentUrl } from './hooks/useCurrentUrl';
 import { buildUrl } from './utils/urlBuilder';
+import { EMPTY_URL_MODEL } from './utils/urlParser';
 import type { UrlModel, TextFragment } from './utils/urlParser';
 import { HostEditor } from './components/HostEditor';
 import { PortEditor } from './components/PortEditor';
@@ -50,27 +51,29 @@ function saveDisabledTextFragments(model: UrlModel, fragments: TextFragment[]) {
 
 export default function App({ mode = 'popup' }: { mode?: 'popup' | 'sidebar' }) {
   const { model, tabId, error } = useCurrentUrl();
-  const [localModel, setLocalModel] = useState<UrlModel | null>(null);
+  const [localModel, setLocalModel] = useState<UrlModel>(EMPTY_URL_MODEL);
+  const [loading, setLoading] = useState(true);
   const [dirty, setDirty] = useState(false);
   const [disabledParams, setDisabledParams] = useState<[string, string][]>([]);
   const [disabledTextFragments, setDisabledTextFragments] = useState<TextFragment[]>([]);
 
   useEffect(() => {
-    if (model !== null && localModel === null) {
+    if (model !== null && loading) {
       setLocalModel(model);
       setDisabledParams(loadDisabledParams(model));
       setDisabledTextFragments(loadDisabledTextFragments(model));
+      setLoading(false);
     }
   }, [model]);
 
   const handleDisabledParamsChange = (params: [string, string][]) => {
     setDisabledParams(params)
-    if (localModel) saveDisabledParams(localModel, params)
+    saveDisabledParams(localModel, params)
   }
 
   const handleDisabledTextFragmentsChange = (fragments: TextFragment[]) => {
     setDisabledTextFragments(fragments)
-    if (localModel) saveDisabledTextFragments(localModel, fragments)
+    saveDisabledTextFragments(localModel, fragments)
   }
 
   const handleModelChange = (updated: UrlModel) => {
@@ -79,22 +82,22 @@ export default function App({ mode = 'popup' }: { mode?: 'popup' | 'sidebar' }) 
   };
 
   const handleReset = () => {
-    setLocalModel(model);
-    setDirty(false);
     if (model) {
+      setLocalModel(model);
       setDisabledParams(loadDisabledParams(model));
       setDisabledTextFragments(loadDisabledTextFragments(model));
     }
+    setDirty(false);
   };
 
   const handleApply = async () => {
-    if (tabId === null || localModel === null) return;
+    if (tabId === null || loading) return;
     await browser.tabs.update(tabId, { url: buildUrl(localModel) });
     window.close();
   };
 
   const handleCopy = () => {
-    if (localModel === null) return;
+    if (loading) return;
     navigator.clipboard.writeText(buildUrl(localModel));
   };
 
@@ -108,18 +111,10 @@ export default function App({ mode = 'popup' }: { mode?: 'popup' | 'sidebar' }) 
     );
   }
 
-  if (localModel === null) {
-    return (
-      <div className={containerCls}>
-        <p>Loading…</p>
-      </div>
-    );
-  }
-
   const builtUrl = buildUrl(localModel);
 
   return (
-    <div className={containerCls}>
+    <div className={`${containerCls}${loading ? ' pointer-events-none opacity-50' : ''}`}>
       {/* Full URL display */}
       <div className="flex items-center gap-1 mb-3">
         <code className="flex-1 text-gray-500 dark:text-gray-400 text-xs truncate overflow-hidden whitespace-nowrap font-mono">
