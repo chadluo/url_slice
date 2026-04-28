@@ -30,22 +30,34 @@ export function useCurrentUrl(): CurrentUrl {
 
         const tab = tabs[0];
 
-        if (!tab || !tab.url) {
+        const rawUrl = tab?.url || tab?.pendingUrl || ''
+
+        if (!tab || !rawUrl) {
           setState({
             model: null,
             tabId: tab?.id ?? null,
             raw: '',
-            error: 'No URL found for the current tab',
+            error: 'Not available on browser internal pages.',
           });
           return;
         }
 
-        const model = parseUrl(tab.url);
+        if (!/^(https?|ftp|file):/.test(rawUrl)) {
+          setState({
+            model: null,
+            tabId: tab.id ?? null,
+            raw: rawUrl,
+            error: 'Not available on browser internal pages.',
+          });
+          return;
+        }
+
+        const model = parseUrl(rawUrl);
 
         setState({
           model,
           tabId: tab.id ?? null,
-          raw: tab.url,
+          raw: rawUrl,
           error: null,
         });
       } catch (err) {

@@ -105,8 +105,9 @@ export default function App({ mode = 'popup' }: { mode?: 'popup' | 'sidebar' }) 
 
   if (error) {
     return (
-      <div className={containerCls}>
-        <p className="text-red-500">{error}</p>
+      <div className={`${containerCls} flex flex-col items-center justify-center gap-2 text-center`}>
+        <span className="text-2xl">🔒</span>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">{error}</p>
       </div>
     );
   }
