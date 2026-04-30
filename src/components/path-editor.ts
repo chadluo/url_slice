@@ -82,8 +82,8 @@ export class PathEditor extends LitElement {
 
     return html`
       <div style="margin-bottom:4px">
-        <span class="mono" style="color:GrayText;font-size:0.85em">/</span>
-        <span style="font-size:0.8em;color:GrayText;font-weight:500">Path</span>
+        <span class="mono" style="color:GrayText">/</span>
+        <span style="color:GrayText;font-weight:500">Path</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;align-items:center;gap:2px">
         <span class="mono" style="color:GrayText">/</span>
@@ -94,7 +94,7 @@ export class PathEditor extends LitElement {
             <button
               @click=${() => this._truncateBefore(i)}
               title="Truncate path before this segment"
-              style="cursor:pointer;background:none;border:none;color:GrayText;padding:0 1px;font-size:0.8em"
+              style="cursor:pointer;background:none;border:none;color:GrayText;padding:0 1px"
             >×</button>
             <input
               class="mono path-seg"

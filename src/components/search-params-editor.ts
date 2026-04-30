@@ -163,14 +163,14 @@ export class SearchParamsEditor extends LitElement {
 
     return html`
       <div style="margin-bottom:4px">
-        <span class="mono" style="color:GrayText;font-size:0.85em">?</span>
-        <span style="font-size:0.8em;color:GrayText;font-weight:500">Query params</span>
+        <span class="mono" style="color:GrayText">?</span>
+        <span style="color:GrayText;font-weight:500">Query params</span>
       </div>
 
       ${this._rows.map(([key, value, enabled], i) => this._renderRow(key, value, enabled, i))}
 
       ${historyEntries.length > 0 ? html`
-        <div style="color:GrayText;font-size:0.8em;margin:4px 0 2px">From history:</div>
+        <div style="color:GrayText;margin:4px 0 2px">From history:</div>
         ${historyEntries.map(([key, value]) => {
           const listId = `sp-hval-${key}`;
           const suggestions = this._historyParams.get(key) ?? [];

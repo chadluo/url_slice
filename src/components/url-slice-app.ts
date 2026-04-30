@@ -70,7 +70,7 @@ export class UrlSliceApp extends LitElement {
 
     return html`
       <div style="display:flex;align-items:center;gap:4px;margin-bottom:12px">
-        <code class="mono" style="flex:1;color:GrayText;font-size:0.85em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${builtUrl}</code>
+        <code class="mono" style="flex:1;color:GrayText;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${builtUrl}</code>
         <button @click=${this._handleCopy} title="Copy URL" style="cursor:pointer;background:none;border:none;color:GrayText">📋</button>
       </div>
 

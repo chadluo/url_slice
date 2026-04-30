@@ -85,8 +85,8 @@ export class HostEditor extends LitElement {
 
     return html`
       <div style="margin-bottom:4px">
-        <span class="mono" style="color:GrayText;font-size:0.85em">//</span>
-        <span style="font-size:0.8em;color:GrayText;font-weight:500">Host</span>
+        <span class="mono" style="color:GrayText">//</span>
+        <span style="color:GrayText;font-weight:500">Host</span>
       </div>
       <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px">
         <span class="mono" style="color:GrayText">${m.protocol}//</span>
@@ -125,7 +125,7 @@ export class HostEditor extends LitElement {
               </select>
             `
           : html`
-              <button @click=${this._addSubdomain} title="Add subdomain" style="cursor:pointer;background:none;border:none;color:GrayText;font-size:0.8em">+sub</button>
+              <button @click=${this._addSubdomain} title="Add subdomain" style="cursor:pointer;background:none;border:none;color:GrayText">+sub</button>
               <span class="mono">${m.domain}</span>
             `}
       </div>

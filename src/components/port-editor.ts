@@ -77,8 +77,8 @@ export class PortEditor extends LitElement {
 
     return html`
       <div style="margin-bottom:4px">
-        <span class="mono" style="color:GrayText;font-size:0.85em">:</span>
-        <span style="font-size:0.8em;color:GrayText;font-weight:500">Port</span>
+        <span class="mono" style="color:GrayText">:</span>
+        <span style="color:GrayText;font-weight:500">Port</span>
       </div>
       <div style="display:flex;align-items:center;gap:2px">
         <button @click=${this._decrementLarge} title="−1000" style="cursor:pointer">−1k</button>

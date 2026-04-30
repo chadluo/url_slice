@@ -151,7 +151,7 @@ export class FragmentEditor extends LitElement {
           spellcheck="false"
           title="prefix"
         />
-        <span style="color:GrayText;font-size:0.85em">-,</span>
+        <span style="color:GrayText">-,</span>
         <input
           class="mono"
           .value=${frag.textStart}
@@ -161,7 +161,7 @@ export class FragmentEditor extends LitElement {
           spellcheck="false"
           title="text start (required)"
         />
-        <span style="color:GrayText;font-size:0.85em">,</span>
+        <span style="color:GrayText">,</span>
         <input
           class="mono"
           .value=${frag.textEnd ?? ''}
@@ -171,7 +171,7 @@ export class FragmentEditor extends LitElement {
           spellcheck="false"
           title="text end (optional)"
         />
-        <span style="color:GrayText;font-size:0.85em">,-</span>
+        <span style="color:GrayText">,-</span>
         <input
           class="mono"
           .value=${frag.suffix ?? ''}
@@ -184,12 +184,12 @@ export class FragmentEditor extends LitElement {
         <button
           @click=${() => this._highlight(frag)}
           ?disabled=${this._tabId() === null || !frag.textStart}
-          style="cursor:pointer;font-size:0.8em"
+          style="cursor:pointer"
           title="Highlight in page"
         >Highlight ▶</button>
         <button @click=${onRemove} style="cursor:pointer;background:none;border:none;color:GrayText">×</button>
         ${frag.textStart ? html`
-          <span class="mono" style="color:GrayText;font-size:0.8em;width:100%;padding-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <span class="mono" style="color:GrayText;width:100%;padding-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
             text=${serializeTextFragment(frag)}
           </span>
         ` : ''}
@@ -204,7 +204,7 @@ export class FragmentEditor extends LitElement {
     if (frag.type === 'time') {
       return html`
         <div style="display:flex;align-items:center;gap:4px;margin:2px 0">
-          <span class="mono" style="color:GrayText;font-size:0.85em">t=</span>
+          <span class="mono" style="color:GrayText">t=</span>
           <input
             class="mono"
             .value=${secondsToMmss(frag.startTime ?? 0)}
@@ -237,10 +237,10 @@ export class FragmentEditor extends LitElement {
     if (frag.type === 'spatial') {
       return html`
         <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:2px 0">
-          <span class="mono" style="color:GrayText;font-size:0.85em">xywh=</span>
+          <span class="mono" style="color:GrayText">xywh=</span>
           ${(['x', 'y', 'width', 'height'] as const).map((field, fi) => html`
             ${fi > 0 ? html`<span style="color:GrayText">,</span>` : ''}
-            <span style="color:GrayText;font-size:0.8em">${field === 'width' ? 'w' : field === 'height' ? 'h' : field}:</span>
+            <span style="color:GrayText">${field === 'width' ? 'w' : field === 'height' ? 'h' : field}:</span>
             <input
               class="mono"
               type="number"
@@ -257,7 +257,7 @@ export class FragmentEditor extends LitElement {
 
     return html`
       <div style="display:flex;align-items:center;gap:4px;margin:2px 0">
-        <span class="mono" style="color:GrayText;font-size:0.85em">${frag.type}=</span>
+        <span class="mono" style="color:GrayText">${frag.type}=</span>
         <input
           class="mono"
           .value=${frag.value ?? ''}
@@ -276,12 +276,12 @@ export class FragmentEditor extends LitElement {
     const disabled = this._disabled();
 
     const tabStyle = (tab: TabName) =>
-      `cursor:pointer;background:none;border:none;border-bottom:2px solid ${this._activeTab === tab ? 'AccentColor' : 'transparent'};padding:4px 8px;font-size:0.85em;color:${this._activeTab === tab ? 'AccentColor' : 'GrayText'}`;
+      `cursor:pointer;background:none;border:none;border-bottom:2px solid ${this._activeTab === tab ? 'AccentColor' : 'transparent'};padding:4px 8px;color:${this._activeTab === tab ? 'AccentColor' : 'GrayText'}`;
 
     return html`
       <div style="margin-bottom:4px">
-        <span class="mono" style="color:GrayText;font-size:0.85em">#</span>
-        <span style="font-size:0.8em;color:GrayText;font-weight:500">Fragments</span>
+        <span class="mono" style="color:GrayText">#</span>
+        <span style="color:GrayText;font-weight:500">Fragments</span>
       </div>
 
       <div style="display:flex;gap:0;border-bottom:1px solid GrayText;margin-bottom:8px">
