@@ -1,11 +1,9 @@
-@import "tailwindcss";
-
-@theme {
-  --font-mono: monospace;
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
 }
 
-@layer base {
-  :root {
-    color-scheme: light dark;
-  }
+.mono {
+  font-family: monospace;
 }
