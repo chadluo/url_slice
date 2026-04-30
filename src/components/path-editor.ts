@@ -91,11 +91,6 @@ export class PathEditor extends LitElement {
           const listId = `path-editor-seg-${i}`;
           const suggestions = this._segmentSuggestions[i] ?? [];
           return html`
-            <button
-              @click=${() => this._truncateBefore(i)}
-              title="Truncate path before this segment"
-              style="cursor:pointer;background:none;border:none;color:GrayText;padding:0 1px"
-            >×</button>
             <input
               class="mono path-seg"
               .value=${seg}
@@ -109,6 +104,11 @@ export class PathEditor extends LitElement {
             <datalist id=${listId}>
               ${suggestions.map((s) => html`<option value=${s}></option>`)}
             </datalist>
+            <button
+              @click=${() => this._truncateBefore(i)}
+              title="Truncate path before this segment"
+              style="cursor:pointer;background:none;border:none;color:GrayText;padding:0 1px"
+            >×</button>
             ${i < m.pathSegments.length - 1
               ? html`<span class="mono" style="color:GrayText">/</span>`
               : ''}
