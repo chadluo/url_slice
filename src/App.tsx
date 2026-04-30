@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { FragmentEditor } from './components/FragmentEditor';
+import { HostEditor } from './components/HostEditor';
+import { PathEditor } from './components/PathEditor';
+import { PortEditor } from './components/PortEditor';
+import { SearchParamsEditor } from './components/SearchParamsEditor';
 import { useCurrentUrl } from './hooks/useCurrentUrl';
 import { buildUrl } from './utils/urlBuilder';
+import type { TextFragment, UrlModel } from './utils/urlParser';
 import { EMPTY_URL_MODEL } from './utils/urlParser';
-import type { UrlModel, TextFragment } from './utils/urlParser';
-import { HostEditor } from './components/HostEditor';
-import { PortEditor } from './components/PortEditor';
-import { PathEditor } from './components/PathEditor';
-import { SearchParamsEditor } from './components/SearchParamsEditor';
-import { FragmentEditor } from './components/FragmentEditor';
 
 function pageKey(model: UrlModel): string {
   const host = [...model.subdomains, model.domain].join('.')
@@ -58,10 +58,11 @@ export default function App({ mode = 'popup' }: { mode?: 'popup' | 'sidebar' }) 
   const [disabledTextFragments, setDisabledTextFragments] = useState<TextFragment[]>([]);
 
   useEffect(() => {
-    if (model !== null && loading) {
+    if (model !== null) {
       setLocalModel(model);
       setDisabledParams(loadDisabledParams(model));
       setDisabledTextFragments(loadDisabledTextFragments(model));
+      setDirty(false);
       setLoading(false);
     }
   }, [model]);
@@ -93,7 +94,7 @@ export default function App({ mode = 'popup' }: { mode?: 'popup' | 'sidebar' }) 
   const handleApply = async () => {
     if (tabId === null || loading) return;
     await browser.tabs.update(tabId, { url: buildUrl(localModel) });
-    window.close();
+    // popup closes automatically on navigation; sidebar stays open and resets via onUpdated
   };
 
   const handleCopy = () => {

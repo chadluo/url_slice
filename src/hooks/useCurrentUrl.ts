@@ -77,8 +77,35 @@ export function useCurrentUrl(): CurrentUrl {
 
     fetchCurrentUrl();
 
+    const onUpdated: Parameters<typeof browser.tabs.onUpdated.addListener>[0] = (
+      tabId,
+      changeInfo,
+      tab,
+    ) => {
+      if (!tab.active) return;
+      if (changeInfo.url !== undefined) {
+        if (!isMounted) return;
+        if (!/^(https?|ftp|file):/.test(changeInfo.url)) {
+          setState({ model: null, tabId, raw: changeInfo.url, error: 'Not available on browser internal pages.' });
+          return;
+        }
+        setState({ model: parseUrl(changeInfo.url), tabId, raw: changeInfo.url, error: null });
+      } else if (changeInfo.status === 'complete') {
+        fetchCurrentUrl();
+      }
+    };
+
+    const onActivated: Parameters<typeof browser.tabs.onActivated.addListener>[0] = () => {
+      fetchCurrentUrl();
+    };
+
+    browser.tabs.onUpdated.addListener(onUpdated);
+    browser.tabs.onActivated.addListener(onActivated);
+
     return () => {
       isMounted = false;
+      browser.tabs.onUpdated.removeListener(onUpdated);
+      browser.tabs.onActivated.removeListener(onActivated);
     };
   }, []);
 
