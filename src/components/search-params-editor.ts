@@ -197,7 +197,7 @@ export class SearchParamsEditor extends LitElement {
         })}
       ` : ''}
 
-      <button @click=${this._addParam} style="cursor:pointer;background:none;border:none;color:LinkText;margin-top:4px">+ Add param</button>
+      <button @click=${this._addParam} class="btn-add">+ Add param</button>
     `;
   }
 }

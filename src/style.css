@@ -6,3 +6,15 @@
 .mono {
   font-family: monospace;
 }
+
+.btn-add {
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: LinkText;
+  margin-top: 4px;
+}
+
+.btn-add:hover {
+  color: color-mix(in oklch, LinkText, Canvas 30%);
+}

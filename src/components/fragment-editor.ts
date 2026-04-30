@@ -296,7 +296,7 @@ export class FragmentEditor extends LitElement {
       ${this._activeTab === 'text' ? html`
         ${m.textFragments.map((f, i) => this._renderTextRow(f, i, true))}
         ${disabled.map((f, i) => this._renderTextRow(f, i, false))}
-        <button @click=${this._addText} style="cursor:pointer;background:none;border:none;color:LinkText;margin-top:4px">+ Add text fragment</button>
+        <button @click=${this._addText} class="btn-add">+ Add text fragment</button>
       ` : html`
         ${m.mediaFragments.map((f, i) => this._renderMediaRow(f, i))}
         <button @click=${this._addTime} style="cursor:pointer;background:none;border:none;color:LinkText;margin-top:4px">+ Add time fragment</button>
