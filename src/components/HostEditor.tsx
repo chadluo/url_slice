@@ -1,4 +1,4 @@
-import { useState, type JSX } from 'react'
+import { useState, useEffect, useRef, type JSX } from 'react'
 import type { UrlModel } from '../utils/urlParser.js'
 import { Dropdown } from './Dropdown.js'
 import { useHistorySuggestions } from '../hooks/useHistorySuggestions.js'
@@ -96,24 +96,42 @@ function ChromeDomainChip({ value, onChange }: ChromeDomainChipProps): JSX.Eleme
 }
 
 export function HostEditor({ model, onChange }: EditorProps): JSX.Element {
-  function handleSubdomainSelect(index: number, suggestion: string) {
-    const newSubdomains = [suggestion, ...model.subdomains.slice(index + 1)]
-    onChange({ ...model, subdomains: newSubdomains, pathSegments: [] })
+  const [displaySubdomains, setDisplaySubdomains] = useState(model.subdomains)
+  const lastSentRef = useRef(model.subdomains)
+
+  useEffect(() => {
+    if (model.subdomains !== lastSentRef.current) {
+      lastSentRef.current = model.subdomains
+      setDisplaySubdomains(model.subdomains)
+    }
+  }, [model.subdomains])
+
+  function applyChange(newDisplay: string[]) {
+    const real = newDisplay.filter((s) => s !== CLEAR_SENTINEL)
+    lastSentRef.current = real
+    setDisplaySubdomains(newDisplay)
+    onChange({ ...model, subdomains: real, pathSegments: [] })
   }
 
-  function handleSubdomainClear(index: number) {
-    const newSubdomains = model.subdomains.filter((_, i) => i !== index)
-    onChange({ ...model, subdomains: newSubdomains, pathSegments: [] })
+  function handleSubdomainSelect(displayIndex: number, suggestion: string) {
+    applyChange([suggestion, ...displaySubdomains.slice(displayIndex + 1)])
+  }
+
+  function handleSubdomainClear(displayIndex: number) {
+    applyChange(displaySubdomains.map((s, i) => (i === displayIndex ? CLEAR_SENTINEL : s)))
   }
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 font-mono text-sm text-gray-400 dark:text-gray-500">
       <span className="text-gray-400 dark:text-gray-500">{model.protocol}//</span>
-      {model.subdomains.map((sub, i) => (
+      {displaySubdomains.map((sub, i) => (
         <span key={i} className="flex items-center gap-0.5">
           <SubdomainChip
             value={sub}
-            subdomainSuffix={[...model.subdomains.slice(i + 1), model.domain].join('.')}
+            subdomainSuffix={[
+              ...displaySubdomains.slice(i + 1).filter((s) => s !== CLEAR_SENTINEL),
+              model.domain,
+            ].join('.')}
             onSelect={(s) => handleSubdomainSelect(i, s)}
             onClear={() => handleSubdomainClear(i)}
           />
