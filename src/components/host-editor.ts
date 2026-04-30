@@ -1,4 +1,4 @@
-import { LitElement, html, nothing } from 'lit';
+import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../state/appState.ts';
 import { getHistorySuggestions } from '../lib/historySuggestions.ts';
@@ -15,7 +15,6 @@ export class HostEditor extends LitElement {
   createRenderRoot() { return this; }
 
   @state() private _subdomainSuggestions: string[][] = [];
-  @state() private _domainSuggestions: string[] = [];
   private _unsub?: () => void;
   private _debounceTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
 
@@ -31,11 +30,6 @@ export class HostEditor extends LitElement {
   }
 
   private _model(): UrlModel { return getState().model; }
-
-  private _fullHostname(): string {
-    const m = this._model();
-    return [...m.subdomains, m.domain].filter(Boolean).join('.');
-  }
 
   private _update(patch: Partial<UrlModel>) {
     setState({ model: { ...this._model(), ...patch }, dirty: true });
@@ -57,12 +51,6 @@ export class HostEditor extends LitElement {
     });
   }
 
-  private _fetchDomainSuggestions(value: string) {
-    this._debounce('domain', async () => {
-      this._domainSuggestions = await getHistorySuggestions(value, 'host', this._fullHostname());
-    });
-  }
-
   private _onSubdomainInput(index: number, e: Event) {
     const input = e.target as HTMLInputElement;
     const m = this._model();
@@ -78,16 +66,6 @@ export class HostEditor extends LitElement {
     this._fetchSubdomainSuggestions(index, suffix);
   }
 
-  private _onDomainInput(e: Event) {
-    const input = e.target as HTMLInputElement;
-    this._update({ domain: input.value, pathSegments: [] });
-    this._fetchDomainSuggestions(input.value);
-  }
-
-  private _onDomainFocus() {
-    this._fetchDomainSuggestions(this._model().domain);
-  }
-
   private _removeSubdomain(index: number) {
     const m = this._model();
     this._update({ subdomains: m.subdomains.filter((_, i) => i !== index), pathSegments: [] });
@@ -98,8 +76,8 @@ export class HostEditor extends LitElement {
     this._update({ subdomains: [...m.subdomains, 'www'], pathSegments: [] });
   }
 
-  private _datalistId(type: string, index = 0) {
-    return `host-editor-${type}-${index}`;
+  private _datalistId(index = 0) {
+    return `host-editor-sub-${index}`;
   }
 
   render() {
@@ -115,7 +93,7 @@ export class HostEditor extends LitElement {
 
         ${m.subdomains.map((sub, i) => {
           const suffix = [...m.subdomains.slice(i + 1), m.domain].filter(Boolean).join('.');
-          const listId = this._datalistId('sub', i);
+          const listId = this._datalistId(i);
           const suggestions = this._subdomainSuggestions[i] ?? [];
           return html`
             <input
@@ -147,19 +125,7 @@ export class HostEditor extends LitElement {
               </select>
             `
           : html`
-              <input
-                class="mono"
-                .value=${m.domain}
-                list=${this._datalistId('domain')}
-                @input=${this._onDomainInput.bind(this)}
-                @focus=${this._onDomainFocus.bind(this)}
-                size=${Math.max(m.domain.length, 6)}
-                style="width:${Math.max(m.domain.length, 6) + 2}ch"
-                placeholder="domain"
-              />
-              <datalist id=${this._datalistId('domain')}>
-                ${this._domainSuggestions.map((s) => html`<option value=${s}></option>`)}
-              </datalist>
+              <span class="mono">${m.domain}</span>
               <button @click=${this._addSubdomain} title="Add subdomain" style="cursor:pointer;background:none;border:none;color:GrayText;font-size:0.8em">+sub</button>
             `}
       </div>
