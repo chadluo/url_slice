@@ -26,7 +26,7 @@ export class UrlSliceApp extends LitElement {
     if (this.mode === 'popup') {
       Object.assign(this.style, { display: 'block', width: '600px', minHeight: '200px', maxHeight: '600px', overflowY: 'auto', padding: '16px' });
     } else {
-      Object.assign(this.style, { display: 'block', width: '100%', minHeight: '100vh', padding: '16px' });
+      Object.assign(this.style, { display: 'block', padding: '16px' });
     }
   }
 
