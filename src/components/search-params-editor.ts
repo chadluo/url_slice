@@ -23,6 +23,8 @@ function saveDisabledParams(m: UrlModel, params: [string, string][]) {
 export class SearchParamsEditor extends LitElement {
   createRenderRoot() { return this; }
 
+  // Stable combined list: [key, value, enabled]. Reset only on page key change.
+  @state() private _rows: Array<[string, string, boolean]> = [];
   @state() private _historyParams: Map<string, string[]> = new Map();
   @state() private _dismissedKeys: Set<string> = new Set();
   @state() private _historyRowValues: Map<string, string> = new Map();
@@ -32,10 +34,10 @@ export class SearchParamsEditor extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this._unsub = subscribe(() => {
-      this._maybeRefreshHistory();
+      this._syncRows();
       this.requestUpdate();
     });
-    this._maybeRefreshHistory();
+    this._syncRows();
   }
 
   disconnectedCallback() {
@@ -44,15 +46,19 @@ export class SearchParamsEditor extends LitElement {
   }
 
   private _model(): UrlModel { return getState().model; }
-  private _disabledParams(): [string, string][] { return getState().disabledParams; }
 
-  private _maybeRefreshHistory() {
+  private _syncRows() {
     const m = this._model();
     const k = pageKey(m);
     if (k === this._lastPageKey) return;
     this._lastPageKey = k;
     this._dismissedKeys = new Set();
     this._historyRowValues = new Map();
+    const dp = getState().disabledParams;
+    this._rows = [
+      ...m.searchParams.map(([key, val]): [string, string, boolean] => [key, val, true]),
+      ...dp.map(([key, val]): [string, string, boolean] => [key, val, false]),
+    ];
     const hostname = [...m.subdomains, m.domain].filter(Boolean).join('.');
     const path = '/' + m.pathSegments.map(encodeURIComponent).join('/') || '/';
     getHistorySearchParams(hostname, path).then((map) => {
@@ -60,78 +66,53 @@ export class SearchParamsEditor extends LitElement {
     });
   }
 
-  private _setModel(updated: UrlModel) {
-    setState({ model: updated, dirty: true });
-  }
-
-  private _setDisabled(params: [string, string][]) {
+  private _commitRows() {
+    const enabled = this._rows.filter(r => r[2]).map(r => [r[0], r[1]] as [string, string]);
+    const disabled = this._rows.filter(r => !r[2]).map(r => [r[0], r[1]] as [string, string]);
     const m = this._model();
-    setState({ disabledParams: params });
-    saveDisabledParams(m, params);
+    setState({ model: { ...m, searchParams: enabled }, disabledParams: disabled, dirty: true });
+    saveDisabledParams(m, disabled);
   }
 
-  // ── Enabled param handlers ──
+  private _toggleRow(index: number) {
+    this._rows = this._rows.map((r, i): [string, string, boolean] =>
+      i === index ? [r[0], r[1], !r[2]] : r
+    );
+    this._commitRows();
+  }
 
   private _onKeyChange(index: number, e: Event) {
     const val = (e.target as HTMLInputElement).value;
-    const m = this._model();
-    this._setModel({ ...m, searchParams: m.searchParams.map((p, i) => i === index ? [val, p[1]] : p) });
+    this._rows = this._rows.map((r, i): [string, string, boolean] =>
+      i === index ? [val, r[1], r[2]] : r
+    );
+    this._commitRows();
   }
 
   private _onValueChange(index: number, e: Event) {
     const val = (e.target as HTMLInputElement).value;
-    const m = this._model();
-    this._setModel({ ...m, searchParams: m.searchParams.map((p, i) => i === index ? [p[0], val] : p) });
+    this._rows = this._rows.map((r, i): [string, string, boolean] =>
+      i === index ? [r[0], val, r[2]] : r
+    );
+    this._commitRows();
   }
 
-  private _removeEnabled(index: number) {
-    const m = this._model();
-    this._setModel({ ...m, searchParams: m.searchParams.filter((_, i) => i !== index) });
+  private _removeRow(index: number) {
+    this._rows = this._rows.filter((_, i) => i !== index);
+    this._commitRows();
   }
 
-  private _disableParam(index: number) {
-    const m = this._model();
-    const param = m.searchParams[index];
-    if (!param) return;
-    this._setModel({ ...m, searchParams: m.searchParams.filter((_, i) => i !== index) });
-    this._setDisabled([...this._disabledParams(), param]);
+  private _addParam() {
+    this._rows = [...this._rows, ['', '', true]];
+    this._commitRows();
+    setTimeout(() => {
+      const inputs = this.querySelectorAll<HTMLInputElement>('.param-key');
+      inputs[inputs.length - 1]?.focus();
+    }, 0);
   }
-
-  // ── Disabled param handlers ──
-
-  private _onDisabledKeyChange(index: number, e: Event) {
-    const val = (e.target as HTMLInputElement).value;
-    const dp = this._disabledParams();
-    this._setDisabled(dp.map((p, i) => i === index ? [val, p[1]] : p));
-  }
-
-  private _onDisabledValueChange(index: number, e: Event) {
-    const val = (e.target as HTMLInputElement).value;
-    const dp = this._disabledParams();
-    this._setDisabled(dp.map((p, i) => i === index ? [p[0], val] : p));
-  }
-
-  private _removeDisabled(index: number) {
-    this._setDisabled(this._disabledParams().filter((_, i) => i !== index));
-  }
-
-  private _enableParam(index: number) {
-    const dp = this._disabledParams();
-    const param = dp[index];
-    if (!param) return;
-    this._setDisabled(dp.filter((_, i) => i !== index));
-    const m = this._model();
-    this._setModel({ ...m, searchParams: [...m.searchParams, param] });
-  }
-
-  // ── History param handlers ──
 
   private _historyEntries(): [string, string][] {
-    const m = this._model();
-    const activeKeys = new Set([
-      ...m.searchParams.map(([k]) => k),
-      ...this._disabledParams().map(([k]) => k),
-    ]);
+    const activeKeys = new Set(this._rows.map(r => r[0]));
     return Array.from(this._historyParams.entries())
       .filter(([k]) => !activeKeys.has(k) && !this._dismissedKeys.has(k))
       .map(([k, vals]) => [k, this._historyRowValues.get(k) ?? vals[0] ?? '']);
@@ -147,41 +128,18 @@ export class SearchParamsEditor extends LitElement {
   }
 
   private _addFromHistory(key: string, value: string) {
-    const m = this._model();
-    this._setModel({ ...m, searchParams: [...m.searchParams, [key, value]] });
+    this._rows = [...this._rows, [key, value, true]];
+    this._commitRows();
   }
 
-  // ── Add param ──
-
-  private _addParam() {
-    const m = this._model();
-    this._setModel({ ...m, searchParams: [...m.searchParams, ['', '']] });
-    setTimeout(() => {
-      const rows = this.querySelectorAll<HTMLInputElement>('.param-key');
-      rows[rows.length - 1]?.focus();
-    }, 0);
-  }
-
-  private _renderRow(
-    key: string,
-    value: string,
-    enabled: boolean,
-    listId: string,
-    suggestions: string[],
-    onToggle: () => void,
-    onKeyChange: (e: Event) => void,
-    onValueChange: (e: Event) => void,
-    onDelete: () => void,
-    readonlyKey = false,
-  ) {
+  private _renderRow(key: string, value: string, enabled: boolean, index: number) {
     return html`
       <div style="display:flex;align-items:center;gap:4px;margin:2px 0;opacity:${enabled ? '1' : '0.6'}">
-        <input type="checkbox" ?checked=${enabled} @change=${onToggle} title="${enabled ? 'Disable' : 'Enable'}" style="cursor:pointer;flex-shrink:0" />
+        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" style="cursor:pointer;flex-shrink:0" />
         <input
           class="mono param-key"
           .value=${key}
-          ?readonly=${readonlyKey}
-          @input=${onKeyChange}
+          @input=${(e: Event) => this._onKeyChange(index, e)}
           style="flex:1;min-width:0"
           placeholder="key"
           spellcheck="false"
@@ -190,23 +148,17 @@ export class SearchParamsEditor extends LitElement {
         <input
           class="mono"
           .value=${value}
-          list=${listId}
-          @input=${onValueChange}
+          @input=${(e: Event) => this._onValueChange(index, e)}
           style="flex:2;min-width:0"
           placeholder="value"
           spellcheck="false"
         />
-        <datalist id=${listId}>
-          ${suggestions.map((s) => html`<option value=${s}></option>`)}
-        </datalist>
-        <button @click=${onDelete} title="Delete param" style="cursor:pointer;background:none;border:none;color:GrayText;flex-shrink:0">×</button>
+        <button @click=${() => this._removeRow(index)} title="Delete param" style="cursor:pointer;background:none;border:none;color:GrayText;flex-shrink:0">×</button>
       </div>
     `;
   }
 
   render() {
-    const m = this._model();
-    const dp = this._disabledParams();
     const historyEntries = this._historyEntries();
 
     return html`
@@ -215,23 +167,7 @@ export class SearchParamsEditor extends LitElement {
         <span style="font-size:0.8em;color:GrayText;font-weight:500">Query params</span>
       </div>
 
-      ${m.searchParams.map(([key, value], i) => this._renderRow(
-        key, value, true,
-        `sp-val-${i}`, [],
-        () => this._disableParam(i),
-        (e) => this._onKeyChange(i, e),
-        (e) => this._onValueChange(i, e),
-        () => this._removeEnabled(i),
-      ))}
-
-      ${dp.map(([key, value], i) => this._renderRow(
-        key, value, false,
-        `sp-dval-${i}`, [],
-        () => this._enableParam(i),
-        (e) => this._onDisabledKeyChange(i, e),
-        (e) => this._onDisabledValueChange(i, e),
-        () => this._removeDisabled(i),
-      ))}
+      ${this._rows.map(([key, value, enabled], i) => this._renderRow(key, value, enabled, i))}
 
       ${historyEntries.length > 0 ? html`
         <div style="color:GrayText;font-size:0.8em;margin:4px 0 2px">From history:</div>
