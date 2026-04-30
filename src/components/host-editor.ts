@@ -125,8 +125,8 @@ export class HostEditor extends LitElement {
               </select>
             `
           : html`
-              <span class="mono">${m.domain}</span>
               <button @click=${this._addSubdomain} title="Add subdomain" style="cursor:pointer;background:none;border:none;color:GrayText;font-size:0.8em">+sub</button>
+              <span class="mono">${m.domain}</span>
             `}
       </div>
     `;
