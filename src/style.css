@@ -3,6 +3,10 @@
   font-family: system-ui, sans-serif;
 }
 
+body {
+  font-size: 100%;
+}
+
 .mono {
   font-family: monospace;
 }
