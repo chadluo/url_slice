@@ -97,13 +97,14 @@ export class HostEditor extends LitElement {
           const suggestions = this._subdomainSuggestions[i] ?? [];
           return html`
             <input
+              id="host-editor-sub-input-${i}"
               class="mono"
               .value=${sub}
               list=${listId}
               @input=${(e: Event) => this._onSubdomainInput(i, e)}
               @focus=${() => this._onSubdomainFocus(i)}
-              size=${Math.max(sub.length, 3)}
-              style="width:${Math.max(sub.length, 3) + 2}ch"
+              size=${Math.max(sub.length, 8)}
+              style="width:${Math.max(sub.length, 8) + 2}ch"
               title="Subdomain segment"
             />
             <datalist id=${listId}>

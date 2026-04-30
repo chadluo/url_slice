@@ -92,13 +92,14 @@ export class PathEditor extends LitElement {
           const suggestions = this._segmentSuggestions[i] ?? [];
           return html`
             <input
+              id="path-editor-seg-input-${i}"
               class="mono path-seg"
               .value=${seg}
               list=${listId}
               @input=${(e: Event) => this._onSegmentInput(i, e)}
               @focus=${() => this._onSegmentFocus(i)}
-              size=${Math.max(seg.length, 2)}
-              style="width:${Math.max(seg.length, 2) + 2}ch"
+              size=${Math.max(seg.length, 8)}
+              style="width:${Math.max(seg.length, 8) + 2}ch"
               placeholder="segment"
             />
             <datalist id=${listId}>
