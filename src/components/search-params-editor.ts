@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { getState, setState, subscribe } from '../state/appState.ts';
 import { getHistorySearchParams } from '../lib/historySuggestions.ts';
+import { getState, setState, subscribe } from '../state/appState.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 
 function pageKey(m: UrlModel): string {
@@ -170,11 +170,12 @@ export class SearchParamsEditor extends LitElement {
       ${this._rows.map(([key, value, enabled], i) => this._renderRow(key, value, enabled, i))}
 
       ${historyEntries.length > 0 ? html`
-        <div style="color:GrayText;margin:4px 0 2px">From history:</div>
+        <details>
+        <summary><span style="color:GrayText;margin:4px 0 2px">From history:</span></summary>
         ${historyEntries.map(([key, value]) => {
-          const listId = `sp-hval-${key}`;
-          const suggestions = this._historyParams.get(key) ?? [];
-          return html`
+      const listId = `sp-hval-${key}`;
+      const suggestions = this._historyParams.get(key) ?? [];
+      return html`
             <div style="display:flex;align-items:center;gap:4px;margin:2px 0;opacity:0.7">
               <span class="mono" style="flex:1;min-width:0;color:GrayText;font-size:0.9em">${key}</span>
               <span>=</span>
@@ -194,7 +195,8 @@ export class SearchParamsEditor extends LitElement {
               <button @click=${() => this._dismissHistory(key)} title="Dismiss" style="cursor:pointer;background:none;border:none;color:GrayText">×</button>
             </div>
           `;
-        })}
+    })}
+        </details>
       ` : ''}
 
       <button @click=${this._addParam} class="btn-add">+ Add param</button>
