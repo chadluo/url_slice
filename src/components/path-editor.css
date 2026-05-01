@@ -1,0 +1,14 @@
+.path-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+
+.seg-remove {
+  padding: 0 1px;
+}
+
+.seg-add {
+  margin-left: 2px;
+}

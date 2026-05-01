@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getHistorySearchParams } from '../lib/historySuggestions.ts';
 import { getState, setState, subscribe } from '../state/appState.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
+import './search-params-editor.css';
 
 type DecodedValue =
   | { kind: 'plain' }
@@ -70,7 +71,6 @@ function saveDisabledParams(m: UrlModel, params: [string, string][]) {
 export class SearchParamsEditor extends LitElement {
   createRenderRoot() { return this; }
 
-  // Stable combined list: [key, value, enabled]. Reset only on page key change.
   @state() private _rows: Array<[string, string, boolean]> = [];
   @state() private _historyParams: Map<string, string[]> = new Map();
   @state() private _dismissedKeys: Set<string> = new Set();
@@ -218,67 +218,61 @@ export class SearchParamsEditor extends LitElement {
 
   private _renderRow(key: string, value: string, enabled: boolean, index: number) {
     const decoded = decodeValue(value);
-    const opacity = enabled ? '1' : '0.6';
 
     if (decoded.kind === 'json' || decoded.kind === 'json_base64') {
       const variant = decoded.kind === 'json_base64' ? decoded.variant : undefined;
       const displayValue = this._jsonEditValues.get(index) ?? decoded.formatted;
       const rows = Math.min(decoded.formatted.split('\n').length, 10);
       const isInvalid = this._invalidRows.has(index);
-      const textareaStyle = `width:100%;box-sizing:border-box;resize:vertical;${isInvalid ? 'border:1px solid red;outline-color:red;' : ''}`;
 
       return html`
-        <div style="display:flex;align-items:flex-start;gap:4px;margin:2px 0;opacity:${opacity}">
-          <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" style="cursor:pointer;flex-shrink:0;margin-top:3px" />
+        <div class="param-row-json" ?data-disabled=${!enabled}>
+          <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" class="param-checkbox-top" />
           <input
             class="mono param-key"
             .value=${key}
             @input=${(e: Event) => this._onKeyChange(index, e)}
-            style="flex:1;min-width:0"
             placeholder="key"
             spellcheck="false"
           />
-          <span style="margin-top:3px">=</span>
-          <div style="flex:2;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <span class="param-eq-top">=</span>
+          <div class="param-value-col">
             ${decoded.kind === 'json_base64' ? html`
-              <span class="mono" style="color:GrayText;font-size:0.85em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block"
-                title=${decoded.rawB64}>${decoded.rawB64.length > 40 ? decoded.rawB64.slice(0, 40) + '…' : decoded.rawB64}</span>
+              <span class="mono param-b64-raw" title=${decoded.rawB64}>${decoded.rawB64.length > 40 ? decoded.rawB64.slice(0, 40) + '…' : decoded.rawB64}</span>
             ` : ''}
             <textarea
-              class="mono"
+              class="mono param-json-textarea"
               .value=${displayValue}
               rows=${rows}
               @input=${(e: Event) => this._onJsonValueChange(index, variant, e)}
-              style=${textareaStyle}
+              ?data-invalid=${isInvalid}
               spellcheck="false"
             ></textarea>
           </div>
-          <button @click=${() => this._removeRow(index)} title="Delete param" style="cursor:pointer;background:none;border:none;color:GrayText;flex-shrink:0;margin-top:3px">×</button>
+          <button @click=${() => this._removeRow(index)} title="Delete param" class="param-remove-top">×</button>
         </div>
       `;
     }
 
     return html`
-      <div style="display:flex;align-items:center;gap:4px;margin:2px 0;opacity:${opacity}">
-        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" style="cursor:pointer;flex-shrink:0" />
+      <div class="param-row" ?data-disabled=${!enabled}>
+        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" class="param-checkbox" />
         <input
           class="mono param-key"
           .value=${key}
           @input=${(e: Event) => this._onKeyChange(index, e)}
-          style="flex:1;min-width:0"
           placeholder="key"
           spellcheck="false"
         />
         <span>=</span>
         <input
-          class="mono"
+          class="mono param-value"
           .value=${value}
           @input=${(e: Event) => this._onValueChange(index, e)}
-          style="flex:2;min-width:0"
           placeholder="value"
           spellcheck="false"
         />
-        <button @click=${() => this._removeRow(index)} title="Delete param" style="cursor:pointer;background:none;border:none;color:GrayText;flex-shrink:0">×</button>
+        <button @click=${() => this._removeRow(index)} title="Delete param" class="btn-muted">×</button>
       </div>
     `;
   }
@@ -287,40 +281,36 @@ export class SearchParamsEditor extends LitElement {
     const historyEntries = this._historyEntries();
 
     return html`
-      <div style="margin-bottom:4px">
-        <span class="mono" style="color:GrayText">?</span>
-        <span style="color:GrayText;font-weight:500">Query params</span>
-      </div>
+      <div class="editor-header">? Query params</div>
 
       ${this._rows.map(([key, value, enabled], i) => this._renderRow(key, value, enabled, i))}
 
       ${historyEntries.length > 0 ? html`
         <details>
-        <summary><span style="color:GrayText;margin:4px 0 2px">From history:</span></summary>
-        ${historyEntries.map(([key, value]) => {
-      const listId = `sp-hval-${key}`;
-      const suggestions = this._historyParams.get(key) ?? [];
-      return html`
-            <div style="display:flex;align-items:center;gap:4px;margin:2px 0;opacity:0.7">
-              <span class="mono" style="flex:1;min-width:0;color:GrayText;font-size:0.9em">${key}</span>
-              <span>=</span>
-              <input
-                class="mono"
-                .value=${value}
-                list=${listId}
-                @input=${(e: Event) => this._onHistoryValueChange(key, e)}
-                style="flex:2;min-width:0"
-                placeholder="value"
-                spellcheck="false"
-              />
-              <datalist id=${listId}>
-                ${suggestions.map((s) => html`<option value=${s}></option>`)}
-              </datalist>
-              <button @click=${() => this._addFromHistory(key, value)} title="Add param" style="cursor:pointer;background:none;border:none">+</button>
-              <button @click=${() => this._dismissHistory(key)} title="Dismiss" style="cursor:pointer;background:none;border:none;color:GrayText">×</button>
-            </div>
-          `;
-    })}
+          <summary class="history-summary">From history:</summary>
+          ${historyEntries.map(([key, value]) => {
+            const listId = `sp-hval-${key}`;
+            const suggestions = this._historyParams.get(key) ?? [];
+            return html`
+              <div class="history-row">
+                <span class="mono history-key">${key}</span>
+                <span>=</span>
+                <input
+                  class="mono param-value"
+                  .value=${value}
+                  list=${listId}
+                  @input=${(e: Event) => this._onHistoryValueChange(key, e)}
+                  placeholder="value"
+                  spellcheck="false"
+                />
+                <datalist id=${listId}>
+                  ${suggestions.map((s) => html`<option value=${s}></option>`)}
+                </datalist>
+                <button @click=${() => this._addFromHistory(key, value)} title="Add param" class="btn-muted">+</button>
+                <button @click=${() => this._dismissHistory(key)} title="Dismiss" class="btn-muted">×</button>
+              </div>
+            `;
+          })}
         </details>
       ` : ''}
 

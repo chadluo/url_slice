@@ -22,3 +22,25 @@ body {
 .btn-add:hover {
   color: color-mix(in oklch, LinkText, Canvas 30%);
 }
+
+button {
+  cursor: pointer;
+}
+
+.btn-muted {
+  background: none;
+  border: none;
+  color: GrayText;
+  padding: 0;
+}
+
+.editor-header {
+  color: GrayText;
+  font-weight: 500;
+  user-select: none;
+  margin-bottom: 4px;
+}
+
+.chip-sep {
+  color: GrayText;
+}

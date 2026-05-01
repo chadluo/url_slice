@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../state/appState.ts';
 import { serializeTextFragment, serializeMediaFragment } from '../utils/fragmentParser.ts';
 import type { UrlModel, TextFragment, MediaFragment } from '../utils/urlParser.ts';
+import './fragment-editor.css';
 
 function pageKey(m: UrlModel): string {
   const host = [...m.subdomains, m.domain].filter(Boolean).join('.');
@@ -140,43 +141,39 @@ export class FragmentEditor extends LitElement {
       enabled ? this._updateTextFrag(index, updated) : this._updateDisabledTextFrag(index, updated);
 
     return html`
-      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:2px 0;opacity:${enabled ? '1' : '0.6'}">
-        <input type="checkbox" ?checked=${enabled} @change=${onToggle} style="cursor:pointer;flex-shrink:0" />
+      <div class="frag-text-row" ?data-disabled=${!enabled}>
+        <input type="checkbox" ?checked=${enabled} @change=${onToggle} />
         <input
-          class="mono"
+          class="mono tf-prefix"
           .value=${frag.prefix ?? ''}
           @change=${(e: Event) => onUpdate({ ...frag, prefix: (e.target as HTMLInputElement).value || undefined })}
-          style="width:6em"
           placeholder="prefix"
           spellcheck="false"
           title="prefix"
         />
-        <span style="color:GrayText">-,</span>
+        <span class="chip-sep">-,</span>
         <input
-          class="mono"
+          class="mono tf-start"
           .value=${frag.textStart}
           @change=${(e: Event) => onUpdate({ ...frag, textStart: (e.target as HTMLInputElement).value })}
-          style="width:10em"
           placeholder="text start"
           spellcheck="false"
           title="text start (required)"
         />
-        <span style="color:GrayText">,</span>
+        <span class="chip-sep">,</span>
         <input
-          class="mono"
+          class="mono tf-end"
           .value=${frag.textEnd ?? ''}
           @change=${(e: Event) => onUpdate({ ...frag, textEnd: (e.target as HTMLInputElement).value || undefined })}
-          style="width:7em"
           placeholder="end"
           spellcheck="false"
           title="text end (optional)"
         />
-        <span style="color:GrayText">,-</span>
+        <span class="chip-sep">,-</span>
         <input
-          class="mono"
+          class="mono tf-suffix"
           .value=${frag.suffix ?? ''}
           @change=${(e: Event) => onUpdate({ ...frag, suffix: (e.target as HTMLInputElement).value || undefined })}
-          style="width:6em"
           placeholder="suffix"
           spellcheck="false"
           title="suffix"
@@ -184,14 +181,11 @@ export class FragmentEditor extends LitElement {
         <button
           @click=${() => this._highlight(frag)}
           ?disabled=${this._tabId() === null || !frag.textStart}
-          style="cursor:pointer"
           title="Highlight in page"
         >Highlight ▶</button>
-        <button @click=${onRemove} style="cursor:pointer;background:none;border:none;color:GrayText">×</button>
+        <button @click=${onRemove} class="btn-muted">×</button>
         ${frag.textStart ? html`
-          <span class="mono" style="color:GrayText;width:100%;padding-left:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-            text=${serializeTextFragment(frag)}
-          </span>
+          <span class="mono frag-preview">text=${serializeTextFragment(frag)}</span>
         ` : ''}
       </div>
     `;
@@ -199,33 +193,31 @@ export class FragmentEditor extends LitElement {
 
   private _renderMediaRow(frag: MediaFragment, index: number) {
     const onUpdate = (updated: MediaFragment) => this._updateMediaFrag(index, updated);
-    const removeBtn = html`<button @click=${() => this._removeMediaFrag(index)} style="cursor:pointer;background:none;border:none;color:GrayText">×</button>`;
+    const removeBtn = html`<button @click=${() => this._removeMediaFrag(index)} class="btn-muted">×</button>`;
 
     if (frag.type === 'time') {
       return html`
-        <div style="display:flex;align-items:center;gap:4px;margin:2px 0">
-          <span class="mono" style="color:GrayText">t=</span>
+        <div class="frag-media-row">
+          <span class="mono chip-sep">t=</span>
           <input
-            class="mono"
+            class="mono mf-time"
             .value=${secondsToMmss(frag.startTime ?? 0)}
             @change=${(e: Event) => {
               const s = mmssToSeconds((e.target as HTMLInputElement).value);
               onUpdate({ ...frag, startTime: isNaN(s) ? 0 : s });
             }}
-            style="width:5em"
             placeholder="0:00"
             title="start time (mm:ss)"
           />
-          <span style="color:GrayText">,</span>
+          <span class="chip-sep">,</span>
           <input
-            class="mono"
+            class="mono mf-time"
             .value=${frag.endTime !== undefined ? secondsToMmss(frag.endTime) : ''}
             @change=${(e: Event) => {
               const val = (e.target as HTMLInputElement).value.trim();
               const s = val ? mmssToSeconds(val) : NaN;
               onUpdate({ ...frag, endTime: isNaN(s) ? undefined : s });
             }}
-            style="width:5em"
             placeholder="end"
             title="end time (mm:ss, optional)"
           />
@@ -236,17 +228,16 @@ export class FragmentEditor extends LitElement {
 
     if (frag.type === 'spatial') {
       return html`
-        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin:2px 0">
-          <span class="mono" style="color:GrayText">xywh=</span>
+        <div class="frag-media-row-wrap">
+          <span class="mono chip-sep">xywh=</span>
           ${(['x', 'y', 'width', 'height'] as const).map((field, fi) => html`
-            ${fi > 0 ? html`<span style="color:GrayText">,</span>` : ''}
-            <span style="color:GrayText">${field === 'width' ? 'w' : field === 'height' ? 'h' : field}:</span>
+            ${fi > 0 ? html`<span class="chip-sep">,</span>` : ''}
+            <span class="chip-sep">${field === 'width' ? 'w' : field === 'height' ? 'h' : field}:</span>
             <input
-              class="mono"
+              class="mono mf-coord"
               type="number"
               .value=${String(frag[field] ?? 0)}
               @change=${(e: Event) => onUpdate({ ...frag, [field]: parseFloat((e.target as HTMLInputElement).value) || 0 })}
-              style="width:4em"
               title=${field}
             />
           `)}
@@ -256,13 +247,12 @@ export class FragmentEditor extends LitElement {
     }
 
     return html`
-      <div style="display:flex;align-items:center;gap:4px;margin:2px 0">
-        <span class="mono" style="color:GrayText">${frag.type}=</span>
+      <div class="frag-media-row">
+        <span class="mono chip-sep">${frag.type}=</span>
         <input
-          class="mono"
+          class="mono mf-value"
           .value=${frag.value ?? ''}
           @change=${(e: Event) => onUpdate({ ...frag, value: (e.target as HTMLInputElement).value })}
-          style="width:12em"
           placeholder="value"
           spellcheck="false"
         />
@@ -275,22 +265,18 @@ export class FragmentEditor extends LitElement {
     const m = this._model();
     const disabled = this._disabled();
 
-    const tabStyle = (tab: TabName) =>
-      `cursor:pointer;background:none;border:none;border-bottom:2px solid ${this._activeTab === tab ? 'AccentColor' : 'transparent'};padding:4px 8px;color:${this._activeTab === tab ? 'AccentColor' : 'GrayText'}`;
-
     return html`
-      <div style="margin-bottom:4px">
-        <span class="mono" style="color:GrayText">#</span>
-        <span style="color:GrayText;font-weight:500">Fragments</span>
-      </div>
+      <div class="editor-header"># Fragments</div>
 
-      <div style="display:flex;gap:0;border-bottom:1px solid GrayText;margin-bottom:8px">
-        <button style=${tabStyle('text')} @click=${() => { this._activeTab = 'text'; }}>
-          Text${m.textFragments.length ? ` (${m.textFragments.length})` : ''}
-        </button>
-        <button style=${tabStyle('media')} @click=${() => { this._activeTab = 'media'; }}>
-          Media${m.mediaFragments.length ? ` (${m.mediaFragments.length})` : ''}
-        </button>
+      <div class="frag-tabs">
+        <button
+          class=${`tab-btn${this._activeTab === 'text' ? ' active' : ''}`}
+          @click=${() => { this._activeTab = 'text'; }}
+        >Text${m.textFragments.length ? ` (${m.textFragments.length})` : ''}</button>
+        <button
+          class=${`tab-btn${this._activeTab === 'media' ? ' active' : ''}`}
+          @click=${() => { this._activeTab = 'media'; }}
+        >Media${m.mediaFragments.length ? ` (${m.mediaFragments.length})` : ''}</button>
       </div>
 
       ${this._activeTab === 'text' ? html`
@@ -299,7 +285,7 @@ export class FragmentEditor extends LitElement {
         <button @click=${this._addText} class="btn-add">+ Add text fragment</button>
       ` : html`
         ${m.mediaFragments.map((f, i) => this._renderMediaRow(f, i))}
-        <button @click=${this._addTime} style="cursor:pointer;background:none;border:none;color:LinkText;margin-top:4px">+ Add time fragment</button>
+        <button @click=${this._addTime} class="btn-add-time">+ Add time fragment</button>
       `}
     `;
   }

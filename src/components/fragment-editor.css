@@ -1,0 +1,75 @@
+.frag-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid GrayText;
+  margin-bottom: 8px;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 4px 8px;
+  color: GrayText;
+}
+
+.tab-btn.active {
+  border-bottom-color: AccentColor;
+  color: AccentColor;
+}
+
+.frag-text-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0;
+}
+
+.frag-text-row[data-disabled] {
+  opacity: 0.6;
+}
+
+.frag-media-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0;
+}
+
+.frag-media-row-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 2px 0;
+}
+
+.frag-preview {
+  color: GrayText;
+  width: 100%;
+  padding-left: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-add-time {
+  background: none;
+  border: none;
+  color: LinkText;
+  margin-top: 4px;
+}
+
+.btn-add-time:hover {
+  color: color-mix(in oklch, LinkText, Canvas 30%);
+}
+
+.tf-prefix { width: 6em; }
+.tf-start  { width: 10em; }
+.tf-end    { width: 7em; }
+.tf-suffix { width: 6em; }
+
+.mf-time  { width: 5em; }
+.mf-coord { width: 4em; }
+.mf-value { width: 12em; }

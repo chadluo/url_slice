@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../state/appState.ts';
 import { getHistorySuggestions } from '../lib/historySuggestions.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
+import './port-editor.css';
 
 @customElement('port-editor')
 export class PortEditor extends LitElement {
@@ -73,32 +74,29 @@ export class PortEditor extends LitElement {
   render() {
     const m = this._model();
     const show = m.port !== '' || m.protocol === 'http:' || m.protocol === 'https:';
+    this.hidden = !show;
     if (!show) return nothing;
 
     return html`
-      <div style="margin-bottom:4px">
-        <span class="mono" style="color:GrayText">:</span>
-        <span style="color:GrayText;font-weight:500">Port</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:2px">
-        <button @click=${this._decrementLarge} title="−1000" style="cursor:pointer">−1k</button>
-        <button @click=${this._decrement} title="−1" style="cursor:pointer">−</button>
+      <div class="editor-header">: Port</div>
+      <div class="port-controls">
+        <button @click=${this._decrementLarge} title="−1000">−1k</button>
+        <button @click=${this._decrement} title="−1">−</button>
         <input
-          class="mono"
+          class="mono port-input"
           inputmode="numeric"
           .value=${m.port}
           list="port-editor-suggestions"
           @input=${this._onInput}
           @focus=${this._fetchSuggestions}
-          style="width:5em;text-align:center"
           placeholder="port"
           aria-label="Port number"
         />
         <datalist id="port-editor-suggestions">
           ${this._suggestions.map((s) => html`<option value=${s}></option>`)}
         </datalist>
-        <button @click=${this._increment} title="+1" style="cursor:pointer">+</button>
-        <button @click=${this._incrementLarge} title="+1000" style="cursor:pointer">+1k</button>
+        <button @click=${this._increment} title="+1">+</button>
+        <button @click=${this._incrementLarge} title="+1000">+1k</button>
       </div>
     `;
   }

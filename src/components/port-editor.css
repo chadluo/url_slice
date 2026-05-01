@@ -1,0 +1,10 @@
+.port-controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.port-input {
+  width: 5em;
+  text-align: center;
+}

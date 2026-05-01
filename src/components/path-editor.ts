@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../state/appState.ts';
 import { getHistorySuggestions } from '../lib/historySuggestions.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
+import './path-editor.css';
 
 @customElement('path-editor')
 export class PathEditor extends LitElement {
@@ -53,7 +54,6 @@ export class PathEditor extends LitElement {
   private _onSegmentInput(index: number, e: Event) {
     const value = (e.target as HTMLInputElement).value;
     const m = this._model();
-    // Truncate: keep segments up to (not including) this index, then this value
     setState({ model: { ...m, pathSegments: [...m.pathSegments.slice(0, index), value] }, dirty: true });
     this._fetchSuggestions(index);
   }
@@ -70,7 +70,6 @@ export class PathEditor extends LitElement {
   private _addSegment() {
     const m = this._model();
     setState({ model: { ...m, pathSegments: [...m.pathSegments, ''] }, dirty: true });
-    // Focus the new input on next render
     setTimeout(() => {
       const inputs = this.querySelectorAll<HTMLInputElement>('input.path-seg');
       inputs[inputs.length - 1]?.focus();
@@ -81,12 +80,9 @@ export class PathEditor extends LitElement {
     const m = this._model();
 
     return html`
-      <div style="margin-bottom:4px">
-        <span class="mono" style="color:GrayText">/</span>
-        <span style="color:GrayText;font-weight:500">Path</span>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:2px">
-        <span class="mono" style="color:GrayText">/</span>
+      <div class="editor-header">/ Path</div>
+      <div class="path-row">
+        <span class="mono chip-sep">/</span>
         ${m.pathSegments.map((seg, i) => {
           const listId = `path-editor-seg-${i}`;
           const suggestions = this._segmentSuggestions[i] ?? [];
@@ -108,18 +104,14 @@ export class PathEditor extends LitElement {
             <button
               @click=${() => this._truncateBefore(i)}
               title="Truncate path before this segment"
-              style="cursor:pointer;background:none;border:none;color:GrayText;padding:0 1px"
+              class="btn-muted seg-remove"
             >×</button>
             ${i < m.pathSegments.length - 1
-              ? html`<span class="mono" style="color:GrayText">/</span>`
+              ? html`<span class="mono chip-sep">/</span>`
               : ''}
           `;
         })}
-        <button
-          @click=${this._addSegment}
-          title="Add path segment"
-          style="cursor:pointer;margin-left:2px"
-        >+</button>
+        <button @click=${this._addSegment} title="Add path segment" class="seg-add">+</button>
       </div>
     `;
   }

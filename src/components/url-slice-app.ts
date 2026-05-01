@@ -8,6 +8,7 @@ import "./host-editor.ts";
 import "./path-editor.ts";
 import "./port-editor.ts";
 import "./search-params-editor.ts";
+import "./url-slice-app.css";
 
 @customElement("url-slice-app")
 export class UrlSliceApp extends LitElement {
@@ -24,21 +25,6 @@ export class UrlSliceApp extends LitElement {
     super.connectedCallback();
     this._unsub = subscribe(() => this.requestUpdate());
     this._cleanupUrl = initCurrentUrl();
-
-    if (this.mode === "popup") {
-      Object.assign(this.style, {
-        display: "block",
-        width: "600px",
-        minHeight: "200px",
-        overflowY: "auto",
-        padding: "16px",
-      });
-    } else {
-      Object.assign(this.style, {
-        display: "block",
-        padding: "16px"
-      });
-    }
   }
 
   disconnectedCallback() {
@@ -70,11 +56,9 @@ export class UrlSliceApp extends LitElement {
 
     if (error || !model) {
       return html`
-        <div
-          style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;height:100%"
-        >
+        <div class="url-error">
           <span style="font-size:2rem">🔒</span>
-          <p style="color:GrayText;font-size:0.9em">${error ?? "Loading…"}</p>
+          <p>${error ?? "Loading…"}</p>
         </div>
       `;
     }
@@ -82,49 +66,20 @@ export class UrlSliceApp extends LitElement {
     const builtUrl = buildUrl(model);
 
     return html`
-      <div style="display:flex;align-items:center;gap:4px;margin-bottom:12px">
-        <code
-          class="mono"
-          style="flex:1;color:GrayText;overflow:hidden;white-space:nowrap;text-overflow:ellipsis"
-          >${builtUrl}</code
-        >
-        <button
-          @click=${this._handleCopy}
-          title="Copy URL"
-          style="cursor:pointer;background:none;border:none;color:GrayText"
-        >
-          📋
-        </button>
+      <div class="url-bar">
+        <code class="mono url-display">${builtUrl}</code>
+        <button @click=${this._handleCopy} title="Copy URL" class="btn-muted">📋</button>
       </div>
 
-      <hr />
       <host-editor></host-editor>
-      <hr />
       <port-editor></port-editor>
-      <hr />
       <path-editor></path-editor>
-      <hr />
       <search-params-editor></search-params-editor>
-      <hr />
       <fragment-editor></fragment-editor>
-      <hr />
 
-      <div style="display:flex;gap:8px;margin-top:12px">
-        <button
-          @click=${this._handleApply}
-          ?disabled=${!dirty}
-          style="flex:1;padding:6px 16px;cursor:${dirty
-        ? "pointer"
-        : "not-allowed"};opacity:${dirty ? "1" : "0.5"}"
-        >
-          Apply
-        </button>
-        <button
-          @click=${this._handleReset}
-          style="padding:6px 12px;cursor:pointer"
-        >
-          Reset
-        </button>
+      <div class="action-bar">
+        <button @click=${this._handleApply} ?disabled=${!dirty} class="btn-apply">Apply</button>
+        <button @click=${this._handleReset} class="btn-reset">Reset</button>
       </div>
     `;
   }

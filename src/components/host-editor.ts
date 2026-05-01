@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../state/appState.ts';
 import { getHistorySuggestions } from '../lib/historySuggestions.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
+import './host-editor.css';
 
 const CHROME_PAGES = [
   'extensions', 'downloads', 'settings', 'history', 'bookmarks',
@@ -84,12 +85,9 @@ export class HostEditor extends LitElement {
     const m = this._model();
 
     return html`
-      <div style="margin-bottom:4px">
-        <span class="mono" style="color:GrayText">//</span>
-        <span style="color:GrayText;font-weight:500">Host</span>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px">
-        <span class="mono" style="color:GrayText">${m.protocol}//</span>
+      <div class="editor-header">// Host</div>
+      <div class="host-chips">
+        <span class="mono chip-sep">${m.protocol}//</span>
 
         ${m.subdomains.map((sub, i) => {
           const suffix = [...m.subdomains.slice(i + 1), m.domain].filter(Boolean).join('.');
@@ -110,8 +108,8 @@ export class HostEditor extends LitElement {
             <datalist id=${listId}>
               ${suggestions.map((s) => html`<option value=${s}></option>`)}
             </datalist>
-            <button @click=${() => this._removeSubdomain(i)} title="Remove subdomain" style="cursor:pointer;background:none;border:none;color:GrayText;padding:0 2px">×</button>
-            <span class="mono" style="color:GrayText">.</span>
+            <button @click=${() => this._removeSubdomain(i)} title="Remove subdomain" class="btn-muted chip-remove">×</button>
+            <span class="mono chip-sep">.</span>
           `;
         })}
 
@@ -126,7 +124,7 @@ export class HostEditor extends LitElement {
               </select>
             `
           : html`
-              <button @click=${this._addSubdomain} title="Add subdomain" style="cursor:pointer;background:none;border:none;color:GrayText">+sub</button>
+              <button @click=${this._addSubdomain} title="Add subdomain" class="btn-muted">+sub</button>
               <span class="mono">${m.domain}</span>
             `}
       </div>

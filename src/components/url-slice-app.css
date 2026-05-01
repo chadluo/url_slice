@@ -1,0 +1,63 @@
+url-slice-app {
+  display: flex;
+  flex-direction: column;
+  gap: 1lh;
+  padding: 0.75lh 0.5em;
+}
+
+url-slice-app[mode="popup"] {
+  width: 600px;
+  min-height: 200px;
+  overflow-y: auto;
+}
+
+.url-bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.url-display {
+  flex: 1;
+  color: GrayText;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.action-bar {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-apply {
+  flex: 1;
+  padding: 6px 16px;
+  background-color: AccentColor;
+  color: AccentColorText;
+  border: none;
+}
+
+.btn-apply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-reset {
+  padding: 6px 12px;
+}
+
+.url-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  height: 100%;
+}
+
+.url-error p {
+  color: GrayText;
+  font-size: 0.9em;
+}
