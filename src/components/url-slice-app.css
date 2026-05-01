@@ -1,8 +1,21 @@
 url-slice-app {
   display: flex;
   flex-direction: column;
-  gap: 1lh;
+  gap: 0.5lh;
   padding: 0.75lh 0.5em;
+}
+
+url-slice-app hr {
+  border: none;
+  border-top: 1px solid color-mix(in oklch, GrayText, Canvas 70%);
+  margin: 0;
+  width: 100%;
+}
+
+/* suppress orphaned hr when port-editor is hidden */
+hr:has(+ port-editor[hidden]),
+port-editor[hidden] + hr {
+  display: none;
 }
 
 url-slice-app[mode="popup"] {

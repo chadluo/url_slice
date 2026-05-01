@@ -72,9 +72,13 @@ export class UrlSliceApp extends LitElement {
       </div>
 
       <host-editor></host-editor>
+      <hr />
       <port-editor></port-editor>
+      <hr />
       <path-editor></path-editor>
+      <hr />
       <search-params-editor></search-params-editor>
+      <hr />
       <fragment-editor></fragment-editor>
 
       <div class="action-bar">
