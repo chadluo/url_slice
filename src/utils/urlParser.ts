@@ -1,9 +1,6 @@
 import type { TextFragment, MediaFragment } from './fragmentCodec.ts'
 import { parseAllFragments } from './fragmentCodec.ts'
 
-export type { TextFragment, MediaFragment }
-export { parseAllFragments, parseTextFragment, parseMediaFragment } from './fragmentCodec.ts'
-
 export interface UrlModel {
   protocol: string
   subdomains: string[]

@@ -1,4 +1,5 @@
-import { EMPTY_URL_MODEL, type TextFragment, type UrlModel } from '../utils/urlParser.ts';
+import { EMPTY_URL_MODEL, type UrlModel } from '../utils/urlParser.ts';
+import type { TextFragment } from './fragmentCodec.ts';
 
 export type AppState = {
   model: UrlModel;
