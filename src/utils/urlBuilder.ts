@@ -1,5 +1,5 @@
 import type { UrlModel } from './urlParser.js'
-import { serializeTextFragment, serializeMediaFragment } from './fragmentParser.js'
+import { serializeTextFragment, serializeMediaFragment } from './fragmentCodec.ts'
 
 export function buildFragment(model: UrlModel): string {
   const { textFragments, mediaFragments } = model

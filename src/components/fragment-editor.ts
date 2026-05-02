@@ -1,8 +1,8 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
-import { serializeTextFragment, serializeMediaFragment } from '../utils/fragmentParser.ts';
-import type { UrlModel, TextFragment, MediaFragment } from '../utils/urlParser.ts';
+import { serializeTextFragment, serializeMediaFragment, type TextFragment, type MediaFragment } from '../utils/fragmentCodec.ts';
+import type { UrlModel } from '../utils/urlParser.ts';
 import './fragment-editor.css';
 
 function pageKey(m: UrlModel): string {
