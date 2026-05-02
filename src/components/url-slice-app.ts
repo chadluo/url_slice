@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { initCurrentUrl } from "../lib/currentUrl.ts";
-import { getState, setState, subscribe } from "../state/appState.ts";
+import { initCurrentUrl } from "../utils/currentUrl.ts";
+import { getState, setState, subscribe } from "../utils/appState.ts";
 import { buildUrl } from "../utils/urlBuilder.ts";
 import "./fragment-editor.ts";
 import "./host-editor.ts";

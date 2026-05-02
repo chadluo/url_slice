@@ -1,5 +1,5 @@
 import { parseUrl } from '../utils/urlParser.ts';
-import { setState } from '../state/appState.ts';
+import { setState } from './appState.ts';
 
 function loadDisabledParams(hostname: string, path: string): [string, string][] {
   try {

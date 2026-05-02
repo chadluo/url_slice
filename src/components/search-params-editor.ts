@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { getHistorySearchParams } from '../lib/historySuggestions.ts';
-import { getState, setState, subscribe } from '../state/appState.ts';
+import { getHistorySearchParams } from '../utils/historySuggestions.ts';
+import { getState, setState, subscribe } from '../utils/appState.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './search-params-editor.css';
 

@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { getState, setState, subscribe } from '../state/appState.ts';
+import { getState, setState, subscribe } from '../utils/appState.ts';
 import { serializeTextFragment, serializeMediaFragment } from '../utils/fragmentParser.ts';
 import type { UrlModel, TextFragment, MediaFragment } from '../utils/urlParser.ts';
 import './fragment-editor.css';

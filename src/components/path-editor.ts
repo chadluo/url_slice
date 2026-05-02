@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { getState, setState, subscribe } from '../state/appState.ts';
-import { getHistorySuggestions } from '../lib/historySuggestions.ts';
+import { getState, setState, subscribe } from '../utils/appState.ts';
+import { getHistorySuggestions } from '../utils/historySuggestions.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './path-editor.css';
 
