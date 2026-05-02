@@ -2,18 +2,9 @@ import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
 import { serializeTextFragment, serializeMediaFragment, type TextFragment, type MediaFragment } from '../utils/fragmentCodec.ts';
-import { pageKey, type UrlModel } from '../utils/urlParser.ts';
+import type { UrlModel } from '../utils/urlParser.ts';
+import { saveDisabledTextFragments } from '../utils/pageStateStorage.ts';
 import './fragment-editor.css';
-
-
-function saveDisabledTextFragments(m: UrlModel, frags: TextFragment[]) {
-  const key = `disabledTextFragments:${pageKey(m)}`;
-  if (frags.length > 0) {
-    localStorage.setItem(key, JSON.stringify(frags));
-  } else {
-    localStorage.removeItem(key);
-  }
-}
 
 function secondsToMmss(seconds: number): string {
   if (isNaN(seconds) || seconds < 0) return '0:00';

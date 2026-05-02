@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getHistorySearchParams } from '../utils/historySuggestions.ts';
 import { getState, setState, subscribe } from '../utils/appState.ts';
 import { pageKey, type UrlModel } from '../utils/urlParser.ts';
+import { saveDisabledParams } from '../utils/pageStateStorage.ts';
 import './search-params-editor.css';
 
 type DecodedValue =
@@ -52,15 +53,6 @@ function encodeToB64(minified: string, variant: 'urlsafe' | 'standard'): string 
   return b64;
 }
 
-
-function saveDisabledParams(m: UrlModel, params: [string, string][]) {
-  const key = `disabledParams:${pageKey(m)}`;
-  if (params.length > 0) {
-    localStorage.setItem(key, JSON.stringify(params));
-  } else {
-    localStorage.removeItem(key);
-  }
-}
 
 @customElement('search-params-editor')
 export class SearchParamsEditor extends LitElement {
