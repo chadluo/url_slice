@@ -77,3 +77,9 @@ export function parseUrl(raw: string): UrlModel {
     mediaFragments,
   }
 }
+
+export function pageKey(m: UrlModel): string {
+  const host = [...m.subdomains, m.domain].filter(Boolean).join('.')
+  const path = m.pathSegments.length ? '/' + m.pathSegments.join('/') : ''
+  return `${host}${path}`
+}

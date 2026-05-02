@@ -2,14 +2,9 @@ import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
 import { serializeTextFragment, serializeMediaFragment, type TextFragment, type MediaFragment } from '../utils/fragmentCodec.ts';
-import type { UrlModel } from '../utils/urlParser.ts';
+import { pageKey, type UrlModel } from '../utils/urlParser.ts';
 import './fragment-editor.css';
 
-function pageKey(m: UrlModel): string {
-  const host = [...m.subdomains, m.domain].filter(Boolean).join('.');
-  const path = m.pathSegments.length ? '/' + m.pathSegments.join('/') : '';
-  return `${host}${path}`;
-}
 
 function saveDisabledTextFragments(m: UrlModel, frags: TextFragment[]) {
   const key = `disabledTextFragments:${pageKey(m)}`;

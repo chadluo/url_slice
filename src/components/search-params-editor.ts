@@ -2,7 +2,7 @@ import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getHistorySearchParams } from '../utils/historySuggestions.ts';
 import { getState, setState, subscribe } from '../utils/appState.ts';
-import type { UrlModel } from '../utils/urlParser.ts';
+import { pageKey, type UrlModel } from '../utils/urlParser.ts';
 import './search-params-editor.css';
 
 type DecodedValue =
@@ -52,11 +52,6 @@ function encodeToB64(minified: string, variant: 'urlsafe' | 'standard'): string 
   return b64;
 }
 
-function pageKey(m: UrlModel): string {
-  const host = [...m.subdomains, m.domain].filter(Boolean).join('.');
-  const path = m.pathSegments.length ? '/' + m.pathSegments.join('/') : '';
-  return `${host}${path}`;
-}
 
 function saveDisabledParams(m: UrlModel, params: [string, string][]) {
   const key = `disabledParams:${pageKey(m)}`;
