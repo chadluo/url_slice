@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
-import { getHistorySuggestions } from '../utils/historySuggestions.ts';
+import { getHistorySuggestions, createDebouncer } from '../utils/historySuggestions.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './host-editor.css';
 
@@ -17,7 +17,7 @@ export class HostEditor extends LitElement {
 
   @state() private _subdomainSuggestions: string[][] = [];
   private _unsub?: () => void;
-  private _debounceTimers: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  private _debouncer = createDebouncer();
 
   connectedCallback() {
     super.connectedCallback();
@@ -27,7 +27,7 @@ export class HostEditor extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsub?.();
-    for (const t of this._debounceTimers.values()) clearTimeout(t);
+    this._debouncer.cancelAll();
   }
 
   private _model(): UrlModel { return getState().model; }
@@ -36,14 +36,8 @@ export class HostEditor extends LitElement {
     setState({ model: { ...this._model(), ...patch }, dirty: true });
   }
 
-  private _debounce(key: string, fn: () => void, ms = 150) {
-    const existing = this._debounceTimers.get(key);
-    if (existing) clearTimeout(existing);
-    this._debounceTimers.set(key, setTimeout(() => { fn(); this._debounceTimers.delete(key); }, ms));
-  }
-
   private _fetchSubdomainSuggestions(index: number, suffix: string) {
-    this._debounce(`sub-${index}`, async () => {
+    this._debouncer.schedule(`sub-${index}`, async () => {
       const suggestions = await getHistorySuggestions(suffix, 'subdomain-segment', suffix, this._model().subdomains[index]);
       const updated = [...this._subdomainSuggestions];
       while (updated.length <= index) updated.push([]);

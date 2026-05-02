@@ -1,3 +1,18 @@
+export function createDebouncer(ms = 150) {
+  const timers = new Map<string | number, ReturnType<typeof setTimeout>>();
+  return {
+    schedule(key: string | number, fn: () => void) {
+      const existing = timers.get(key);
+      if (existing) clearTimeout(existing);
+      timers.set(key, setTimeout(() => { timers.delete(key); fn(); }, ms));
+    },
+    cancelAll() {
+      for (const t of timers.values()) clearTimeout(t);
+      timers.clear();
+    },
+  };
+}
+
 export async function getHistorySuggestions(
   prefix: string,
   field: 'host' | 'path' | 'port' | 'subdomain' | 'path-segment' | 'subdomain-segment',

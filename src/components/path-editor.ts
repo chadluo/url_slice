@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
-import { getHistorySuggestions } from '../utils/historySuggestions.ts';
+import { getHistorySuggestions, createDebouncer } from '../utils/historySuggestions.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './path-editor.css';
 
@@ -11,7 +11,7 @@ export class PathEditor extends LitElement {
 
   @state() private _segmentSuggestions: string[][] = [];
   private _unsub?: () => void;
-  private _debounceTimers: Map<number, ReturnType<typeof setTimeout>> = new Map();
+  private _debouncer = createDebouncer();
 
   connectedCallback() {
     super.connectedCallback();
@@ -21,7 +21,7 @@ export class PathEditor extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsub?.();
-    for (const t of this._debounceTimers.values()) clearTimeout(t);
+    this._debouncer.cancelAll();
   }
 
   private _model(): UrlModel { return getState().model; }
@@ -37,9 +37,7 @@ export class PathEditor extends LitElement {
   }
 
   private _fetchSuggestions(index: number) {
-    const existing = this._debounceTimers.get(index);
-    if (existing) clearTimeout(existing);
-    this._debounceTimers.set(index, setTimeout(async () => {
+    this._debouncer.schedule(index, async () => {
       const prefix = this._pathPrefix(index);
       const currentSeg = this._model().pathSegments[index] ?? '';
       const suggestions = await getHistorySuggestions(prefix, 'path-segment', this._hostname(), currentSeg);
@@ -47,8 +45,7 @@ export class PathEditor extends LitElement {
       while (updated.length <= index) updated.push([]);
       updated[index] = suggestions;
       this._segmentSuggestions = updated;
-      this._debounceTimers.delete(index);
-    }, 150));
+    });
   }
 
   private _onSegmentInput(index: number, e: Event) {

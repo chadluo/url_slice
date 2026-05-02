@@ -1,7 +1,7 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
-import { getHistorySuggestions } from '../utils/historySuggestions.ts';
+import { getHistorySuggestions, createDebouncer } from '../utils/historySuggestions.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './port-editor.css';
 
@@ -11,7 +11,7 @@ export class PortEditor extends LitElement {
 
   @state() private _suggestions: string[] = [];
   private _unsub?: () => void;
-  private _debounceTimer?: ReturnType<typeof setTimeout>;
+  private _debouncer = createDebouncer();
 
   connectedCallback() {
     super.connectedCallback();
@@ -21,7 +21,7 @@ export class PortEditor extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsub?.();
-    if (this._debounceTimer) clearTimeout(this._debounceTimer);
+    this._debouncer.cancelAll();
   }
 
   private _model(): UrlModel { return getState().model; }
@@ -31,12 +31,11 @@ export class PortEditor extends LitElement {
   }
 
   private _fetchSuggestions() {
-    if (this._debounceTimer) clearTimeout(this._debounceTimer);
-    this._debounceTimer = setTimeout(async () => {
+    this._debouncer.schedule(0, async () => {
       const m = this._model();
       const host = [...m.subdomains, m.domain].filter(Boolean).join('.');
       this._suggestions = await getHistorySuggestions(m.port, 'port', host);
-    }, 150);
+    });
   }
 
   private _decrement() {
