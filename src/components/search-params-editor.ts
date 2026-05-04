@@ -241,24 +241,37 @@ export class SearchParamsEditor extends LitElement {
       `;
     }
 
+    const keyListId = `sp-key-${index}`;
+    const valListId = `sp-val-${index}`;
+    const keySuggestions = Array.from(this._historyParams.keys());
+    const valSuggestions = this._historyParams.get(key) ?? [];
+
     return html`
       <div class="param-row" ?data-disabled=${!enabled}>
         <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" class="param-checkbox" />
         <input
           class="mono param-key"
           .value=${key}
+          list=${keyListId}
           @input=${(e: Event) => this._onKeyChange(index, e)}
           placeholder="key"
           spellcheck="false"
         />
+        <datalist id=${keyListId}>
+          ${keySuggestions.map((s) => html`<option value=${s}></option>`)}
+        </datalist>
         <span>=</span>
         <input
           class="mono param-value"
           .value=${value}
+          list=${valListId}
           @input=${(e: Event) => this._onValueChange(index, e)}
           placeholder="value"
           spellcheck="false"
         />
+        <datalist id=${valListId}>
+          ${valSuggestions.map((s) => html`<option value=${s}></option>`)}
+        </datalist>
         <button @click=${() => this._removeRow(index)} title="Delete param" class="btn-muted">×</button>
       </div>
     `;
