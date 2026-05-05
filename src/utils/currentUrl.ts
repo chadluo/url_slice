@@ -1,14 +1,8 @@
 import { parseUrl } from '../utils/urlParser.ts';
 import { setState } from './appState.ts';
-import { loadAndClearPendingState, loadPageState } from './pageStateStorage.ts';
+import { loadPageState } from './pageStateStorage.ts';
 
-async function fetchAndApply(restore = false): Promise<void> {
-  const pending = loadAndClearPendingState();
-  if (restore && pending) {
-    setState(pending);
-    return;
-  }
-
+async function fetchAndApply(): Promise<void> {
   try {
     const tabs = await browser.tabs.query({ active: true, currentWindow: true });
     const tab = tabs[0];
@@ -39,8 +33,7 @@ async function fetchAndApply(restore = false): Promise<void> {
 }
 
 export function initCurrentUrl(): () => void {
-  const restore = new URLSearchParams(location.search).has('detached');
-  fetchAndApply(restore);
+  fetchAndApply();
 
   const onUpdated: Parameters<typeof browser.tabs.onUpdated.addListener>[0] = (tabId, changeInfo, tab) => {
     if (!tab.active) return;

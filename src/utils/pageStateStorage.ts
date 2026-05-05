@@ -1,4 +1,3 @@
-import type { AppState } from './appState.ts';
 import type { TextFragment } from './fragmentCodec.ts';
 import { pageKey, type UrlModel } from './urlParser.ts';
 
@@ -37,24 +36,4 @@ export function saveDisabledParams(model: UrlModel, params: [string, string][]):
 
 export function saveDisabledTextFragments(model: UrlModel, frags: TextFragment[]): void {
   write(`disabledTextFragments:${pageKey(model)}`, frags);
-}
-
-const PENDING_KEY = '_pendingState';
-
-type PendingState = Pick<AppState, 'model' | 'committedModel' | 'tabId' | 'disabledParams' | 'disabledTextFragments'>;
-
-export function savePendingState(state: AppState): void {
-  const { model, committedModel, tabId, disabledParams, disabledTextFragments } = state;
-  localStorage.setItem(PENDING_KEY, JSON.stringify({ model, committedModel, tabId, disabledParams, disabledTextFragments }));
-}
-
-export function loadAndClearPendingState(): (PendingState & { dirty: true }) | null {
-  const raw = localStorage.getItem(PENDING_KEY);
-  localStorage.removeItem(PENDING_KEY);
-  if (!raw) return null;
-  try {
-    return { ...JSON.parse(raw) as PendingState, dirty: true };
-  } catch {
-    return null;
-  }
 }
