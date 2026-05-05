@@ -85,7 +85,7 @@ export async function getHistorySearchParams(
       if (!item.url) continue;
       try {
         const url = new URL(item.url);
-        if (url.hostname !== hostname || url.pathname !== path) continue;
+        if (url.hostname !== hostname || url.pathname.replace(/\/$/, '') !== path.replace(/\/$/, '')) continue;
         url.searchParams.forEach((value, key) => {
           if (!map.has(key)) map.set(key, new Set());
           map.get(key)!.add(value);
