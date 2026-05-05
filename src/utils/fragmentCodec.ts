@@ -21,26 +21,23 @@ export interface MediaFragment {
 }
 
 export function parseTextFragment(raw: string): TextFragment {
-  // Format: [prefix-,]textStart[,textEnd][,-suffix]
-  const decoded = decodeURIComponent(raw)
-
-  let rest = decoded
+  // Parse on the raw (percent-encoded) string so that encoded %2C and %2D
+  // inside values are never mistaken for the literal , and - delimiters.
+  // Decode each component individually after splitting.
+  let rest = raw
   let prefix: string | undefined
   let suffix: string | undefined
 
   const dashCommaIdx = rest.indexOf('-,')
   if (dashCommaIdx !== -1) {
-    prefix = rest.slice(0, dashCommaIdx)
+    prefix = decodeURIComponent(rest.slice(0, dashCommaIdx))
     rest = rest.slice(dashCommaIdx + 2)
   }
 
-  const suffixMatch = /^(.*?),-([^,]*)$/.exec(rest)
-  if (suffixMatch) {
-    const lastDashCommaIdx = rest.lastIndexOf(',-')
-    if (lastDashCommaIdx !== -1) {
-      suffix = rest.slice(lastDashCommaIdx + 2)
-      rest = rest.slice(0, lastDashCommaIdx)
-    }
+  const lastDashCommaIdx = rest.lastIndexOf(',-')
+  if (lastDashCommaIdx !== -1) {
+    suffix = decodeURIComponent(rest.slice(lastDashCommaIdx + 2))
+    rest = rest.slice(0, lastDashCommaIdx)
   }
 
   const commaIdx = rest.indexOf(',')
@@ -48,17 +45,16 @@ export function parseTextFragment(raw: string): TextFragment {
   let textEnd: string | undefined
 
   if (commaIdx !== -1) {
-    textStart = rest.slice(0, commaIdx)
-    textEnd = rest.slice(commaIdx + 1)
-    if (textEnd === '') textEnd = undefined
+    textStart = decodeURIComponent(rest.slice(0, commaIdx))
+    textEnd = decodeURIComponent(rest.slice(commaIdx + 1)) || undefined
   } else {
-    textStart = rest
+    textStart = decodeURIComponent(rest)
   }
 
   const result: TextFragment = { textStart }
-  if (prefix !== undefined && prefix !== '') result.prefix = prefix
-  if (textEnd !== undefined) result.textEnd = textEnd
-  if (suffix !== undefined && suffix !== '') result.suffix = suffix
+  if (prefix) result.prefix = prefix
+  if (textEnd) result.textEnd = textEnd
+  if (suffix) result.suffix = suffix
 
   return result
 }
@@ -147,17 +143,24 @@ export function parseAllFragments(hash: string): {
   return { textFragments, mediaFragments }
 }
 
+// - and , are delimiter characters in the text fragment syntax and must be
+// percent-encoded inside component values so they can't form false delimiters.
+// encodeURIComponent already handles , → %2C; we additionally encode - → %2D.
+function encodeTextComponent(s: string): string {
+  return encodeURIComponent(s).replace(/-/g, '%2D')
+}
+
 export function serializeTextFragment(f: TextFragment): string {
   let result = ''
   if (f.prefix !== undefined) {
-    result += encodeURIComponent(f.prefix) + '-,'
+    result += encodeTextComponent(f.prefix) + '-,'
   }
-  result += encodeURIComponent(f.textStart)
+  result += encodeTextComponent(f.textStart)
   if (f.textEnd !== undefined) {
-    result += ',' + encodeURIComponent(f.textEnd)
+    result += ',' + encodeTextComponent(f.textEnd)
   }
   if (f.suffix !== undefined) {
-    result += ',-' + encodeURIComponent(f.suffix)
+    result += ',-' + encodeTextComponent(f.suffix)
   }
   return result
 }
