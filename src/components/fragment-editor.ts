@@ -96,7 +96,8 @@ export class FragmentEditor extends LitElement {
   private _highlight(frag: TextFragment) {
     const tabId = this._tabId();
     if (tabId === null || !frag.textStart) return;
-    browser.tabs.sendMessage(tabId, { type: 'HIGHLIGHT_TEXT', text: frag.textStart }).catch(() => {});
+    const texts = this._model().textFragments.map(f => f.textStart).filter(Boolean);
+    browser.tabs.sendMessage(tabId, { type: 'JUMP_TO_FRAGMENT', texts, scrollTo: frag.textStart }).catch(() => {});
   }
 
   // ── Media fragment handlers ──

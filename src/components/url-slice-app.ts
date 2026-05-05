@@ -3,12 +3,24 @@ import { customElement, property } from "lit/decorators.js";
 import { initCurrentUrl } from "../utils/currentUrl.ts";
 import { getState, setState, subscribe } from "../utils/appState.ts";
 import { buildUrl } from "../utils/urlBuilder.ts";
+import type { UrlModel } from "../utils/urlParser.ts";
 import "./fragment-editor.ts";
 import "./host-editor.ts";
 import "./path-editor.ts";
 import "./port-editor.ts";
 import "./search-params-editor.ts";
 import "./url-slice-app.css";
+
+function onlyFragmentsChanged(a: UrlModel, b: UrlModel): boolean {
+  return (
+    a.protocol === b.protocol &&
+    a.domain === b.domain &&
+    JSON.stringify(a.subdomains) === JSON.stringify(b.subdomains) &&
+    a.port === b.port &&
+    JSON.stringify(a.pathSegments) === JSON.stringify(b.pathSegments) &&
+    JSON.stringify(a.searchParams) === JSON.stringify(b.searchParams)
+  );
+}
 
 @customElement("url-slice-app")
 export class UrlSliceApp extends LitElement {
@@ -20,10 +32,21 @@ export class UrlSliceApp extends LitElement {
 
   private _unsub?: () => void;
   private _cleanupUrl?: () => void;
+  private _highlightedOnLoad = false;
 
   connectedCallback() {
     super.connectedCallback();
-    this._unsub = subscribe(() => this.requestUpdate());
+    this._highlightedOnLoad = false;
+    this._unsub = subscribe(() => {
+      this.requestUpdate();
+      if (!this._highlightedOnLoad) {
+        const { model, tabId, dirty } = getState();
+        if (model && tabId !== null && !dirty) {
+          this._highlightedOnLoad = true;
+          this._sendHighlightAll(model, tabId);
+        }
+      }
+    });
     this._cleanupUrl = initCurrentUrl();
   }
 
@@ -33,11 +56,23 @@ export class UrlSliceApp extends LitElement {
     this._cleanupUrl?.();
   }
 
+  private _sendHighlightAll(model: UrlModel, tabId: number) {
+    const texts = model.textFragments.map(f => f.textStart).filter(Boolean);
+    if (texts.length === 0) return;
+    browser.tabs.sendMessage(tabId, { type: 'HIGHLIGHT_ALL', texts }).catch(() => {});
+  }
+
   private _handleApply() {
-    const { model, tabId } = getState();
-    if (tabId === null || !model) return;
-    setState({ dirty: false });
-    browser.tabs.update(tabId, { url: buildUrl(model) });
+    const { model, committedModel, tabId } = getState();
+    if (tabId === null || !model || !committedModel) return;
+    const newUrl = buildUrl(model);
+    if (onlyFragmentsChanged(model, committedModel)) {
+      setState({ dirty: false, committedModel: model });
+      browser.tabs.sendMessage(tabId, { type: 'UPDATE_URL', url: newUrl }).catch(() => {});
+    } else {
+      setState({ dirty: false });
+      browser.tabs.update(tabId, { url: newUrl });
+    }
   }
 
   private _handleReset() {

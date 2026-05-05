@@ -15,13 +15,13 @@ export default defineBackground(() => {
 
     const newUrl = appendTextFragment(info.pageUrl, text);
     browser.tabs
-      .sendMessage(tab.id, { type: 'ADD_HIGHLIGHT', text, url: newUrl })
+      .sendMessage(tab.id, { type: 'UPDATE_URL', url: newUrl })
       .catch(() => {});
   });
 });
 
 function appendTextFragment(pageUrl: string, text: string): string {
-  const encoded = encodeURIComponent(text);
+  const encoded = encodeURIComponent(text).replace(/-/g, '%2D');
   const hashIdx = pageUrl.indexOf('#');
 
   if (hashIdx === -1) {
@@ -35,6 +35,5 @@ function appendTextFragment(pageUrl: string, text: string): string {
   if (hash.includes(':~:')) {
     return pageUrl + '&text=' + encoded;
   }
-  // Has anchor but no text directive
   return pageUrl + ':~:text=' + encoded;
 }

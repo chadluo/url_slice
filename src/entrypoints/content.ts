@@ -1,3 +1,5 @@
+import { parseAllFragments } from '../utils/fragmentCodec.ts';
+
 export default defineContentScript({
   matches: ['*://*/*'],
   main() {
@@ -6,18 +8,24 @@ export default defineContentScript({
         if (!message || typeof message !== 'object') return;
         const msg = message as Record<string, unknown>;
 
-        if (msg.type === 'HIGHLIGHT_TEXT' && typeof msg.text === 'string') {
-          highlightText(msg.text);
+        if (msg.type === 'UPDATE_URL' && typeof msg.url === 'string') {
+          history.replaceState(null, '', msg.url);
+          highlightAll(textFragmentsFromUrl(msg.url));
+          return;
+        }
+
+        if (msg.type === 'HIGHLIGHT_ALL' && Array.isArray(msg.texts)) {
+          highlightAll(msg.texts as string[]);
           return;
         }
 
         if (
-          msg.type === 'ADD_HIGHLIGHT' &&
-          typeof msg.text === 'string' &&
-          typeof msg.url === 'string'
+          msg.type === 'JUMP_TO_FRAGMENT' &&
+          Array.isArray(msg.texts) &&
+          typeof msg.scrollTo === 'string'
         ) {
-          history.replaceState(null, '', msg.url);
-          highlightText(msg.text);
+          highlightAll(msg.texts as string[]);
+          scrollToText(msg.scrollTo);
           return;
         }
 
@@ -30,52 +38,58 @@ export default defineContentScript({
   },
 });
 
-function highlightText(text: string): void {
-  if (!text) return;
-
-  // Try CSS Custom Highlight API first
-  if (typeof CSS !== 'undefined' && 'highlights' in CSS) {
-    try {
-      const ranges = findTextRanges(text);
-      if (ranges.length > 0) {
-        const highlight = new Highlight(...ranges);
-        CSS.highlights.set('wxt-highlight', highlight);
-        // Scroll first match into view
-        const firstRange = ranges[0];
-        if (firstRange) {
-          const node = firstRange.startContainer;
-          const el =
-            node.nodeType === Node.ELEMENT_NODE
-              ? (node as Element)
-              : node.parentElement;
-          el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        return;
-      }
-    } catch {
-      // fall through to window.find
-    }
+function textFragmentsFromUrl(url: string): string[] {
+  try {
+    const hash = new URL(url).hash;
+    return parseAllFragments(hash).textFragments.map(f => f.textStart).filter(Boolean);
+  } catch {
+    return [];
   }
+}
 
-  // Fallback: window.find (non-standard but widely supported)
-  const win = window as Window & { find?: (...args: unknown[]) => boolean };
-  if (typeof win.find === 'function') {
-    win.find(text, false, false, true, false, false, false);
+function ensureHighlightStyle(): void {
+  if (document.getElementById('url-slice-highlight-style')) return;
+  const style = document.createElement('style');
+  style.id = 'url-slice-highlight-style';
+  style.textContent = '::highlight(url-slice-highlight) { background-color: Mark; color: MarkText; }';
+  document.head.appendChild(style);
+}
+
+function highlightAll(texts: string[]): void {
+  if (typeof CSS === 'undefined' || !('highlights' in CSS)) return;
+  const active = texts.filter(Boolean);
+  if (active.length === 0) {
+    CSS.highlights.delete('url-slice-highlight');
+    return;
   }
+  ensureHighlightStyle();
+  const ranges: Range[] = active.flatMap(findTextRanges);
+  if (ranges.length === 0) {
+    CSS.highlights.delete('url-slice-highlight');
+    return;
+  }
+  CSS.highlights.set('url-slice-highlight', new Highlight(...ranges));
+}
+
+function scrollToText(text: string): void {
+  const ranges = findTextRanges(text);
+  if (ranges.length === 0) return;
+  const node = ranges[0]!.startContainer;
+  const el = node.nodeType === Node.ELEMENT_NODE ? (node as Element) : node.parentElement;
+  el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function findTextRanges(text: string): Range[] {
   const ranges: Range[] = [];
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
-  );
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   let node: Node | null;
   while ((node = walker.nextNode()) !== null) {
     const content = node.textContent ?? '';
+    const lower = content.toLowerCase();
+    const target = text.toLowerCase();
     let pos = 0;
     while (true) {
-      const idx = content.toLowerCase().indexOf(text.toLowerCase(), pos);
+      const idx = lower.indexOf(target, pos);
       if (idx === -1) break;
       const range = document.createRange();
       range.setStart(node, idx);
@@ -89,7 +103,5 @@ function findTextRanges(text: string): Range[] {
 
 function seekVideo(time: number): void {
   const video = document.querySelector('video');
-  if (video) {
-    video.currentTime = time;
-  }
+  if (video) video.currentTime = time;
 }
