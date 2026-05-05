@@ -36,6 +36,7 @@ export class UrlSliceApp extends LitElement {
   private _handleApply() {
     const { model, tabId } = getState();
     if (tabId === null || !model) return;
+    setState({ dirty: false });
     browser.tabs.update(tabId, { url: buildUrl(model) });
   }
 
