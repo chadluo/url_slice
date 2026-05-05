@@ -1,21 +1,7 @@
 .frag-tabs {
   display: flex;
-  gap: 0;
-  border-bottom: 1px solid GrayText;
+  gap: 8px;
   margin-bottom: 8px;
-}
-
-.tab-btn {
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  padding: 4px 8px;
-  color: GrayText;
-}
-
-.tab-btn.active {
-  border-bottom-color: AccentColor;
-  color: AccentColor;
 }
 
 .frag-text-row {

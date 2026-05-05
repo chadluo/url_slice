@@ -255,14 +255,16 @@ export class FragmentEditor extends LitElement {
       <div class="editor-header"># Fragments</div>
 
       <div class="frag-tabs">
-        <button
-          class=${`tab-btn${this._activeTab === 'text' ? ' active' : ''}`}
-          @click=${() => { this._activeTab = 'text'; }}
-        >Text${m.textFragments.length ? ` (${m.textFragments.length})` : ''}</button>
-        <button
-          class=${`tab-btn${this._activeTab === 'media' ? ' active' : ''}`}
-          @click=${() => { this._activeTab = 'media'; }}
-        >Media${m.mediaFragments.length ? ` (${m.mediaFragments.length})` : ''}</button>
+        <label>
+          <input type="radio" name="frag-tab" value="text" ?checked=${this._activeTab === 'text'}
+            @change=${() => { this._activeTab = 'text'; }} />
+          Text${m.textFragments.length ? ` (${m.textFragments.length})` : ''}
+        </label>
+        <label>
+          <input type="radio" name="frag-tab" value="media" ?checked=${this._activeTab === 'media'}
+            @change=${() => { this._activeTab = 'media'; }} />
+          Media${m.mediaFragments.length ? ` (${m.mediaFragments.length})` : ''}
+        </label>
       </div>
 
       ${this._activeTab === 'text' ? html`
