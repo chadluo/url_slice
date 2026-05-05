@@ -68,7 +68,7 @@ export class HostEditor extends LitElement {
 
   private _addSubdomain() {
     const m = this._model();
-    this._update({ subdomains: [...m.subdomains, 'www'], pathSegments: [] });
+    this._update({ subdomains: ['www', ...m.subdomains], pathSegments: [] });
   }
 
   private _datalistId(index = 0) {
@@ -83,8 +83,11 @@ export class HostEditor extends LitElement {
       <div class="host-chips">
         <span class="mono chip-sep">${m.protocol}//</span>
 
+        ${m.protocol !== 'chrome:'
+          ? html`<button @click=${this._addSubdomain} title="Add subdomain">+</button>`
+          : ''}
+
         ${m.subdomains.map((sub, i) => {
-          const suffix = [...m.subdomains.slice(i + 1), m.domain].filter(Boolean).join('.');
           const listId = this._datalistId(i);
           const suggestions = this._subdomainSuggestions[i] ?? [];
           return html`
@@ -117,10 +120,7 @@ export class HostEditor extends LitElement {
                 ${CHROME_PAGES.map((p) => html`<option value=${p} ?selected=${p === m.domain}>${p}</option>`)}
               </select>
             `
-          : html`
-              <button @click=${this._addSubdomain} title="Add subdomain" class="btn-muted">+sub</button>
-              <span class="mono">${m.domain}</span>
-            `}
+          : html`<span class="mono">${m.domain}</span>`}
       </div>
     `;
   }
