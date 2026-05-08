@@ -48,6 +48,8 @@
   to the left of the domain, reading as "insert a subdomain before the domain."
 - **New subdomain chips**: inserted chips start blank so users can type the desired segment directly. Blank host
   chips are omitted from the built URL until populated.
+- **Enter to apply**: pressing Enter in text-like fields applies the pending URL change when the app is dirty. Modifier
+  Enter combinations and composition events are ignored.
 
 ## UI / visual
 

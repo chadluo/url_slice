@@ -33,10 +33,28 @@ export class UrlSliceApp extends LitElement {
   private _unsub?: () => void;
   private _cleanupUrl?: () => void;
   private _highlightedOnLoad = false;
+  private _handleKeydown = (event: KeyboardEvent) => {
+    if (
+      event.defaultPrevented ||
+      event.isComposing ||
+      event.key !== "Enter" ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      !this._isApplyTextField(event.target)
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    this._handleApply();
+  };
 
   connectedCallback() {
     super.connectedCallback();
     this._highlightedOnLoad = false;
+    this.addEventListener("keydown", this._handleKeydown);
     this._unsub = subscribe(() => {
       this.requestUpdate();
       if (!this._highlightedOnLoad) {
@@ -52,8 +70,13 @@ export class UrlSliceApp extends LitElement {
 
   disconnectedCallback() {
     super.disconnectedCallback();
+    this.removeEventListener("keydown", this._handleKeydown);
     this._unsub?.();
     this._cleanupUrl?.();
+  }
+
+  private _isApplyTextField(target: EventTarget | null): boolean {
+    return target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement;
   }
 
   private _sendHighlightAll(model: UrlModel, tabId: number) {
@@ -63,8 +86,8 @@ export class UrlSliceApp extends LitElement {
   }
 
   private _handleApply() {
-    const { model, committedModel, tabId } = getState();
-    if (tabId === null || !model || !committedModel) return;
+    const { model, committedModel, tabId, dirty } = getState();
+    if (tabId === null || !model || !committedModel || !dirty) return;
     const newUrl = buildUrl(model);
     if (onlyFragmentsChanged(model, committedModel)) {
       setState({ dirty: false, committedModel: model });
