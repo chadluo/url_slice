@@ -24,7 +24,7 @@ export function buildFragment(model: UrlModel): string {
 }
 
 export function buildUrl(model: UrlModel): string {
-  const hostname = [...model.subdomains, model.domain].join('.')
+  const hostname = [...model.subdomains, model.domain].filter(Boolean).join('.')
   const portSuffix = model.port ? ':' + model.port : ''
   const origin = `${model.protocol}//${hostname}${portSuffix}`
 

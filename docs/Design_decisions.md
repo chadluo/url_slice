@@ -46,6 +46,8 @@
   segment on click.
 - **Domain host**: readonly — displayed as plain text. Only subdomains are editable chips. The `+sub` button appears
   to the left of the domain, reading as "insert a subdomain before the domain."
+- **New subdomain chips**: inserted chips start blank so users can type the desired segment directly. Blank host
+  chips are omitted from the built URL until populated.
 
 ## UI / visual
 

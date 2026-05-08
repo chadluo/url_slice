@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { buildUrl } from './urlBuilder.js'
 import { parseUrl } from './urlParser.js'
 
 describe('parseUrl – domain / subdomain splitting', () => {
@@ -59,5 +60,12 @@ describe('parseUrl – path, query, port', () => {
   it('empty port for standard https', () => {
     const m = parseUrl('https://example.com/')
     expect(m.port).toBe('')
+  })
+})
+
+describe('buildUrl - host segments', () => {
+  it('omits blank subdomain segments', () => {
+    const m = parseUrl('https://example.com/')
+    expect(buildUrl({ ...m, subdomains: ['', 'docs'] })).toBe('https://docs.example.com/')
   })
 })

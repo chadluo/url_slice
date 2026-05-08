@@ -68,7 +68,7 @@ export class HostEditor extends LitElement {
 
   private _addSubdomain() {
     const m = this._model();
-    this._update({ subdomains: ['www', ...m.subdomains], pathSegments: [] });
+    this._update({ subdomains: ['', ...m.subdomains], pathSegments: [] });
   }
 
   private _datalistId(index = 0) {
