@@ -12,7 +12,6 @@ src/
     fragment-editor.ts     # text fragments + media fragments (two tabs)
   entrypoints/
     background.ts          # minimal — logs on install
-    content.ts             # handles HIGHLIGHT_TEXT and SEEK_VIDEO messages
     popup/
       index.html
       main.ts              # mounts <url-slice-app mode="popup">
@@ -27,5 +26,5 @@ src/
   utils/
     urlParser.ts           # parseUrl(raw) → UrlModel  (path segments decoded)
     urlBuilder.ts          # buildUrl(model) → string  (path segments re-encoded)
-    fragmentParser.ts      # serialize/parse TextFragment and MediaFragment
+    fragmentCodec.ts       # serialize/parse TextFragment and MediaFragment
 ```

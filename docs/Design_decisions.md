@@ -18,8 +18,9 @@
   (hostname+path) changes — enabling/disabling within a session preserves visual order. Disabled pairs are excluded
   from `buildUrl` and persisted to `localStorage` keyed by `hostname+path` so they survive popup close/reopen.
   Both `model.searchParams` (enabled) and `appState.disabledParams` (disabled) are kept in sync via `_commitRows()`.
-- **Content script**: uses CSS Custom Highlight API with `window.find` fallback for `HIGHLIGHT_TEXT`; sets
-  `video.currentTime` for `SEEK_VIDEO`.
+- **Fragment edits**: text and media fragments are edited as URL parts and applied with the same `browser.tabs.update`
+  navigation path as host, path, port, and query changes. The extension does not inject a content script for in-page
+  highlighting or media seeking.
 
 ## State management
 

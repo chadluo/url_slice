@@ -3,24 +3,12 @@ import { customElement, property } from "lit/decorators.js";
 import { getState, setState, subscribe } from "../utils/appState.ts";
 import { initCurrentUrl } from "../utils/currentUrl.ts";
 import { buildUrl } from "../utils/urlBuilder.ts";
-import type { UrlModel } from "../utils/urlParser.ts";
 import "./fragment-editor.ts";
 import "./host-editor.ts";
 import "./path-editor.ts";
 import "./port-editor.ts";
 import "./search-params-editor.ts";
 import "./url-slice-app.css";
-
-function onlyFragmentsChanged(a: UrlModel, b: UrlModel): boolean {
-  return (
-    a.protocol === b.protocol &&
-    a.domain === b.domain &&
-    JSON.stringify(a.subdomains) === JSON.stringify(b.subdomains) &&
-    a.port === b.port &&
-    JSON.stringify(a.pathSegments) === JSON.stringify(b.pathSegments) &&
-    JSON.stringify(a.searchParams) === JSON.stringify(b.searchParams)
-  );
-}
 
 @customElement("url-slice-app")
 export class UrlSliceApp extends LitElement {
@@ -32,7 +20,6 @@ export class UrlSliceApp extends LitElement {
 
   private _unsub?: () => void;
   private _cleanupUrl?: () => void;
-  private _highlightedOnLoad = false;
   private _handleKeydown = (event: KeyboardEvent) => {
     if (
       event.defaultPrevented ||
@@ -53,18 +40,8 @@ export class UrlSliceApp extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this._highlightedOnLoad = false;
     this.addEventListener("keydown", this._handleKeydown);
-    this._unsub = subscribe(() => {
-      this.requestUpdate();
-      if (!this._highlightedOnLoad) {
-        const { model, tabId, dirty } = getState();
-        if (model && tabId !== null && !dirty) {
-          this._highlightedOnLoad = true;
-          this._sendHighlightAll(model, tabId);
-        }
-      }
-    });
+    this._unsub = subscribe(() => this.requestUpdate());
     this._cleanupUrl = initCurrentUrl();
   }
 
@@ -79,23 +56,12 @@ export class UrlSliceApp extends LitElement {
     return target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement;
   }
 
-  private _sendHighlightAll(model: UrlModel, tabId: number) {
-    const texts = model.textFragments.map(f => f.textStart).filter(Boolean);
-    if (texts.length === 0) return;
-    browser.tabs.sendMessage(tabId, { type: 'HIGHLIGHT_ALL', texts }).catch(() => { });
-  }
-
   private _handleApply() {
     const { model, committedModel, tabId, dirty } = getState();
     if (tabId === null || !model || !committedModel || !dirty) return;
     const newUrl = buildUrl(model);
-    if (onlyFragmentsChanged(model, committedModel)) {
-      setState({ dirty: false, committedModel: model });
-      browser.tabs.sendMessage(tabId, { type: 'UPDATE_URL', url: newUrl }).catch(() => { });
-    } else {
-      setState({ dirty: false });
-      browser.tabs.update(tabId, { url: newUrl });
-    }
+    setState({ dirty: false });
+    browser.tabs.update(tabId, { url: newUrl });
   }
 
   private _handleReset() {

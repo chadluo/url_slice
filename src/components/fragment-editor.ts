@@ -43,7 +43,6 @@ export class FragmentEditor extends LitElement {
 
   private _model(): UrlModel { return getState().model; }
   private _disabled(): TextFragment[] { return getState().disabledTextFragments; }
-  private _tabId(): number | null { return getState().tabId; }
 
   private _setModel(m: UrlModel) { setState({ model: m, dirty: true }); }
   private _setDisabled(frags: TextFragment[]) {
@@ -91,13 +90,6 @@ export class FragmentEditor extends LitElement {
     const m = this._model();
     this._setModel({ ...m, textFragments: [...m.textFragments, { textStart: '' }] });
     this._activeTab = 'text';
-  }
-
-  private _highlight(frag: TextFragment) {
-    const tabId = this._tabId();
-    if (tabId === null || !frag.textStart) return;
-    const texts = this._model().textFragments.map(f => f.textStart).filter(Boolean);
-    browser.tabs.sendMessage(tabId, { type: 'JUMP_TO_FRAGMENT', texts, scrollTo: frag.textStart }).catch(() => {});
   }
 
   // ── Media fragment handlers ──
@@ -165,11 +157,6 @@ export class FragmentEditor extends LitElement {
           spellcheck="false"
           title="suffix"
         />
-        <button
-          @click=${() => this._highlight(frag)}
-          ?disabled=${this._tabId() === null || !frag.textStart}
-          title="Highlight in page"
-        >Highlight ▶</button>
         <button @click=${onRemove} class="btn-muted">×</button>
         ${frag.textStart ? html`
           <span class="mono frag-preview">text=${serializeTextFragment(frag)}</span>
