@@ -4,7 +4,7 @@ export default defineConfig({
   srcDir: 'src',
   manifest: {
     name: 'url_slice',
-    description: 'Decompose and edit the current page URL segment by segment',
+    description: 'A structural URL editor',
     icons: {
       '48': 'icon/48.png',
       '128': 'icon/128.png',
