@@ -1,7 +1,7 @@
 import { LitElement, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { initCurrentUrl } from "../utils/currentUrl.ts";
 import { getState, setState, subscribe } from "../utils/appState.ts";
+import { initCurrentUrl } from "../utils/currentUrl.ts";
 import { buildUrl } from "../utils/urlBuilder.ts";
 import type { UrlModel } from "../utils/urlParser.ts";
 import "./fragment-editor.ts";
@@ -82,7 +82,7 @@ export class UrlSliceApp extends LitElement {
   private _sendHighlightAll(model: UrlModel, tabId: number) {
     const texts = model.textFragments.map(f => f.textStart).filter(Boolean);
     if (texts.length === 0) return;
-    browser.tabs.sendMessage(tabId, { type: 'HIGHLIGHT_ALL', texts }).catch(() => {});
+    browser.tabs.sendMessage(tabId, { type: 'HIGHLIGHT_ALL', texts }).catch(() => { });
   }
 
   private _handleApply() {
@@ -91,7 +91,7 @@ export class UrlSliceApp extends LitElement {
     const newUrl = buildUrl(model);
     if (onlyFragmentsChanged(model, committedModel)) {
       setState({ dirty: false, committedModel: model });
-      browser.tabs.sendMessage(tabId, { type: 'UPDATE_URL', url: newUrl }).catch(() => {});
+      browser.tabs.sendMessage(tabId, { type: 'UPDATE_URL', url: newUrl }).catch(() => { });
     } else {
       setState({ dirty: false });
       browser.tabs.update(tabId, { url: newUrl });
@@ -142,6 +142,7 @@ export class UrlSliceApp extends LitElement {
 
       <div class="action-bar">
         <button @click=${this._handleApply} ?disabled=${!dirty} class="btn-apply">Apply</button>
+
         <button @click=${this._handleReset} class="btn-reset">Reset</button>
       </div>
     `;
