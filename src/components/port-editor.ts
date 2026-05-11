@@ -1,7 +1,7 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
-import { getHistorySuggestions, createDebouncer } from '../utils/historySuggestions.ts';
+import { getHistorySuggestions, createDebouncer, type HistorySuggestion } from '../utils/historySuggestions.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './port-editor.css';
 
@@ -9,7 +9,7 @@ import './port-editor.css';
 export class PortEditor extends LitElement {
   createRenderRoot() { return this; }
 
-  @state() private _suggestions: string[] = [];
+  @state() private _suggestions: HistorySuggestion[] = [];
   private _unsub?: () => void;
   private _debouncer = createDebouncer();
 
@@ -92,7 +92,7 @@ export class PortEditor extends LitElement {
           aria-label="Port number"
         />
         <datalist id="port-editor-suggestions">
-          ${this._suggestions.map((s) => html`<option value=${s}></option>`)}
+          ${this._suggestions.map((s) => html`<option value=${s.value}>${s.title}</option>`)}
         </datalist>
         <button @click=${this._increment} title="+1">+</button>
         <button @click=${this._incrementLarge} title="+1000">+1k</button>

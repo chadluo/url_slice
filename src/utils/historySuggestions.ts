@@ -13,12 +13,14 @@ export function createDebouncer(ms = 150) {
   };
 }
 
+export type HistorySuggestion = { value: string; title: string };
+
 export async function getHistorySuggestions(
   prefix: string,
   field: 'host' | 'path' | 'port' | 'subdomain' | 'path-segment' | 'subdomain-segment',
   currentHost: string,
   excludeValue?: string,
-): Promise<string[]> {
+): Promise<HistorySuggestion[]> {
   if (!prefix || prefix.length < 1) return [];
 
   try {
@@ -30,44 +32,57 @@ export async function getHistorySuggestions(
     }
 
     const results = await browser.history.search({ text: searchText, maxResults: 50, startTime: 0 });
-    const extracted = new Set<string>();
+    const extracted = new Map<string, string>(); // value → title
 
     for (const item of results) {
       if (!item.url) continue;
       try {
         const url = new URL(item.url);
         if (field === 'host') {
-          if (url.hostname) extracted.add(url.hostname);
+          if (url.hostname && !extracted.has(url.hostname)) extracted.set(url.hostname, '');
         } else if (field === 'subdomain') {
           if (url.hostname.endsWith(`.${currentHost}`)) {
             const sub = url.hostname.slice(0, -(currentHost.length + 1));
-            if (sub) extracted.add(sub);
+            if (sub && !extracted.has(sub)) extracted.set(sub, '');
           }
         } else if (field === 'subdomain-segment') {
           if (url.hostname.endsWith(`.${prefix}`)) {
             const before = url.hostname.slice(0, -(prefix.length + 1));
             const seg = before.split('.')[0];
-            if (seg) extracted.add(seg);
+            if (!seg) continue;
+            const isRoot = url.pathname === '/' || url.pathname === '';
+            if (!extracted.has(seg)) {
+              extracted.set(seg, isRoot ? (item.title ?? '') : '');
+            } else if (isRoot && !extracted.get(seg)) {
+              extracted.set(seg, item.title ?? '');
+            }
           }
         } else if (field === 'path-segment') {
           if (url.hostname === currentHost && url.pathname.startsWith(prefix)) {
             const rest = url.pathname.slice(prefix.length);
             const seg = rest.split('/')[0];
-            if (seg) extracted.add(seg);
+            if (!seg) continue;
+            const isExactLevel = rest === seg || rest === seg + '/';
+            if (!extracted.has(seg)) {
+              extracted.set(seg, isExactLevel ? (item.title ?? '') : '');
+            } else if (isExactLevel && !extracted.get(seg)) {
+              extracted.set(seg, item.title ?? '');
+            }
           }
         } else if (field === 'path') {
-          if (url.hostname === currentHost && url.pathname) extracted.add(url.pathname);
+          if (url.hostname === currentHost && url.pathname && !extracted.has(url.pathname)) extracted.set(url.pathname, '');
         } else if (field === 'port') {
-          if (url.hostname === currentHost && url.port) extracted.add(url.port);
+          if (url.hostname === currentHost && url.port && !extracted.has(url.port)) extracted.set(url.port, '');
         }
       } catch {}
     }
 
     const toExclude = excludeValue !== undefined ? excludeValue : prefix;
-    return Array.from(extracted)
-      .filter((s) => s !== '' && s !== toExclude)
-      .sort()
-      .slice(0, 10);
+    return Array.from(extracted.entries())
+      .filter(([s]) => s !== '' && s !== toExclude)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .slice(0, 10)
+      .map(([value, title]) => ({ value, title }));
   } catch {
     return [];
   }

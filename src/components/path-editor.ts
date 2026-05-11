@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
-import { getHistorySuggestions, createDebouncer } from '../utils/historySuggestions.ts';
+import { getHistorySuggestions, createDebouncer, type HistorySuggestion } from '../utils/historySuggestions.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './path-editor.css';
 
@@ -9,7 +9,7 @@ import './path-editor.css';
 export class PathEditor extends LitElement {
   createRenderRoot() { return this; }
 
-  @state() private _segmentSuggestions: string[][] = [];
+  @state() private _segmentSuggestions: HistorySuggestion[][] = [];
   private _unsub?: () => void;
   private _debouncer = createDebouncer();
 
@@ -96,7 +96,7 @@ export class PathEditor extends LitElement {
               placeholder="segment"
             />
             <datalist id=${listId}>
-              ${suggestions.map((s) => html`<option value=${s}></option>`)}
+              ${suggestions.map((s) => html`<option value=${s.value}>${s.title}</option>`)}
             </datalist>
             <button
               @click=${() => this._truncateBefore(i)}

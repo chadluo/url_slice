@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
-import { getHistorySuggestions, createDebouncer } from '../utils/historySuggestions.ts';
+import { getHistorySuggestions, createDebouncer, type HistorySuggestion } from '../utils/historySuggestions.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './host-editor.css';
 
@@ -15,7 +15,7 @@ const CHROME_PAGES = [
 export class HostEditor extends LitElement {
   createRenderRoot() { return this; }
 
-  @state() private _subdomainSuggestions: string[][] = [];
+  @state() private _subdomainSuggestions: HistorySuggestion[][] = [];
   private _unsub?: () => void;
   private _debouncer = createDebouncer();
 
@@ -103,7 +103,7 @@ export class HostEditor extends LitElement {
               title="Subdomain segment"
             />
             <datalist id=${listId}>
-              ${suggestions.map((s) => html`<option value=${s}></option>`)}
+              ${suggestions.map((s) => html`<option value=${s.value}>${s.title}</option>`)}
             </datalist>
             <button @click=${() => this._removeSubdomain(i)} title="Remove subdomain" class="btn-muted chip-remove">×</button>
             <span class="mono chip-sep">.</span>
