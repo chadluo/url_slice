@@ -32,6 +32,11 @@ button {
   border: none;
   color: GrayText;
   padding: 0;
+  transition: transform 80ms ease;
+}
+
+.btn-muted:active {
+  transform: translateY(2px);
 }
 
 .editor-header {

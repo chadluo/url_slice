@@ -5,6 +5,7 @@ export type AppState = {
   model: UrlModel;
   committedModel: UrlModel;
   tabId: number | null;
+  title: string;
   error: string | null;
   dirty: boolean;
   disabledParams: [string, string][];
@@ -15,6 +16,7 @@ const _state: AppState = {
   model: EMPTY_URL_MODEL,
   committedModel: EMPTY_URL_MODEL,
   tabId: null,
+  title: '',
   error: null,
   dirty: false,
   disabledParams: [],

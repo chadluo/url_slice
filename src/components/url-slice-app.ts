@@ -76,6 +76,14 @@ export class UrlSliceApp extends LitElement {
     navigator.clipboard.writeText(buildUrl(model));
   }
 
+  private _handleCopyMarkdown() {
+    const { model, title } = getState();
+    if (!model) return;
+    const url = buildUrl(model);
+    const text = title ? `[${title}](${url})` : `<${url}>`;
+    navigator.clipboard.writeText(text);
+  }
+
   render() {
     const { model, error, dirty } = getState();
 
@@ -94,6 +102,7 @@ export class UrlSliceApp extends LitElement {
       <div class="url-bar">
         <code class="mono url-display">${builtUrl}</code>
         <button @click=${this._handleCopy} title="Copy URL" class="btn-muted">📋</button>
+        <button @click=${this._handleCopyMarkdown} title="Copy as Markdown" class="btn-muted">📝</button>
       </div>
 
       <host-editor></host-editor>
