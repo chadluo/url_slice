@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
-import { getHistorySuggestions, createDebouncer, type HistorySuggestion } from '../utils/historySuggestions.ts';
+import { createDebouncer, getHistorySuggestions, type HistorySuggestion } from '../utils/historySuggestions.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './host-editor.css';
 
@@ -84,8 +84,8 @@ export class HostEditor extends LitElement {
         <span class="mono chip-sep">${m.protocol}//</span>
 
         ${m.protocol !== 'chrome:'
-          ? html`<button @click=${this._addSubdomain} title="Add subdomain">+</button>`
-          : ''}
+        ? html`<button @click=${this._addSubdomain} title="Add subdomain">+</button>`
+        : ''}
 
         ${m.subdomains.map((sub, i) => {
           const listId = this._datalistId(i);
@@ -111,7 +111,7 @@ export class HostEditor extends LitElement {
         })}
 
         ${m.protocol === 'chrome:'
-          ? html`
+        ? html`
               <select
                 class="mono"
                 .value=${m.domain}
@@ -120,7 +120,7 @@ export class HostEditor extends LitElement {
                 ${CHROME_PAGES.map((p) => html`<option value=${p} ?selected=${p === m.domain}>${p}</option>`)}
               </select>
             `
-          : html`<span class="mono">${m.domain}</span>`}
+        : html`<span class="mono">${m.domain}</span>`}
       </div>
     `;
   }
