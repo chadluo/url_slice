@@ -1,9 +1,9 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { getHistorySearchParams } from '../utils/historySuggestions.ts';
 import { getState, setState, subscribe } from '../utils/appState.ts';
-import { pageKey, type UrlModel } from '../utils/urlParser.ts';
+import { getHistorySearchParams } from '../utils/historySuggestions.ts';
 import { saveDisabledParams } from '../utils/pageStateStorage.ts';
+import { pageKey, type UrlModel } from '../utils/urlParser.ts';
 import './search-params-editor.css';
 
 type DecodedValue =
@@ -66,6 +66,7 @@ export class SearchParamsEditor extends LitElement {
   @state() private _invalidRows: Set<number> = new Set();
   private _unsub?: () => void;
   private _lastPageKey = '';
+  private _historyFetchTimer: ReturnType<typeof setTimeout> | null = null;
 
   connectedCallback() {
     super.connectedCallback();
@@ -79,6 +80,10 @@ export class SearchParamsEditor extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this._unsub?.();
+    if (this._historyFetchTimer !== null) {
+      clearTimeout(this._historyFetchTimer);
+      this._historyFetchTimer = null;
+    }
   }
 
   private _model(): UrlModel { return getState().model; }
@@ -97,11 +102,16 @@ export class SearchParamsEditor extends LitElement {
       ...m.searchParams.map(([key, val]): [string, string, boolean] => [key, val, true]),
       ...dp.map(([key, val]): [string, string, boolean] => [key, val, false]),
     ];
+    this._historyParams = new Map();
     const hostname = [...m.subdomains, m.domain].filter(Boolean).join('.');
     const path = '/' + m.pathSegments.map(encodeURIComponent).join('/') || '/';
-    getHistorySearchParams(hostname, path).then((map) => {
-      this._historyParams = map;
-    });
+    if (this._historyFetchTimer !== null) clearTimeout(this._historyFetchTimer);
+    this._historyFetchTimer = setTimeout(() => {
+      this._historyFetchTimer = null;
+      getHistorySearchParams(hostname, path).then((map) => {
+        this._historyParams = map;
+      });
+    }, 0);
   }
 
   private _commitRows() {
@@ -289,9 +299,9 @@ export class SearchParamsEditor extends LitElement {
         <details>
           <summary class="history-summary">From history:</summary>
           ${historyEntries.map(([key, value]) => {
-            const listId = `sp-hval-${key}`;
-            const suggestions = this._historyParams.get(key) ?? [];
-            return html`
+      const listId = `sp-hval-${key}`;
+      const suggestions = this._historyParams.get(key) ?? [];
+      return html`
               <div class="history-row">
                 <span class="mono history-key">${key}</span>
                 <span>=</span>
@@ -310,7 +320,7 @@ export class SearchParamsEditor extends LitElement {
                 <button @click=${() => this._dismissHistory(key)} title="Dismiss" class="btn-muted">×</button>
               </div>
             `;
-          })}
+    })}
         </details>
       ` : ''}
 
