@@ -12,9 +12,37 @@ url-slice-app hr {
   width: 100%;
 }
 
-/* suppress orphaned hr when port-editor is hidden */
-hr:has(+ port-editor[hidden]),
-port-editor[hidden] + hr {
+.editors-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  column-gap: 0.5lh;
+  row-gap: 0.5lh;
+}
+
+/* all items full width by default */
+.editors-grid > :not(origins-editor) {
+  grid-column: 1 / 3;
+}
+
+/* pin host and port to explicit rows so origins can span them */
+.editors-grid > host-editor { grid-row: 1; }
+.editors-grid > port-editor { grid-row: 2; }
+
+/* when origins is visible, host and port shrink to col 1 */
+.editors-grid:has(origins-editor:not([hidden])) > host-editor,
+.editors-grid:has(origins-editor:not([hidden])) > port-editor {
+  grid-column: 1;
+}
+
+origins-editor {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+origins-editor[hidden] {
   display: none;
 }
 

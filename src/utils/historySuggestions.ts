@@ -88,6 +88,31 @@ export async function getHistorySuggestions(
   }
 }
 
+export type OriginEntry = { origin: string; protocol: string };
+
+export async function getHistoryOrigins(path: string): Promise<OriginEntry[]> {
+  if (!path || path === '/') return [];
+  try {
+    const results = await browser.history.search({ text: path, maxResults: 100, startTime: 0 });
+    const seen = new Map<string, string>(); // origin → protocol
+    const normalizedPath = path.replace(/\/$/, '');
+    for (const item of results) {
+      if (!item.url) continue;
+      try {
+        const url = new URL(item.url);
+        if (url.pathname.replace(/\/$/, '') !== normalizedPath) continue;
+        const origin = url.hostname + (url.port ? `:${url.port}` : '');
+        if (!seen.has(origin)) seen.set(origin, url.protocol);
+      } catch {}
+    }
+    return Array.from(seen.entries())
+      .map(([origin, protocol]) => ({ origin, protocol }))
+      .sort((a, b) => a.origin.localeCompare(b.origin));
+  } catch {
+    return [];
+  }
+}
+
 export async function getHistorySearchParams(
   hostname: string,
   path: string,

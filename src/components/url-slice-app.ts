@@ -5,6 +5,7 @@ import { initCurrentUrl } from "../utils/currentUrl.ts";
 import { buildUrl } from "../utils/urlBuilder.ts";
 import "./fragment-editor.ts";
 import "./host-editor.ts";
+import "./origins-editor.ts";
 import "./path-editor.ts";
 import "./port-editor.ts";
 import "./search-params-editor.ts";
@@ -105,15 +106,17 @@ export class UrlSliceApp extends LitElement {
         <button @click=${this._handleCopyMarkdown} title="Copy as Markdown" class="btn-muted">📝</button>
       </div>
 
-      <host-editor></host-editor>
-      <hr />
-      <port-editor></port-editor>
-      <hr />
-      <path-editor></path-editor>
-      <hr />
-      <search-params-editor></search-params-editor>
-      <hr />
-      <fragment-editor></fragment-editor>
+      <div class="editors-grid">
+        <host-editor></host-editor>
+        <port-editor></port-editor>
+        <origins-editor></origins-editor>
+        <hr />
+        <path-editor></path-editor>
+        <hr />
+        <search-params-editor></search-params-editor>
+        <hr />
+        <fragment-editor></fragment-editor>
+      </div>
 
       <div class="action-bar">
         <button @click=${this._handleApply} ?disabled=${!dirty} class="btn-apply">Apply</button>
