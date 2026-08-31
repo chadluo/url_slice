@@ -13,3 +13,5 @@ Segmented structural editor of a URL:
 - copy URL in markdown format
 
 ![Screenshot](screenshot.png)
+
+[Source](https://github.com/chadluo/url_slice) &middot; [Chrome Web Store](https://chromewebstore.google.com/detail/urlslice/dpnmhmajfcnidbogkkldpaiapioljepk)
