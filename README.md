@@ -1,5 +1,7 @@
 # url_slice
 
+[Source](https://github.com/chadluo/url_slice) &middot; [Chrome Web Store](https://chromewebstore.google.com/detail/urlslice/dpnmhmajfcnidbogkkldpaiapioljepk)
+
 A structural URL editor Chrome extension.
 
 Segmented structural editor of a URL:
@@ -13,5 +15,3 @@ Segmented structural editor of a URL:
 - copy URL in markdown format
 
 ![Screenshot](screenshot.png)
-
-[Source](https://github.com/chadluo/url_slice) &middot; [Chrome Web Store](https://chromewebstore.google.com/detail/urlslice/dpnmhmajfcnidbogkkldpaiapioljepk)
