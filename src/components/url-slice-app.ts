@@ -15,7 +15,7 @@ import "./url-slice-app.css";
 export class UrlSliceApp extends LitElement {
   @property({ type: String }) mode: "popup" | "sidebar" = "popup";
 
-  createRenderRoot() {
+  override createRenderRoot() {
     return this;
   }
 
@@ -39,14 +39,14 @@ export class UrlSliceApp extends LitElement {
     this._handleApply();
   };
 
-  connectedCallback() {
+  override connectedCallback() {
     super.connectedCallback();
     this.addEventListener("keydown", this._handleKeydown);
     this._unsub = subscribe(() => this.requestUpdate());
     this._cleanupUrl = initCurrentUrl();
   }
 
-  disconnectedCallback() {
+  override disconnectedCallback() {
     super.disconnectedCallback();
     this.removeEventListener("keydown", this._handleKeydown);
     this._unsub?.();
@@ -85,7 +85,7 @@ export class UrlSliceApp extends LitElement {
     navigator.clipboard.writeText(text);
   }
 
-  render() {
+  override render() {
     const { model, error, dirty } = getState();
 
     if (error || !model) {

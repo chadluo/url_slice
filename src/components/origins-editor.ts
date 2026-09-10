@@ -8,13 +8,13 @@ import './origins-editor.css';
 
 @customElement('origins-editor')
 export class OriginsEditor extends LitElement {
-  createRenderRoot() { return this; }
+  override createRenderRoot() { return this; }
 
   @state() private _origins: OriginEntry[] = [];
   private _unsub?: () => void;
   private _lastPath = '';
 
-  connectedCallback() {
+  override connectedCallback() {
     super.connectedCallback();
     this._unsub = subscribe(() => {
       const path = this._encodedPath();
@@ -27,7 +27,7 @@ export class OriginsEditor extends LitElement {
     this._fetchOrigins();
   }
 
-  disconnectedCallback() {
+  override disconnectedCallback() {
     super.disconnectedCallback();
     this._unsub?.();
   }
@@ -70,12 +70,12 @@ export class OriginsEditor extends LitElement {
     } catch {}
   }
 
-  protected updated() {
+  protected override updated() {
     const select = this.querySelector<HTMLSelectElement>('.origins-select');
     if (select) select.value = this._currentOrigin();
   }
 
-  render() {
+  override render() {
     const current = this._currentOrigin();
     const others = this._origins.filter(o => o.origin !== current);
     this.hidden = others.length === 0;

@@ -26,17 +26,17 @@ type TabName = 'text' | 'media';
 
 @customElement('fragment-editor')
 export class FragmentEditor extends LitElement {
-  createRenderRoot() { return this; }
+  override createRenderRoot() { return this; }
 
   @state() private _activeTab: TabName = 'text';
   private _unsub?: () => void;
 
-  connectedCallback() {
+  override connectedCallback() {
     super.connectedCallback();
     this._unsub = subscribe(() => this.requestUpdate());
   }
 
-  disconnectedCallback() {
+  override disconnectedCallback() {
     super.disconnectedCallback();
     this._unsub?.();
   }
@@ -235,7 +235,7 @@ export class FragmentEditor extends LitElement {
     `;
   }
 
-  render() {
+  override render() {
     const m = this._model();
     const disabled = this._disabled();
 

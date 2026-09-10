@@ -56,7 +56,7 @@ function encodeToB64(minified: string, variant: 'urlsafe' | 'standard'): string 
 
 @customElement('search-params-editor')
 export class SearchParamsEditor extends LitElement {
-  createRenderRoot() { return this; }
+  override createRenderRoot() { return this; }
 
   @state() private _rows: Array<[string, string, boolean]> = [];
   @state() private _historyParams: Map<string, string[]> = new Map();
@@ -68,7 +68,7 @@ export class SearchParamsEditor extends LitElement {
   private _lastPageKey = '';
   private _historyFetchTimer: ReturnType<typeof setTimeout> | null = null;
 
-  connectedCallback() {
+  override connectedCallback() {
     super.connectedCallback();
     this._unsub = subscribe(() => {
       this._syncRows();
@@ -77,7 +77,7 @@ export class SearchParamsEditor extends LitElement {
     this._syncRows();
   }
 
-  disconnectedCallback() {
+  override disconnectedCallback() {
     super.disconnectedCallback();
     this._unsub?.();
     if (this._historyFetchTimer !== null) {
@@ -292,7 +292,7 @@ export class SearchParamsEditor extends LitElement {
     `;
   }
 
-  render() {
+  override render() {
     const historyEntries = this._historyEntries();
 
     return html`

@@ -7,18 +7,18 @@ import './port-editor.css';
 
 @customElement('port-editor')
 export class PortEditor extends LitElement {
-  createRenderRoot() { return this; }
+  override createRenderRoot() { return this; }
 
   @state() private _suggestions: HistorySuggestion[] = [];
   private _unsub?: () => void;
   private _debouncer = createDebouncer();
 
-  connectedCallback() {
+  override connectedCallback() {
     super.connectedCallback();
     this._unsub = subscribe(() => this.requestUpdate());
   }
 
-  disconnectedCallback() {
+  override disconnectedCallback() {
     super.disconnectedCallback();
     this._unsub?.();
     this._debouncer.cancelAll();
@@ -70,7 +70,7 @@ export class PortEditor extends LitElement {
     if (n >= 1 && n <= 65535) this._setPort(raw);
   }
 
-  render() {
+  override render() {
     const m = this._model();
     const show = m.port !== '' || m.protocol === 'http:' || m.protocol === 'https:';
     this.hidden = !show;

@@ -7,18 +7,18 @@ import './path-editor.css';
 
 @customElement('path-editor')
 export class PathEditor extends LitElement {
-  createRenderRoot() { return this; }
+  override createRenderRoot() { return this; }
 
   @state() private _segmentSuggestions: HistorySuggestion[][] = [];
   private _unsub?: () => void;
   private _debouncer = createDebouncer();
 
-  connectedCallback() {
+  override connectedCallback() {
     super.connectedCallback();
     this._unsub = subscribe(() => this.requestUpdate());
   }
 
-  disconnectedCallback() {
+  override disconnectedCallback() {
     super.disconnectedCallback();
     this._unsub?.();
     this._debouncer.cancelAll();
@@ -73,7 +73,7 @@ export class PathEditor extends LitElement {
     }, 0);
   }
 
-  render() {
+  override render() {
     const m = this._model();
 
     return html`
