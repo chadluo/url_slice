@@ -64,8 +64,8 @@ export function parseMediaFragment(key: string, value: string): MediaFragment {
 
   if (key === 't') {
     const parts = value.split(',')
-    const startTime = parseFloat(parts[0])
-    const endTime = parts.length > 1 ? parseFloat(parts[1]) : undefined
+    const startTime = parseFloat(parts[0] ?? '')
+    const endTime = parts.length > 1 ? parseFloat(parts[1] ?? '') : undefined
     const frag: MediaFragment = {
       type: 'time',
       raw,
@@ -80,10 +80,10 @@ export function parseMediaFragment(key: string, value: string): MediaFragment {
     return {
       type: 'spatial',
       raw,
-      x: parseFloat(parts[0]),
-      y: parseFloat(parts[1]),
-      width: parseFloat(parts[2]),
-      height: parseFloat(parts[3]),
+      x: parseFloat(parts[0] ?? ''),
+      y: parseFloat(parts[1] ?? ''),
+      width: parseFloat(parts[2] ?? ''),
+      height: parseFloat(parts[3] ?? ''),
     }
   }
 
