@@ -129,6 +129,11 @@ export class SearchParamsEditor extends LitElement {
     this._commitRows();
   }
 
+  private _disableAll() {
+    this._rows = this._rows.map((r): [string, string, boolean] => [r[0], r[1], false]);
+    this._commitRows();
+  }
+
   private _onKeyChange(index: number, e: Event) {
     const val = (e.target as HTMLInputElement).value;
     this._rows = this._rows.map((r, i): [string, string, boolean] =>
@@ -292,6 +297,9 @@ export class SearchParamsEditor extends LitElement {
 
     return html`
       <div class="editor-header">? Query params</div>
+      ${this._rows.some(r => r[2]) ? html`
+        <button @click=${this._disableAll} class="btn-muted">Disable all</button>
+      ` : ''}
 
       ${this._rows.map(([key, value, enabled], i) => this._renderRow(key, value, enabled, i))}
 
