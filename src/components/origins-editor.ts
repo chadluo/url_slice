@@ -45,6 +45,10 @@ export class OriginsEditor extends LitElement {
     return m.pathSegments.length ? '/' + m.pathSegments.map(encodeURIComponent).join('/') : '/';
   }
 
+  // `_origins` is sourced from getHistoryOrigins(), which matches on exact pathname only
+  // (see historySuggestions.ts) so that dev/prod origins of the same site show up here even
+  // when they share nothing else. Occasional unrelated-site matches are a tolerated tradeoff
+  // of that choice, not a bug to fix here.
   private _fetchOrigins() {
     const path = this._encodedPath();
     this._lastPath = path;

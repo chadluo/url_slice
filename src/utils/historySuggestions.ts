@@ -90,6 +90,17 @@ export async function getHistorySuggestions(
 
 export type OriginEntry = { origin: string; protocol: string };
 
+// Finds other origins (hostname[:port]) with a history entry at the exact same pathname
+// as `path`. `browser.history.search` does a substring match on `path` across the URL and
+// page title, so it only narrows candidates; results are then filtered to exact pathname
+// equality below.
+//
+// Matching is on the path string alone, with no check that the origins are actually the
+// same site (no host similarity, no eTLD+1 comparison). This is deliberate: the main use
+// case is jumping between a local dev origin and its prod counterpart, which often share
+// nothing but the path. The tradeoff is that unrelated sites which coincidentally share a
+// path (e.g. "/search") can also show up as swap targets — tolerated rather than adding
+// config or heuristics to filter it out.
 export async function getHistoryOrigins(path: string): Promise<OriginEntry[]> {
   if (!path || path === '/') return [];
   try {
