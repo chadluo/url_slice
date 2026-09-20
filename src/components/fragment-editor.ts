@@ -4,6 +4,7 @@ import { getState, setState, subscribe } from '../utils/appState.ts';
 import { serializeTextFragment, serializeMediaFragment, type TextFragment, type MediaFragment } from '../utils/fragmentCodec.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import { saveDisabledTextFragments } from '../utils/pageStateStorage.ts';
+import { withPerf } from '../utils/perf.ts';
 import './fragment-editor.css';
 
 function secondsToMmss(seconds: number): string {
@@ -236,6 +237,10 @@ export class FragmentEditor extends LitElement {
   }
 
   override render() {
+    return withPerf('fragment', () => this._renderContent());
+  }
+
+  private _renderContent() {
     const m = this._model();
     const disabled = this._disabled();
 

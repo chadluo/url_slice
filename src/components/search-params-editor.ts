@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
 import { getHistorySearchParams } from '../utils/historySuggestions.ts';
 import { saveDisabledParams } from '../utils/pageStateStorage.ts';
+import { withPerf } from '../utils/perf.ts';
 import { pageKey, type UrlModel } from '../utils/urlParser.ts';
 import './search-params-editor.css';
 
@@ -310,6 +311,10 @@ export class SearchParamsEditor extends LitElement {
   }
 
   override render() {
+    return withPerf('search-params', () => this._renderContent());
+  }
+
+  private _renderContent() {
     if (!this._ready) {
       return html`
         <div class="editor-header">? Query params</div>

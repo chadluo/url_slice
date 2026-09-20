@@ -2,6 +2,7 @@ import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
 import { createDebouncer, getHistorySuggestions, type HistorySuggestion } from '../utils/historySuggestions.ts';
+import { withPerf } from '../utils/perf.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './host-editor.css';
 
@@ -76,6 +77,10 @@ export class HostEditor extends LitElement {
   }
 
   override render() {
+    return withPerf('host', () => this._renderContent());
+  }
+
+  private _renderContent() {
     const m = this._model();
 
     return html`

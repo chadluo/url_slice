@@ -10,6 +10,7 @@ src/
     path-editor.ts         # section header + /segment inputs (clears trailing on edit)
     search-params-editor.ts  # key=value rows + enable/disable checkbox; stable order within session
     fragment-editor.ts     # text fragments + media fragments (two tabs)
+    perf-tracker.ts        # reads perf.ts store, shows render time per editor
   entrypoints/
     background.ts          # minimal — logs on install
     popup/
@@ -18,9 +19,13 @@ src/
     sidepanel/
       index.html
       main.ts              # mounts <url-slice-app mode="sidebar">
+    options/
+      index.html           # settings page; name is fixed — WXT maps it to manifest options_ui
+      main.ts              # perf tracking checkbox
   lib/
     currentUrl.ts          # tabs.query → parses URL → setState; returns cleanup fn
     historySuggestions.ts  # browser.history.search helpers with 150ms debounce
+    perf.ts                # withPerf — times a render fn; own store + bus, deliberately not appState
   state/
     appState.ts            # plain object + EventTarget pub/sub (getState/setState/subscribe)
   utils/

@@ -2,6 +2,7 @@ import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
 import { getHistorySuggestions, createDebouncer, type HistorySuggestion } from '../utils/historySuggestions.ts';
+import { withPerf } from '../utils/perf.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './port-editor.css';
 
@@ -71,6 +72,10 @@ export class PortEditor extends LitElement {
   }
 
   override render() {
+    return withPerf('port', () => this._renderContent());
+  }
+
+  private _renderContent() {
     const m = this._model();
     const show = m.port !== '' || m.protocol === 'http:' || m.protocol === 'https:';
     this.hidden = !show;

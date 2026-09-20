@@ -57,11 +57,32 @@
 - **Enter to apply**: pressing Enter in text-like fields applies the pending URL change when the app is dirty. Modifier
   Enter combinations and composition events are ignored.
 
+## Performance tracking
+
+- **Render timing**: each editor's `render()` delegates to a private `_renderContent()` wrapped in
+  `withPerf(name, fn)` (`utils/perf.ts`), which times the call with `performance.now()` and stores the
+  duration keyed by editor name. `perf-tracker.ts` renders the latest timings at the bottom of the app.
+  Deliberately simple: no `PerformanceObserver`, history, or aggregation — just the most recent render
+  duration per part.
+- **On/off setting**: lives on the options page (`entrypoints/options/`), reached from chrome://extensions →
+  Details → "Extension options". It is persisted in `localStorage` under `perfTracking` (default on); the
+  options page and the popup share the extension origin, so plain `localStorage` needs no `browser.storage`.
+  When off, `withPerf` calls the render fn directly without timing and the stored timings are cleared, so
+  `perf-tracker` renders nothing. `perf-tracker` listens for the `storage` event because a sidebar left open
+  would otherwise keep the old value until reopened.
+- **Perf store is separate from `appState`**: `perf.ts` keeps its own module-level record and
+  `EventTarget`, and only `perf-tracker` subscribes to it. Timings must not live in `appState`, because
+  every editor subscribes to that bus — a write from inside `render()` re-enters all of them and loops
+  forever, which hangs the popup before first paint. Covered by `perf.test.ts`.
+
 ## UI / visual
 
 - **Font**: `style.css` sets `font-family: system-ui, sans-serif` on `:root` and `font-family: monospace` via the
   `.mono` class. All sizes use the browser default (1rem / 16px); no reduced font sizes anywhere.
 - **Dark mode**: `color-scheme: light dark` on `:root`; components use CSS system colors (`GrayText`, `LinkText`,
   `Canvas`, `AccentColor`) which adapt automatically to `prefers-color-scheme`.
+- **Options page size**: Chrome sizes the embedded options dialog to its content (capped at roughly 600×600),
+  so page CSS is the only lever. `options/index.html` sets `min-width: 400px` plus padding in a local `<style>`
+  block, otherwise a page holding one checkbox renders as a cramped box.
 - **Add buttons**: `.btn-add` class in `style.css` styles the `+ Add param` and `+ Add text fragment` buttons with
   `color: LinkText` and a lighter `color-mix(in oklch, LinkText, Canvas 30%)` on hover.

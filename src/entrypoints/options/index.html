@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>url_slice options</title>
+    <style>
+      /* Chrome sizes the options dialog to the content, up to about 600×600. */
+      body {
+        min-width: 400px;
+        margin: 0;
+        padding: 24px;
+      }
+
+      h1 {
+        margin: 0 0 16px;
+        font-size: 1.25rem;
+      }
+
+      p {
+        margin: 4px 0 0 24px;
+        color: GrayText;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>url_slice</h1>
+    <label>
+      <input type="checkbox" id="perf" />
+      Show render performance timings
+    </label>
+    <p>Adds a row of per-editor render durations at the bottom of the popup and sidebar.</p>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

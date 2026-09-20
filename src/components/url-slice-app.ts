@@ -7,6 +7,7 @@ import "./fragment-editor.ts";
 import "./host-editor.ts";
 import "./origins-editor.ts";
 import "./path-editor.ts";
+import "./perf-tracker.ts";
 import "./port-editor.ts";
 import "./search-params-editor.ts";
 import "./url-slice-app.css";
@@ -123,6 +124,8 @@ export class UrlSliceApp extends LitElement {
 
         <button @click=${this._handleReset} class="btn-reset">Reset</button>
       </div>
+
+      <perf-tracker></perf-tracker>
     `;
   }
 }

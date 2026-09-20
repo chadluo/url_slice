@@ -2,6 +2,7 @@ import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
 import { getHistoryOrigins, type OriginEntry } from '../utils/historySuggestions.ts';
+import { withPerf } from '../utils/perf.ts';
 import { parseUrl } from '../utils/urlParser.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './origins-editor.css';
@@ -80,6 +81,10 @@ export class OriginsEditor extends LitElement {
   }
 
   override render() {
+    return withPerf('origins', () => this._renderContent());
+  }
+
+  private _renderContent() {
     const current = this._currentOrigin();
     const others = this._origins.filter(o => o.origin !== current);
     this.hidden = others.length === 0;
