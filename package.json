@@ -2,7 +2,7 @@
   "name": "url_slice",
   "description": "Structural URL editor: search params, paths, hosts and ports, autocomplete from browse history",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.1.2",
   "type": "module",
   "scripts": {
     "dev": "wxt",
