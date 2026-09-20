@@ -64,9 +64,11 @@ export class SearchParamsEditor extends LitElement {
   @state() private _historyRowValues: Map<string, string> = new Map();
   @state() private _jsonEditValues: Map<number, string> = new Map();
   @state() private _invalidRows: Set<number> = new Set();
+  @state() private _ready = false;
   private _unsub?: () => void;
   private _lastPageKey = '';
   private _historyFetchTimer: ReturnType<typeof setTimeout> | null = null;
+  private _readyTimer: ReturnType<typeof setTimeout> | null = null;
 
   override connectedCallback() {
     super.connectedCallback();
@@ -83,6 +85,10 @@ export class SearchParamsEditor extends LitElement {
     if (this._historyFetchTimer !== null) {
       clearTimeout(this._historyFetchTimer);
       this._historyFetchTimer = null;
+    }
+    if (this._readyTimer !== null) {
+      clearTimeout(this._readyTimer);
+      this._readyTimer = null;
     }
   }
 
@@ -103,6 +109,17 @@ export class SearchParamsEditor extends LitElement {
       ...dp.map(([key, val]): [string, string, boolean] => [key, val, false]),
     ];
     this._historyParams = new Map();
+
+    // Rendering rows decodes each value (JSON/base64 probing), which can be slow on
+    // URLs with many params (e.g. Google search). Defer it a tick so the rest of the
+    // popup paints first instead of blocking on this section.
+    this._ready = false;
+    if (this._readyTimer !== null) clearTimeout(this._readyTimer);
+    this._readyTimer = setTimeout(() => {
+      this._readyTimer = null;
+      this._ready = true;
+    }, 0);
+
     const hostname = [...m.subdomains, m.domain].filter(Boolean).join('.');
     const path = '/' + m.pathSegments.map(encodeURIComponent).join('/') || '/';
     if (this._historyFetchTimer !== null) clearTimeout(this._historyFetchTimer);
@@ -293,6 +310,13 @@ export class SearchParamsEditor extends LitElement {
   }
 
   override render() {
+    if (!this._ready) {
+      return html`
+        <div class="editor-header">? Query params</div>
+        ${this._rows.length > 0 ? html`<div class="param-loading">Loading ${this._rows.length} param${this._rows.length === 1 ? '' : 's'}…</div>` : ''}
+      `;
+    }
+
     const historyEntries = this._historyEntries();
 
     return html`

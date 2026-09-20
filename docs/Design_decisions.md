@@ -18,6 +18,10 @@
   (hostname+path) changes — enabling/disabling within a session preserves visual order. Disabled pairs are excluded
   from `buildUrl` and persisted to `localStorage` keyed by `hostname+path` so they survive popup close/reopen.
   Both `model.searchParams` (enabled) and `appState.disabledParams` (disabled) are kept in sync via `_commitRows()`.
+- **Query param async render**: `search-params-editor` defers row rendering by one macrotask (`setTimeout(0)`) after
+  the page key changes, showing a "Loading N params…" placeholder first. Row rendering decodes each value (JSON/base64
+  probing per row), which is slow on URLs with many params (e.g. Google search); deferring it lets the rest of the
+  popup (host, port, path editors) paint first instead of blocking on this section.
 - **Fragment edits**: text and media fragments are edited as URL parts and applied with the same `browser.tabs.update`
   navigation path as host, path, port, and query changes. The extension does not inject a content script for in-page
   highlighting or media seeking.
