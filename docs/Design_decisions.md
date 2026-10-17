@@ -22,6 +22,11 @@
   the page key changes, showing a "Loading N params…" placeholder first. Row rendering decodes each value (JSON/base64
   probing per row), which is slow on URLs with many params (e.g. Google search); deferring it lets the rest of the
   popup (host, port, path editors) paint first instead of blocking on this section.
+- **GitHub query qualifiers**: on `github.com`, a param value that holds at least one `key:value` token (e.g.
+  `q=is:issue state:open`) renders as a nested qualifier editor instead of one text input. `githubQuery.ts` splits
+  on whitespace but keeps quoted spans (`label:"good first issue"`) whole; free text becomes a row with an empty
+  qualifier. Edited pairs are kept in local `_qualifierEdits` so blank rows survive; serialization drops blank rows
+  and the trailing space. Qualifier and value suggestions come from the same param's values in history.
 - **Fragment edits**: text and media fragments are edited as URL parts and applied with the same `browser.tabs.update`
   navigation path as host, path, port, and query changes. The extension does not inject a content script for in-page
   highlighting or media seeking.

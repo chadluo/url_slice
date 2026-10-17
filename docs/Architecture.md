@@ -32,4 +32,5 @@ src/
     urlParser.ts           # parseUrl(raw) → UrlModel  (path segments decoded)
     urlBuilder.ts          # buildUrl(model) → string  (path segments re-encoded)
     fragmentCodec.ts       # serialize/parse TextFragment and MediaFragment
+    githubQuery.ts         # parse/serialize GitHub search qualifiers (`is:open label:x`)
 ```

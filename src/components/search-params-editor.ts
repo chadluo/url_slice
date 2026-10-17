@@ -1,6 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
+import { isGitHubQuery, parseQualifiers, qualifierHistory, serializeQualifiers, type Qualifier } from '../utils/githubQuery.ts';
 import { getHistorySearchParams } from '../utils/historySuggestions.ts';
 import { saveDisabledParams } from '../utils/pageStateStorage.ts';
 import { withPerf } from '../utils/perf.ts';
@@ -54,6 +55,15 @@ function encodeToB64(minified: string, variant: 'urlsafe' | 'standard'): string 
   return b64;
 }
 
+// Row-index-keyed local state must follow the rows when one is removed.
+function dropIndex<T>(map: Map<number, T>, index: number): Map<number, T> {
+  const next = new Map<number, T>();
+  for (const [k, v] of map) {
+    if (k < index) next.set(k, v);
+    else if (k > index) next.set(k - 1, v);
+  }
+  return next;
+}
 
 @customElement('search-params-editor')
 export class SearchParamsEditor extends LitElement {
@@ -65,6 +75,8 @@ export class SearchParamsEditor extends LitElement {
   @state() private _historyRowValues: Map<string, string> = new Map();
   @state() private _jsonEditValues: Map<number, string> = new Map();
   @state() private _invalidRows: Set<number> = new Set();
+  // Held locally so blank qualifier rows survive; serialization drops them from the URL.
+  @state() private _qualifierEdits: Map<number, Qualifier[]> = new Map();
   @state() private _ready = false;
   private _unsub?: () => void;
   private _lastPageKey = '';
@@ -104,6 +116,7 @@ export class SearchParamsEditor extends LitElement {
     this._historyRowValues = new Map();
     this._jsonEditValues = new Map();
     this._invalidRows = new Set();
+    this._qualifierEdits = new Map();
     const dp = getState().disabledParams;
     this._rows = [
       ...m.searchParams.map(([key, val]): [string, string, boolean] => [key, val, true]),
@@ -169,12 +182,8 @@ export class SearchParamsEditor extends LitElement {
   }
 
   private _removeRow(index: number) {
-    const newJsonEdit = new Map<number, string>();
-    for (const [k, v] of this._jsonEditValues) {
-      if (k < index) newJsonEdit.set(k, v);
-      else if (k > index) newJsonEdit.set(k - 1, v);
-    }
-    this._jsonEditValues = newJsonEdit;
+    this._jsonEditValues = dropIndex(this._jsonEditValues, index);
+    this._qualifierEdits = dropIndex(this._qualifierEdits, index);
 
     const newInvalid = new Set<number>();
     for (const k of this._invalidRows) {
@@ -231,12 +240,79 @@ export class SearchParamsEditor extends LitElement {
     }
   }
 
+  private _setQualifiers(index: number, pairs: Qualifier[]) {
+    this._qualifierEdits = new Map(this._qualifierEdits).set(index, pairs);
+    const value = serializeQualifiers(pairs);
+    this._rows = this._rows.map((r, i): [string, string, boolean] =>
+      i === index ? [r[0], value, r[2]] : r
+    );
+    this._commitRows();
+  }
+
+  private _renderQualifierRow(key: string, enabled: boolean, index: number, pairs: Qualifier[]) {
+    const history = qualifierHistory(this._historyParams.get(key) ?? []);
+    const keyListId = `sp-qkey-${index}`;
+    const edit = (j: number, pair: Qualifier) =>
+      this._setQualifiers(index, pairs.map((p, i) => (i === j ? pair : p)));
+
+    return html`
+      <div class="param-row-json" ?data-disabled=${!enabled}>
+        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" class="param-checkbox-top" />
+        <input
+          class="mono param-key"
+          .value=${key}
+          @input=${(e: Event) => this._onKeyChange(index, e)}
+          placeholder="key"
+          spellcheck="false"
+        />
+        <span class="param-eq-top">=</span>
+        <div class="param-value-col">
+          <datalist id=${keyListId}>
+            ${Array.from(history.keys()).map((s) => html`<option value=${s}></option>`)}
+          </datalist>
+          ${pairs.map(([qk, qv], j) => html`
+            <div class="param-row">
+              <input
+                class="mono param-key"
+                .value=${qk}
+                list=${keyListId}
+                @input=${(e: Event) => edit(j, [(e.target as HTMLInputElement).value, qv])}
+                placeholder="qualifier"
+                spellcheck="false"
+              />
+              <span>:</span>
+              <input
+                class="mono param-value"
+                .value=${qv}
+                list=${`sp-qval-${index}-${j}`}
+                @input=${(e: Event) => edit(j, [qk, (e.target as HTMLInputElement).value])}
+                placeholder="value"
+                spellcheck="false"
+              />
+              <datalist id=${`sp-qval-${index}-${j}`}>
+                ${(history.get(qk) ?? []).map((s) => html`<option value=${s}></option>`)}
+              </datalist>
+              <button @click=${() => this._setQualifiers(index, pairs.filter((_, i) => i !== j))} title="Delete qualifier" class="btn-muted">×</button>
+            </div>
+          `)}
+          <button @click=${() => this._setQualifiers(index, [...pairs, ['', '']])} class="btn-add">+ Add qualifier</button>
+        </div>
+        <button @click=${() => this._removeRow(index)} title="Delete param" class="param-remove-top">×</button>
+      </div>
+    `;
+  }
+
   private _addFromHistory(key: string, value: string) {
     this._rows = [...this._rows, [key, value, true]];
     this._commitRows();
   }
 
   private _renderRow(key: string, value: string, enabled: boolean, index: number) {
+    const m = this._model();
+    const qualifiers = this._qualifierEdits.get(index)
+      ?? (isGitHubQuery([...m.subdomains, m.domain].filter(Boolean).join('.'), value) ? parseQualifiers(value) : null);
+    if (qualifiers) return this._renderQualifierRow(key, enabled, index, qualifiers);
+
     const decoded = decodeValue(value);
 
     if (decoded.kind === 'json' || decoded.kind === 'json_base64') {
