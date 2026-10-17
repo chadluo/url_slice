@@ -6,9 +6,6 @@
 }
 
 .seg-remove {
-  padding: 0 1px;
-}
-
-.seg-add {
-  margin-left: 2px;
+  padding: 0 6px;
+  font-size: 1.25em;
 }

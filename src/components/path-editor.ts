@@ -74,12 +74,20 @@ export class PathEditor extends LitElement {
     }, 0);
   }
 
+  private _stepLast(delta: number) {
+    const m = this._model();
+    const segs = [...m.pathSegments];
+    segs[segs.length - 1] = String(Math.max(0, Number(segs[segs.length - 1]) + delta));
+    setState({ model: { ...m, pathSegments: segs }, dirty: true });
+  }
+
   override render() {
     return withPerf('path', () => this._renderContent());
   }
 
   private _renderContent() {
     const m = this._model();
+    const canAdd = !/\.\w+$/.test(m.pathSegments.at(-1) ?? '');
 
     return html`
       <div class="editor-header">/ Path</div>
@@ -103,6 +111,12 @@ export class PathEditor extends LitElement {
             <datalist id=${listId}>
               ${suggestions.map((s) => html`<option value=${s.value}>${s.title}</option>`)}
             </datalist>
+            ${i === m.pathSegments.length - 1 && /^\d+$/.test(seg)
+              ? html`
+                  <button @click=${() => this._stepLast(-1)} title="−1">-1</button>
+                  <button @click=${() => this._stepLast(1)} title="+1">+1</button>
+                `
+              : ''}
             <button
               @click=${() => this._truncateBefore(i)}
               title="Truncate path before this segment"
@@ -113,7 +127,10 @@ export class PathEditor extends LitElement {
               : ''}
           `;
         })}
-        <button @click=${this._addSegment} title="Add path segment" class="seg-add">+</button>
+        ${canAdd
+          ? html`${m.pathSegments.length ? html`<span class="mono chip-sep">/</span>` : ''}<button
+              @click=${this._addSegment} title="Add path segment" class="seg-add">+</button>`
+          : ''}
       </div>
     `;
   }
