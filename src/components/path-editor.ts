@@ -91,12 +91,13 @@ export class PathEditor extends LitElement {
 
     return html`
       <div class="editor-header">/ Path</div>
-      <div class="path-row">
-        <span class="mono chip-sep">/</span>
+      <div class="path-list">
         ${m.pathSegments.map((seg, i) => {
           const listId = `path-editor-seg-${i}`;
           const suggestions = this._segmentSuggestions[i] ?? [];
           return html`
+            <div class="path-row">
+            <span class="mono chip-sep">/</span>
             <input
               id="path-editor-seg-input-${i}"
               class="mono path-seg"
@@ -122,14 +123,12 @@ export class PathEditor extends LitElement {
               title="Truncate path before this segment"
               class="btn-muted seg-remove"
             >×</button>
-            ${i < m.pathSegments.length - 1
-              ? html`<span class="mono chip-sep">/</span>`
-              : ''}
+            </div>
           `;
         })}
         ${canAdd
-          ? html`${m.pathSegments.length ? html`<span class="mono chip-sep">/</span>` : ''}<button
-              @click=${this._addSegment} title="Add path segment" class="seg-add">+</button>`
+          ? html`<div class="path-row"><span class="mono chip-sep">/</span><button
+              @click=${this._addSegment} title="Add path segment" class="seg-add">+</button></div>`
           : ''}
       </div>
     `;

@@ -1,3 +1,9 @@
+.path-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .path-row {
   display: flex;
   flex-wrap: wrap;
