@@ -25,15 +25,18 @@
   update) — enabling/disabling within a session preserves visual order. Page updates and tab loads never filter
   disabled pairs, so saved disabled duplicates (`x=1` twice, one disabled) stay. Reset restores
   `committedDisabledParams` (the disabled list as loaded for `committedModel`) and saves it. Disabled pairs are excluded
-  from `buildUrl` and persisted to `browser.storage.session` keyed by the `committedModel` page key
+  from `buildUrl` and persisted to `browser.storage.session` keyed by the edited model's page key
   (`hostname+path`), so they survive popup close/reopen but not a browser restart.
 - **Disabled state storage** (`pageStateStorage.ts`): disabled params and text fragments can hold secrets
   (`token=`, `code=`), so they use `storage.session` (memory only, cleared when the browser closes; needs the
   `storage` permission; Chrome allows it only in extension pages by default, which is where it is used). The load
   is async: `currentUrl.ts` awaits it, drops a result that a later tab event superseded, and reads `dirty` after the
-  await. Writes are fire-and-forget. Saves use the `committedModel` page key, not the edited model, so edits to host
-  or path do not move the state to another page. Old versions used `localStorage`; on popup or side panel open, the
-  module deletes the old keys that start with `disabled` (marked `ponytail:` for removal later).
+  await. If the disabled lists change locally while the read is pending (this does not set `dirty`), the local
+  lists win when they are for the same page key. Writes are fire-and-forget. Editors save under the edited model's
+  page key, so the state follows Apply to a new path; an entry for a path that is never applied stays until the
+  browser restarts. Reset writes its snapshot under the `committedModel` key. Old versions used `localStorage`;
+  `removeLegacyDisabledState()` deletes the old keys that start with `disabled` on popup, side panel and options
+  page open (marked `ponytail:` for removal later).
   Both `model.searchParams` (enabled) and `appState.disabledParams` (disabled) are kept in sync via `_commitRows()`.
 - **Query param async render**: `search-params-editor` defers row rendering by one macrotask (`setTimeout(0)`) after
   the page key changes, showing a "Loading N params…" placeholder first. Row rendering decodes each value (JSON/base64
