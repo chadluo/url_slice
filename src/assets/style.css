@@ -32,6 +32,8 @@ button {
   border: none;
   color: GrayText;
   padding: 0;
+  min-inline-size: 24px;
+  min-block-size: 24px;
   transition: transform 80ms ease;
 }
 
