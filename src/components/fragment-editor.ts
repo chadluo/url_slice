@@ -242,7 +242,7 @@ export class FragmentEditor extends LitElement {
     return html`
       <div class="editor-header"># Fragments</div>
 
-      <div class="frag-tabs">
+      <div class="frag-tabs" role="radiogroup" aria-label="Fragment type">
         <label>
           <input type="radio" name="frag-tab" value="text" ?checked=${this._activeTab === 'text'}
             @change=${() => { this._activeTab = 'text'; }} />
