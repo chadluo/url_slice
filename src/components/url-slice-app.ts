@@ -1,6 +1,6 @@
 import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
-import { getState, setState, subscribe } from "../utils/appState.ts";
+import { getState, setState, StoreController } from "../utils/appState.ts";
 import { initCurrentUrl } from "../utils/currentUrl.ts";
 import { removeLegacyDisabledState, saveDisabledParams } from "../utils/pageStateStorage.ts";
 import { buildUrl } from "../utils/urlBuilder.ts";
@@ -23,7 +23,7 @@ export class UrlSliceApp extends LitElement {
     return this;
   }
 
-  private _unsub?: () => void;
+  private _store = new StoreController(this);
   private _cleanupUrl?: () => void;
   private _handleKeydown = (event: KeyboardEvent) => {
     if (
@@ -46,7 +46,6 @@ export class UrlSliceApp extends LitElement {
   override connectedCallback() {
     super.connectedCallback();
     this.addEventListener("keydown", this._handleKeydown);
-    this._unsub = subscribe(() => this.requestUpdate());
     this._cleanupUrl = initCurrentUrl();
     removeLegacyDisabledState();
   }
@@ -54,7 +53,6 @@ export class UrlSliceApp extends LitElement {
   override disconnectedCallback() {
     super.disconnectedCallback();
     this.removeEventListener("keydown", this._handleKeydown);
-    this._unsub?.();
     this._cleanupUrl?.();
   }
 

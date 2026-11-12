@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { getState, setState, subscribe } from '../utils/appState.ts';
+import { getState, setState, StoreController } from '../utils/appState.ts';
 import { serializeTextFragment, serializeMediaFragment, type TextFragment, type MediaFragment } from '../utils/fragmentCodec.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import { saveDisabledTextFragments } from '../utils/pageStateStorage.ts';
@@ -30,17 +30,7 @@ export class FragmentEditor extends LitElement {
   override createRenderRoot() { return this; }
 
   @state() private _activeTab: TabName = 'text';
-  private _unsub?: () => void;
-
-  override connectedCallback() {
-    super.connectedCallback();
-    this._unsub = subscribe(() => this.requestUpdate());
-  }
-
-  override disconnectedCallback() {
-    super.disconnectedCallback();
-    this._unsub?.();
-  }
+  private _store = new StoreController(this);
 
   private _model(): UrlModel { return getState().model; }
   private _disabled(): TextFragment[] { return getState().disabledTextFragments; }

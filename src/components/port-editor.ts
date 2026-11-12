@@ -1,6 +1,6 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { getState, setState, subscribe } from '../utils/appState.ts';
+import { getState, setState, StoreController } from '../utils/appState.ts';
 import { getHistorySuggestions, createDebouncer, type HistorySuggestion } from '../utils/historySuggestions.ts';
 import { withPerf } from '../utils/perf.ts';
 import { hostname, type UrlModel } from '../utils/urlParser.ts';
@@ -11,17 +11,11 @@ export class PortEditor extends LitElement {
   override createRenderRoot() { return this; }
 
   @state() private _suggestions: HistorySuggestion[] = [];
-  private _unsub?: () => void;
+  private _store = new StoreController(this);
   private _debouncer = createDebouncer();
-
-  override connectedCallback() {
-    super.connectedCallback();
-    this._unsub = subscribe(() => this.requestUpdate());
-  }
 
   override disconnectedCallback() {
     super.disconnectedCallback();
-    this._unsub?.();
     this._debouncer.cancelAll();
   }
 

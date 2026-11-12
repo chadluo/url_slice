@@ -1,6 +1,6 @@
 import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { getState, setState, subscribe } from '../utils/appState.ts';
+import { getState, setState, StoreController } from '../utils/appState.ts';
 import { getHistoryOrigins, type OriginEntry } from '../utils/historySuggestions.ts';
 import { withPerf } from '../utils/perf.ts';
 import { hostname, parseUrl, type UrlModel } from '../utils/urlParser.ts';
@@ -11,25 +11,18 @@ export class OriginsEditor extends LitElement {
   override createRenderRoot() { return this; }
 
   @state() private _origins: OriginEntry[] = [];
-  private _unsub?: () => void;
   private _lastPath = '';
+  private _store = new StoreController(this, () => {
+    const path = this._encodedPath();
+    if (path !== this._lastPath) {
+      this._lastPath = path;
+      this._fetchOrigins();
+    }
+  });
 
   override connectedCallback() {
     super.connectedCallback();
-    this._unsub = subscribe(() => {
-      const path = this._encodedPath();
-      if (path !== this._lastPath) {
-        this._lastPath = path;
-        this._fetchOrigins();
-      }
-      this.requestUpdate();
-    });
     this._fetchOrigins();
-  }
-
-  override disconnectedCallback() {
-    super.disconnectedCallback();
-    this._unsub?.();
   }
 
   private _model(): UrlModel { return getState().model; }

@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { getState, setState, subscribe } from '../utils/appState.ts';
+import { getState, setState, StoreController } from '../utils/appState.ts';
 import { isGitHubQuery, parseQualifiers, qualifierHistory, serializeQualifiers, type Qualifier } from '../utils/githubQuery.ts';
 import { getHistorySearchParams } from '../utils/historySuggestions.ts';
 import { saveDisabledParams } from '../utils/pageStateStorage.ts';
@@ -72,7 +72,7 @@ export class SearchParamsEditor extends LitElement {
   // Held locally so blank qualifier rows survive; serialization drops them from the URL.
   @state() private _qualifierEdits: Map<number, Qualifier[]> = new Map();
   @state() private _ready = false;
-  private _unsub?: () => void;
+  private _store = new StoreController(this, () => this._syncRows());
   private _lastPageKey = '';
   // The searchParams array the rows last produced or loaded. A different array means Reset or a page update.
   private _syncedParams: [string, string][] | null = null;
@@ -81,16 +81,11 @@ export class SearchParamsEditor extends LitElement {
 
   override connectedCallback() {
     super.connectedCallback();
-    this._unsub = subscribe(() => {
-      this._syncRows();
-      this.requestUpdate();
-    });
     this._syncRows();
   }
 
   override disconnectedCallback() {
     super.disconnectedCallback();
-    this._unsub?.();
     if (this._historyFetchTimer !== null) {
       clearTimeout(this._historyFetchTimer);
       this._historyFetchTimer = null;

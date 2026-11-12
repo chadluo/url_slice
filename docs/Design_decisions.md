@@ -57,7 +57,9 @@
   `error`, `dirty`, `disabledParams`, `committedDisabledParams`, `disabledTextFragments`. Mutations go through `setState(patch)` which merges
   and fires a synchronous `change` event on an internal `EventTarget`.
 - **Component reactivity**: all components call `createRenderRoot() { return this; }` (light DOM, no shadow root) and
-  subscribe to the global bus via `subscribe(() => this.requestUpdate())`. Local UI state (suggestions, active tab,
+  subscribe to the global bus through `StoreController` (a Lit `ReactiveController` in `appState.ts`), which
+  subscribes on connect, unsubscribes on disconnect and calls `requestUpdate()` on each change. An optional
+  `onChange` callback runs first (`search-params-editor` syncs its rows, `origins-editor` refetches on a path change). Local UI state (suggestions, active tab,
   stable row order) uses Lit `@state()` properties. `tsconfig.json` sets `useDefineForClassFields: false` so that
   TypeScript experimental decorator accessors are not shadowed by class field initializers.
 

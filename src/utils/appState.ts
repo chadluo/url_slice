@@ -1,3 +1,4 @@
+import type { ReactiveController, ReactiveControllerHost } from 'lit';
 import { EMPTY_URL_MODEL, type UrlModel } from '../utils/urlParser.ts';
 import type { TextFragment } from './fragmentCodec.ts';
 
@@ -40,4 +41,28 @@ export function setState(patch: Partial<AppState>): void {
 export function subscribe(cb: () => void): () => void {
   _bus.addEventListener('change', cb);
   return () => _bus.removeEventListener('change', cb);
+}
+
+// Subscribes a Lit host to the store while it is connected; onChange runs before each requested update.
+export class StoreController implements ReactiveController {
+  private _host: ReactiveControllerHost;
+  private _onChange?: () => void;
+  private _unsub?: () => void;
+
+  constructor(host: ReactiveControllerHost, onChange?: () => void) {
+    this._host = host;
+    this._onChange = onChange;
+    host.addController(this);
+  }
+
+  hostConnected() {
+    this._unsub = subscribe(() => {
+      this._onChange?.();
+      this._host.requestUpdate();
+    });
+  }
+
+  hostDisconnected() {
+    this._unsub?.();
+  }
 }
