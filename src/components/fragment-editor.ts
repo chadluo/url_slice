@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { getState, setState, subscribe } from '../utils/appState.ts';
+import { getState, setState, StoreController } from '../utils/appState.ts';
 import { serializeTextFragment, serializeMediaFragment, type TextFragment, type MediaFragment } from '../utils/fragmentCodec.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import { saveDisabledTextFragments } from '../utils/pageStateStorage.ts';
@@ -30,17 +30,7 @@ export class FragmentEditor extends LitElement {
   override createRenderRoot() { return this; }
 
   @state() private _activeTab: TabName = 'text';
-  private _unsub?: () => void;
-
-  override connectedCallback() {
-    super.connectedCallback();
-    this._unsub = subscribe(() => this.requestUpdate());
-  }
-
-  override disconnectedCallback() {
-    super.disconnectedCallback();
-    this._unsub?.();
-  }
+  private _store = new StoreController(this);
 
   private _model(): UrlModel { return getState().model; }
   private _disabled(): TextFragment[] { return getState().disabledTextFragments; }
@@ -120,9 +110,11 @@ export class FragmentEditor extends LitElement {
     const onUpdate = (updated: TextFragment) =>
       enabled ? this._updateTextFrag(index, updated) : this._updateDisabledTextFrag(index, updated);
 
+    const n = (enabled ? 0 : this._model().textFragments.length) + index + 1;
+
     return html`
       <div class="frag-text-row" ?data-disabled=${!enabled}>
-        <input type="checkbox" ?checked=${enabled} @change=${onToggle} />
+        <input type="checkbox" ?checked=${enabled} @change=${onToggle} aria-label="Include text fragment ${n}" />
         <input
           class="mono tf-prefix"
           .value=${frag.prefix ?? ''}
@@ -130,6 +122,7 @@ export class FragmentEditor extends LitElement {
           placeholder="prefix"
           spellcheck="false"
           title="prefix"
+          aria-label="Text fragment ${n} prefix"
         />
         <span class="chip-sep">-,</span>
         <input
@@ -139,6 +132,7 @@ export class FragmentEditor extends LitElement {
           placeholder="text start"
           spellcheck="false"
           title="text start (required)"
+          aria-label="Text fragment ${n} text start"
         />
         <span class="chip-sep">,</span>
         <input
@@ -148,6 +142,7 @@ export class FragmentEditor extends LitElement {
           placeholder="end"
           spellcheck="false"
           title="text end (optional)"
+          aria-label="Text fragment ${n} end"
         />
         <span class="chip-sep">,-</span>
         <input
@@ -157,8 +152,9 @@ export class FragmentEditor extends LitElement {
           placeholder="suffix"
           spellcheck="false"
           title="suffix"
+          aria-label="Text fragment ${n} suffix"
         />
-        <button @click=${onRemove} class="btn-muted">×</button>
+        <button @click=${onRemove} aria-label="Remove text fragment ${n}" class="btn-muted">×</button>
         ${frag.textStart ? html`
           <span class="mono frag-preview">text=${serializeTextFragment(frag)}</span>
         ` : ''}
@@ -168,7 +164,7 @@ export class FragmentEditor extends LitElement {
 
   private _renderMediaRow(frag: MediaFragment, index: number) {
     const onUpdate = (updated: MediaFragment) => this._updateMediaFrag(index, updated);
-    const removeBtn = html`<button @click=${() => this._removeMediaFrag(index)} class="btn-muted">×</button>`;
+    const removeBtn = html`<button @click=${() => this._removeMediaFrag(index)} aria-label="Remove media fragment ${index + 1}" class="btn-muted">×</button>`;
 
     if (frag.type === 'time') {
       return html`
@@ -182,6 +178,7 @@ export class FragmentEditor extends LitElement {
               onUpdate({ ...frag, startTime: isNaN(s) ? 0 : s });
             }}
             placeholder="0:00"
+            aria-label="Media fragment ${index + 1} start time"
             title="start time (mm:ss)"
           />
           <span class="chip-sep">,</span>
@@ -194,6 +191,7 @@ export class FragmentEditor extends LitElement {
               onUpdate({ ...frag, endTime: isNaN(s) ? undefined : s });
             }}
             placeholder="end"
+            aria-label="Media fragment ${index + 1} end time"
             title="end time (mm:ss, optional)"
           />
           ${removeBtn}
@@ -214,6 +212,7 @@ export class FragmentEditor extends LitElement {
               .value=${String(frag[field] ?? 0)}
               @change=${(e: Event) => onUpdate({ ...frag, [field]: parseFloat((e.target as HTMLInputElement).value) || 0 })}
               title=${field}
+              aria-label="Media fragment ${index + 1} ${field[0]}"
             />
           `)}
           ${removeBtn}
@@ -229,6 +228,7 @@ export class FragmentEditor extends LitElement {
           .value=${frag.value ?? ''}
           @change=${(e: Event) => onUpdate({ ...frag, value: (e.target as HTMLInputElement).value })}
           placeholder="value"
+          aria-label="Media fragment ${index + 1} ${frag.type} value"
           spellcheck="false"
         />
         ${removeBtn}
@@ -247,7 +247,7 @@ export class FragmentEditor extends LitElement {
     return html`
       <div class="editor-header"># Fragments</div>
 
-      <div class="frag-tabs">
+      <div class="frag-tabs" role="radiogroup" aria-label="Fragment type">
         <label>
           <input type="radio" name="frag-tab" value="text" ?checked=${this._activeTab === 'text'}
             @change=${() => { this._activeTab = 'text'; }} />
@@ -266,7 +266,7 @@ export class FragmentEditor extends LitElement {
         <button @click=${this._addText} class="btn-add">+ Add text fragment</button>
       ` : html`
         ${m.mediaFragments.map((f, i) => this._renderMediaRow(f, i))}
-        <button @click=${this._addTime} class="btn-add-time">+ Add time fragment</button>
+        <button @click=${this._addTime} class="btn-add">+ Add time fragment</button>
       `}
     `;
   }

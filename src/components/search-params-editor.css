@@ -65,9 +65,13 @@
   resize: vertical;
 }
 
-.param-json-textarea[data-invalid] {
+.param-json-textarea[aria-invalid="true"] {
   border: 1px solid red;
   outline-color: red;
+}
+
+.param-json-error {
+  color: red;
 }
 
 .param-eq-top {
@@ -75,12 +79,8 @@
 }
 
 .param-remove-top {
-  background: none;
-  border: none;
-  color: GrayText;
   flex-shrink: 0;
   margin-top: 3px;
-  padding: 0;
 }
 
 .history-row {
@@ -101,9 +101,4 @@
 .history-summary {
   color: GrayText;
   margin: 4px 0 2px;
-}
-
-.param-loading {
-  color: GrayText;
-  margin: 2px 0;
 }

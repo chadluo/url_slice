@@ -1,11 +1,11 @@
-import { LitElement, html } from 'lit';
+import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { getState, setState, subscribe } from '../utils/appState.ts';
+import { getState, setState, StoreController } from '../utils/appState.ts';
 import { isGitHubQuery, parseQualifiers, qualifierHistory, serializeQualifiers, type Qualifier } from '../utils/githubQuery.ts';
 import { getHistorySearchParams } from '../utils/historySuggestions.ts';
 import { saveDisabledParams } from '../utils/pageStateStorage.ts';
 import { withPerf } from '../utils/perf.ts';
-import { pageKey, type UrlModel } from '../utils/urlParser.ts';
+import { hostname, pageKey, type UrlModel } from '../utils/urlParser.ts';
 import './search-params-editor.css';
 
 type DecodedValue =
@@ -21,13 +21,8 @@ function tryDecodeBase64Json(value: string): DecodedValue | null {
   if (!isLikelyBase64(value)) return null;
   for (const variant of ['urlsafe', 'standard'] as const) {
     try {
-      let b64 = value;
-      if (variant === 'urlsafe') b64 = value.replace(/-/g, '+').replace(/_/g, '/');
-      const pad = b64.length % 4;
-      if (pad === 2) b64 += '==';
-      else if (pad === 3) b64 += '=';
-      const decoded = atob(b64);
-      const parsed = JSON.parse(decoded);
+      const bytes = Uint8Array.fromBase64(value, { alphabet: variant === 'urlsafe' ? 'base64url' : 'base64' });
+      const parsed = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
       if (typeof parsed === 'object' && parsed !== null) {
         return { kind: 'json_base64', formatted: JSON.stringify(parsed, null, 2), rawB64: value, variant };
       }
@@ -36,7 +31,18 @@ function tryDecodeBase64Json(value: string): DecodedValue | null {
   return null;
 }
 
+// Each render decodes every row again (any editor's keystroke re-renders all rows), so keep results by value.
+// ponytail: unbounded, one entry per distinct value seen in this popup / side panel session; a side panel left
+// open for a long time with many edited values keeps growing. Add an LRU limit if that shows in memory.
+const decodeCache = new Map<string, DecodedValue>();
+
 function decodeValue(value: string): DecodedValue {
+  let decoded = decodeCache.get(value);
+  if (!decoded) decodeCache.set(value, (decoded = decodeUncached(value)));
+  return decoded;
+}
+
+function decodeUncached(value: string): DecodedValue {
   if (!value) return { kind: 'plain' };
   const b64 = tryDecodeBase64Json(value);
   if (b64) return b64;
@@ -50,9 +56,8 @@ function decodeValue(value: string): DecodedValue {
 }
 
 function encodeToB64(minified: string, variant: 'urlsafe' | 'standard'): string {
-  const b64 = btoa(minified);
-  if (variant === 'urlsafe') return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  return b64;
+  const bytes = new TextEncoder().encode(minified);
+  return variant === 'urlsafe' ? bytes.toBase64({ alphabet: 'base64url', omitPadding: true }) : bytes.toBase64();
 }
 
 // Row-index-keyed local state must follow the rows when one is removed.
@@ -65,11 +70,13 @@ function dropIndex<T>(map: Map<number, T>, index: number): Map<number, T> {
   return next;
 }
 
+type Row = { key: string; value: string; enabled: boolean };
+
 @customElement('search-params-editor')
 export class SearchParamsEditor extends LitElement {
   override createRenderRoot() { return this; }
 
-  @state() private _rows: Array<[string, string, boolean]> = [];
+  @state() private _rows: Row[] = [];
   @state() private _historyParams: Map<string, string[]> = new Map();
   @state() private _dismissedKeys: Set<string> = new Set();
   @state() private _historyRowValues: Map<string, string> = new Map();
@@ -77,31 +84,22 @@ export class SearchParamsEditor extends LitElement {
   @state() private _invalidRows: Set<number> = new Set();
   // Held locally so blank qualifier rows survive; serialization drops them from the URL.
   @state() private _qualifierEdits: Map<number, Qualifier[]> = new Map();
-  @state() private _ready = false;
-  private _unsub?: () => void;
+  private _store = new StoreController(this, () => this._syncRows());
   private _lastPageKey = '';
+  // The searchParams array the rows last produced or loaded. A different array means Reset or a page update.
+  private _syncedParams: [string, string][] | null = null;
   private _historyFetchTimer: ReturnType<typeof setTimeout> | null = null;
-  private _readyTimer: ReturnType<typeof setTimeout> | null = null;
 
   override connectedCallback() {
     super.connectedCallback();
-    this._unsub = subscribe(() => {
-      this._syncRows();
-      this.requestUpdate();
-    });
     this._syncRows();
   }
 
   override disconnectedCallback() {
     super.disconnectedCallback();
-    this._unsub?.();
     if (this._historyFetchTimer !== null) {
       clearTimeout(this._historyFetchTimer);
       this._historyFetchTimer = null;
-    }
-    if (this._readyTimer !== null) {
-      clearTimeout(this._readyTimer);
-      this._readyTimer = null;
     }
   }
 
@@ -110,75 +108,63 @@ export class SearchParamsEditor extends LitElement {
   private _syncRows() {
     const m = this._model();
     const k = pageKey(m);
-    if (k === this._lastPageKey) return;
-    this._lastPageKey = k;
-    this._dismissedKeys = new Set();
-    this._historyRowValues = new Map();
+    const pageChanged = k !== this._lastPageKey;
+    if (!pageChanged && m.searchParams === this._syncedParams) return;
+    const dp = getState().disabledParams;
+    this._syncedParams = m.searchParams;
     this._jsonEditValues = new Map();
     this._invalidRows = new Set();
     this._qualifierEdits = new Map();
-    const dp = getState().disabledParams;
     this._rows = [
-      ...m.searchParams.map(([key, val]): [string, string, boolean] => [key, val, true]),
-      ...dp.map(([key, val]): [string, string, boolean] => [key, val, false]),
+      ...m.searchParams.map(([key, value]) => ({ key, value, enabled: true })),
+      ...dp.map(([key, value]) => ({ key, value, enabled: false })),
     ];
+    if (!pageChanged) return;
+    this._lastPageKey = k;
+    this._dismissedKeys = new Set();
+    this._historyRowValues = new Map();
     this._historyParams = new Map();
 
-    // Rendering rows decodes each value (JSON/base64 probing), which can be slow on
-    // URLs with many params (e.g. Google search). Defer it a tick so the rest of the
-    // popup paints first instead of blocking on this section.
-    this._ready = false;
-    if (this._readyTimer !== null) clearTimeout(this._readyTimer);
-    this._readyTimer = setTimeout(() => {
-      this._readyTimer = null;
-      this._ready = true;
-    }, 0);
-
-    const hostname = [...m.subdomains, m.domain].filter(Boolean).join('.');
-    const path = '/' + m.pathSegments.map(encodeURIComponent).join('/') || '/';
+    const host = hostname(m);
+    const path = '/' + m.pathSegments.map(encodeURIComponent).join('/');
     if (this._historyFetchTimer !== null) clearTimeout(this._historyFetchTimer);
     this._historyFetchTimer = setTimeout(() => {
       this._historyFetchTimer = null;
-      getHistorySearchParams(hostname, path).then((map) => {
+      getHistorySearchParams(host, path).then((map) => {
         this._historyParams = map;
       });
     }, 0);
   }
 
   private _commitRows() {
-    const enabled = this._rows.filter(r => r[2]).map(r => [r[0], r[1]] as [string, string]);
-    const disabled = this._rows.filter(r => !r[2]).map(r => [r[0], r[1]] as [string, string]);
+    const enabled = this._rows.filter(r => r.enabled).map(r => [r.key, r.value] as [string, string]);
+    const disabled = this._rows.filter(r => !r.enabled).map(r => [r.key, r.value] as [string, string]);
     const m = this._model();
+    this._syncedParams = enabled;
     setState({ model: { ...m, searchParams: enabled }, disabledParams: disabled, dirty: true });
     saveDisabledParams(m, disabled);
   }
 
-  private _toggleRow(index: number) {
-    this._rows = this._rows.map((r, i): [string, string, boolean] =>
-      i === index ? [r[0], r[1], !r[2]] : r
-    );
+  private _patchRow(index: number, patch: Partial<Row>) {
+    this._rows = this._rows.map((r, i) => (i === index ? { ...r, ...patch } : r));
     this._commitRows();
   }
 
+  private _toggleRow(index: number) {
+    this._patchRow(index, { enabled: !this._rows[index]!.enabled });
+  }
+
   private _disableAll() {
-    this._rows = this._rows.map((r): [string, string, boolean] => [r[0], r[1], false]);
+    this._rows = this._rows.map((r) => ({ ...r, enabled: false }));
     this._commitRows();
   }
 
   private _onKeyChange(index: number, e: Event) {
-    const val = (e.target as HTMLInputElement).value;
-    this._rows = this._rows.map((r, i): [string, string, boolean] =>
-      i === index ? [val, r[1], r[2]] : r
-    );
-    this._commitRows();
+    this._patchRow(index, { key: (e.target as HTMLInputElement).value });
   }
 
   private _onValueChange(index: number, e: Event) {
-    const val = (e.target as HTMLInputElement).value;
-    this._rows = this._rows.map((r, i): [string, string, boolean] =>
-      i === index ? [r[0], val, r[2]] : r
-    );
-    this._commitRows();
+    this._patchRow(index, { value: (e.target as HTMLInputElement).value });
   }
 
   private _removeRow(index: number) {
@@ -196,17 +182,16 @@ export class SearchParamsEditor extends LitElement {
     this._commitRows();
   }
 
-  private _addParam() {
-    this._rows = [...this._rows, ['', '', true]];
+  private async _addParam() {
+    this._rows = [...this._rows, { key: '', value: '', enabled: true }];
     this._commitRows();
-    setTimeout(() => {
-      const inputs = this.querySelectorAll<HTMLInputElement>('.param-key');
-      inputs[inputs.length - 1]?.focus();
-    }, 0);
+    await this.updateComplete;
+    const inputs = this.querySelectorAll<HTMLInputElement>('.param-key');
+    inputs[inputs.length - 1]?.focus();
   }
 
   private _historyEntries(): [string, string][] {
-    const activeKeys = new Set(this._rows.map(r => r[0]));
+    const activeKeys = new Set(this._rows.map(r => r.key));
     return Array.from(this._historyParams.entries())
       .filter(([k]) => !activeKeys.has(k) && !this._dismissedKeys.has(k))
       .map(([k, vals]) => [k, this._historyRowValues.get(k) ?? vals[0] ?? '']);
@@ -224,17 +209,20 @@ export class SearchParamsEditor extends LitElement {
   private _onJsonValueChange(index: number, variant: 'urlsafe' | 'standard' | undefined, e: Event) {
     const text = (e.target as HTMLTextAreaElement).value;
     this._jsonEditValues = new Map(this._jsonEditValues).set(index, text);
+    const newInvalid = new Set(this._invalidRows);
+    newInvalid.delete(index);
+    this._invalidRows = newInvalid;
     try {
-      const parsed = JSON.parse(text);
-      const minified = JSON.stringify(parsed);
-      const rawValue = variant ? encodeToB64(minified, variant) : minified;
-      this._rows = this._rows.map((r, i): [string, string, boolean] =>
-        i === index ? [r[0], rawValue, r[2]] : r
-      );
-      this._commitRows();
-      const newInvalid = new Set(this._invalidRows);
-      newInvalid.delete(index);
-      this._invalidRows = newInvalid;
+      const minified = JSON.stringify(JSON.parse(text));
+      this._patchRow(index, { value: variant ? encodeToB64(minified, variant) : minified });
+    } catch {
+      // The error shows on blur.
+    }
+  }
+
+  private _onJsonBlur(index: number, e: Event) {
+    try {
+      JSON.parse((e.target as HTMLTextAreaElement).value);
     } catch {
       this._invalidRows = new Set(this._invalidRows).add(index);
     }
@@ -243,10 +231,7 @@ export class SearchParamsEditor extends LitElement {
   private _setQualifiers(index: number, pairs: Qualifier[]) {
     this._qualifierEdits = new Map(this._qualifierEdits).set(index, pairs);
     const value = serializeQualifiers(pairs);
-    this._rows = this._rows.map((r, i): [string, string, boolean] =>
-      i === index ? [r[0], value, r[2]] : r
-    );
-    this._commitRows();
+    this._patchRow(index, { value });
   }
 
   private _renderQualifierRow(key: string, enabled: boolean, index: number, pairs: Qualifier[]) {
@@ -257,12 +242,13 @@ export class SearchParamsEditor extends LitElement {
 
     return html`
       <div class="param-row-json" ?data-disabled=${!enabled}>
-        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" class="param-checkbox-top" />
+        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} aria-label="Include ${key} #${index + 1}" class="param-checkbox-top" />
         <input
           class="mono param-key"
           .value=${key}
           @input=${(e: Event) => this._onKeyChange(index, e)}
           placeholder="key"
+          aria-label="Param ${index + 1} key"
           spellcheck="false"
         />
         <span class="param-eq-top">=</span>
@@ -278,6 +264,7 @@ export class SearchParamsEditor extends LitElement {
                 list=${keyListId}
                 @input=${(e: Event) => edit(j, [(e.target as HTMLInputElement).value, qv])}
                 placeholder="qualifier"
+                aria-label="Qualifier ${j + 1} of ${key} #${index + 1}"
                 spellcheck="false"
               />
               <span>:</span>
@@ -287,30 +274,31 @@ export class SearchParamsEditor extends LitElement {
                 list=${`sp-qval-${index}-${j}`}
                 @input=${(e: Event) => edit(j, [qk, (e.target as HTMLInputElement).value])}
                 placeholder="value"
+                aria-label="Value of qualifier ${j + 1} of ${key} #${index + 1}"
                 spellcheck="false"
               />
               <datalist id=${`sp-qval-${index}-${j}`}>
                 ${(history.get(qk) ?? []).map((s) => html`<option value=${s}></option>`)}
               </datalist>
-              <button @click=${() => this._setQualifiers(index, pairs.filter((_, i) => i !== j))} title="Delete qualifier" class="btn-muted">×</button>
+              <button @click=${() => this._setQualifiers(index, pairs.filter((_, i) => i !== j))} title="Delete qualifier" aria-label="Delete qualifier ${j + 1} of ${key} #${index + 1}" class="btn-muted">×</button>
             </div>
           `)}
           <button @click=${() => this._setQualifiers(index, [...pairs, ['', '']])} class="btn-add">+ Add qualifier</button>
         </div>
-        <button @click=${() => this._removeRow(index)} title="Delete param" class="param-remove-top">×</button>
+        <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key} #${index + 1}" class="btn-muted param-remove-top">×</button>
       </div>
     `;
   }
 
   private _addFromHistory(key: string, value: string) {
-    this._rows = [...this._rows, [key, value, true]];
+    this._rows = [...this._rows, { key, value, enabled: true }];
     this._commitRows();
   }
 
   private _renderRow(key: string, value: string, enabled: boolean, index: number) {
     const m = this._model();
     const qualifiers = this._qualifierEdits.get(index)
-      ?? (isGitHubQuery([...m.subdomains, m.domain].filter(Boolean).join('.'), value) ? parseQualifiers(value) : null);
+      ?? (isGitHubQuery(hostname(m), value) ? parseQualifiers(value) : null);
     if (qualifiers) return this._renderQualifierRow(key, enabled, index, qualifiers);
 
     const decoded = decodeValue(value);
@@ -323,12 +311,13 @@ export class SearchParamsEditor extends LitElement {
 
       return html`
         <div class="param-row-json" ?data-disabled=${!enabled}>
-          <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" class="param-checkbox-top" />
+          <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} aria-label="Include ${key} #${index + 1}" class="param-checkbox-top" />
           <input
             class="mono param-key"
             .value=${key}
             @input=${(e: Event) => this._onKeyChange(index, e)}
             placeholder="key"
+          aria-label="Param ${index + 1} key"
             spellcheck="false"
           />
           <span class="param-eq-top">=</span>
@@ -340,50 +329,50 @@ export class SearchParamsEditor extends LitElement {
               class="mono param-json-textarea"
               .value=${displayValue}
               rows=${rows}
+              aria-label="JSON value of ${key} #${index + 1}"
               @input=${(e: Event) => this._onJsonValueChange(index, variant, e)}
-              ?data-invalid=${isInvalid}
+              @blur=${(e: Event) => this._onJsonBlur(index, e)}
+              aria-invalid=${isInvalid}
+              aria-describedby=${isInvalid ? `sp-json-err-${index}` : nothing}
               spellcheck="false"
             ></textarea>
+            ${isInvalid ? html`<span id="sp-json-err-${index}" class="param-json-error">Invalid JSON</span>` : ''}
           </div>
-          <button @click=${() => this._removeRow(index)} title="Delete param" class="param-remove-top">×</button>
+          <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key} #${index + 1}" class="btn-muted param-remove-top">×</button>
         </div>
       `;
     }
 
-    const keyListId = `sp-key-${index}`;
-    const valListId = `sp-val-${index}`;
-    const keySuggestions = Array.from(this._historyParams.keys());
-    const valSuggestions = this._historyParams.get(key) ?? [];
-
     return html`
       <div class="param-row" ?data-disabled=${!enabled}>
-        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" class="param-checkbox" />
+        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} aria-label="Include ${key} #${index + 1}" class="param-checkbox" />
         <input
           class="mono param-key"
           .value=${key}
-          list=${keyListId}
+          list="sp-keys"
           @input=${(e: Event) => this._onKeyChange(index, e)}
           placeholder="key"
+          aria-label="Param ${index + 1} key"
           spellcheck="false"
         />
-        <datalist id=${keyListId}>
-          ${keySuggestions.map((s) => html`<option value=${s}></option>`)}
-        </datalist>
         <span>=</span>
         <input
           class="mono param-value"
           .value=${value}
-          list=${valListId}
+          list=${this._valueListId(key)}
           @input=${(e: Event) => this._onValueChange(index, e)}
           placeholder="value"
+          aria-label="Value of ${key} #${index + 1}"
           spellcheck="false"
         />
-        <datalist id=${valListId}>
-          ${valSuggestions.map((s) => html`<option value=${s}></option>`)}
-        </datalist>
-        <button @click=${() => this._removeRow(index)} title="Delete param" class="btn-muted">×</button>
+        <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key} #${index + 1}" class="btn-muted">×</button>
       </div>
     `;
+  }
+
+  // One value list per history key, shared by every row with that key. The index keeps the ID valid for any key.
+  private _valueListId(key: string): string {
+    return `sp-vals-${Array.from(this._historyParams.keys()).indexOf(key)}`;
   }
 
   override render() {
@@ -391,53 +380,47 @@ export class SearchParamsEditor extends LitElement {
   }
 
   private _renderContent() {
-    if (!this._ready) {
-      return html`
-        <div class="editor-header">? Query params</div>
-        ${this._rows.length > 0 ? html`<div class="param-loading">Loading ${this._rows.length} param${this._rows.length === 1 ? '' : 's'}…</div>` : ''}
-      `;
-    }
-
     const historyEntries = this._historyEntries();
 
     return html`
-      <div class="editor-header">? Query params</div>
-      ${this._rows.some(r => r[2]) ? html`
-        <button @click=${this._disableAll} class="btn-muted">Disable all</button>
-      ` : ''}
+      <div class="editor-header">
+        ? Query params
+        ${this._rows.some(r => r.enabled) ? html`<button @click=${this._disableAll} class="btn-muted">Disable all</button>` : ''}
+      </div>
 
-      ${this._rows.map(([key, value, enabled], i) => this._renderRow(key, value, enabled, i))}
+      ${this._rows.map(({ key, value, enabled }, i) => this._renderRow(key, value, enabled, i))}
 
       ${historyEntries.length > 0 ? html`
         <details>
           <summary class="history-summary">From history:</summary>
-          ${historyEntries.map(([key, value]) => {
-      const listId = `sp-hval-${key}`;
-      const suggestions = this._historyParams.get(key) ?? [];
-      return html`
+          ${historyEntries.map(([key, value]) => html`
               <div class="history-row">
                 <span class="mono history-key">${key}</span>
                 <span>=</span>
                 <input
                   class="mono param-value"
                   .value=${value}
-                  list=${listId}
+                  list=${this._valueListId(key)}
                   @input=${(e: Event) => this._onHistoryValueChange(key, e)}
                   placeholder="value"
+                  aria-label="History value of ${key}"
                   spellcheck="false"
                 />
-                <datalist id=${listId}>
-                  ${suggestions.map((s) => html`<option value=${s}></option>`)}
-                </datalist>
-                <button @click=${() => this._addFromHistory(key, value)} title="Add param" class="btn-muted">+</button>
-                <button @click=${() => this._dismissHistory(key)} title="Dismiss" class="btn-muted">×</button>
+                <button @click=${() => this._addFromHistory(key, value)} title="Add param" aria-label="Add param ${key}" class="btn-muted">+</button>
+                <button @click=${() => this._dismissHistory(key)} title="Dismiss" aria-label="Dismiss ${key}" class="btn-muted">×</button>
               </div>
-            `;
-    })}
+            `)}
         </details>
       ` : ''}
 
       <button @click=${this._addParam} class="btn-add">+ Add param</button>
+
+      <datalist id="sp-keys">
+        ${Array.from(this._historyParams.keys(), (k) => html`<option value=${k}></option>`)}
+      </datalist>
+      ${Array.from(this._historyParams.values(), (values, i) => html`
+        <datalist id="sp-vals-${i}">${values.map((v) => html`<option value=${v}></option>`)}</datalist>
+      `)}
     `;
   }
 }

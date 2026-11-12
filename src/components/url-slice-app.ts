@@ -1,7 +1,8 @@
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
-import { getState, setState, subscribe } from "../utils/appState.ts";
+import { customElement, property, state } from "lit/decorators.js";
+import { getState, setState, StoreController } from "../utils/appState.ts";
 import { initCurrentUrl } from "../utils/currentUrl.ts";
+import { removeLegacyDisabledState, saveDisabledParams } from "../utils/pageStateStorage.ts";
 import { buildUrl } from "../utils/urlBuilder.ts";
 import "./fragment-editor.ts";
 import "./host-editor.ts";
@@ -15,12 +16,14 @@ import "./url-slice-app.css";
 @customElement("url-slice-app")
 export class UrlSliceApp extends LitElement {
   @property({ type: String }) mode: "popup" | "sidebar" = "popup";
+  @state() private _copyStatus = "";
+  private _copyStatusTimer?: number;
 
   override createRenderRoot() {
     return this;
   }
 
-  private _unsub?: () => void;
+  private _store = new StoreController(this);
   private _cleanupUrl?: () => void;
   private _handleKeydown = (event: KeyboardEvent) => {
     if (
@@ -43,14 +46,13 @@ export class UrlSliceApp extends LitElement {
   override connectedCallback() {
     super.connectedCallback();
     this.addEventListener("keydown", this._handleKeydown);
-    this._unsub = subscribe(() => this.requestUpdate());
     this._cleanupUrl = initCurrentUrl();
+    removeLegacyDisabledState();
   }
 
   override disconnectedCallback() {
     super.disconnectedCallback();
     this.removeEventListener("keydown", this._handleKeydown);
-    this._unsub?.();
     this._cleanupUrl?.();
   }
 
@@ -58,42 +60,57 @@ export class UrlSliceApp extends LitElement {
     return target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement;
   }
 
-  private _handleApply() {
-    const { model, committedModel, tabId, dirty } = getState();
-    if (tabId === null || !model || !committedModel || !dirty) return;
+  private async _handleApply() {
+    const { model, tabId, dirty } = getState();
+    if (tabId === null || !dirty) return;
     const newUrl = buildUrl(model);
+    // Cleared first so the navigation's own tab update replaces the model (see currentUrl.ts).
     setState({ dirty: false });
-    browser.tabs.update(tabId, { url: newUrl });
+    try {
+      await browser.tabs.update(tabId, { url: newUrl });
+    } catch {
+      // Only if the user is still on the same tab and edit; after a tab switch the edit is gone.
+      const now = getState();
+      if (now.tabId === tabId && now.model === model) setState({ dirty: true });
+    }
   }
 
   private _handleReset() {
-    const { committedModel } = getState();
-    if (!committedModel) return;
-    setState({ model: { ...committedModel }, dirty: false });
+    const { committedModel, committedDisabledParams } = getState();
+    saveDisabledParams(committedModel, committedDisabledParams);
+    setState({ model: { ...committedModel }, disabledParams: committedDisabledParams, dirty: false });
+  }
+
+  private async _copy(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      this._copyStatus = "Copied";
+    } catch {
+      this._copyStatus = "Copy failed";
+    }
+    clearTimeout(this._copyStatusTimer);
+    this._copyStatusTimer = window.setTimeout(() => (this._copyStatus = ""), 2000);
   }
 
   private _handleCopy() {
-    const { model } = getState();
-    if (!model) return;
-    navigator.clipboard.writeText(buildUrl(model));
+    this._copy(buildUrl(getState().model));
   }
 
   private _handleCopyMarkdown() {
     const { model, title } = getState();
-    if (!model) return;
     const url = buildUrl(model);
-    const text = title ? `[${title}](${url})` : `<${url}>`;
-    navigator.clipboard.writeText(text);
+    const text = title ? `[${title.replace(/[\\[\]]/g, "\\$&")}](${url})` : `<${url}>`;
+    this._copy(text);
   }
 
   override render() {
     const { model, error, dirty } = getState();
 
-    if (error || !model) {
+    if (error) {
       return html`
         <div class="url-error">
-          <span style="font-size:2rem">🔒</span>
-          <p>${error ?? "Loading…"}</p>
+          <span style="font-size:2rem" aria-hidden="true">🔒</span>
+          <p>${error}</p>
         </div>
       `;
     }
@@ -103,8 +120,9 @@ export class UrlSliceApp extends LitElement {
     return html`
       <div class="url-bar">
         <code class="mono url-display">${builtUrl}</code>
-        <button @click=${this._handleCopy} title="Copy URL" class="btn-muted">📋</button>
-        <button @click=${this._handleCopyMarkdown} title="Copy as Markdown" class="btn-muted">📝</button>
+        <button @click=${this._handleCopy} title="Copy URL" aria-label="Copy URL" class="btn-muted"><span aria-hidden="true">📋</span></button>
+        <button @click=${this._handleCopyMarkdown} title="Copy as Markdown" aria-label="Copy as Markdown" class="btn-muted"><span aria-hidden="true">📝</span></button>
+        <span role="status">${this._copyStatus}</span>
       </div>
 
       <div class="editors-grid">

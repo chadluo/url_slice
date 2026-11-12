@@ -40,17 +40,6 @@
   white-space: nowrap;
 }
 
-.btn-add-time {
-  background: none;
-  border: none;
-  color: LinkText;
-  margin-top: 4px;
-}
-
-.btn-add-time:hover {
-  color: color-mix(in oklch, LinkText, Canvas 30%);
-}
-
 .tf-prefix { width: 6em; }
 .tf-start  { width: 10em; }
 .tf-end    { width: 7em; }

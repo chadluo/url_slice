@@ -17,19 +17,14 @@ export type HistorySuggestion = { value: string; title: string };
 
 export async function getHistorySuggestions(
   prefix: string,
-  field: 'host' | 'path' | 'port' | 'subdomain' | 'path-segment' | 'subdomain-segment',
+  field: 'port' | 'path-segment' | 'subdomain-segment',
   currentHost: string,
   excludeValue?: string,
 ): Promise<HistorySuggestion[]> {
   if (!prefix || prefix.length < 1) return [];
 
   try {
-    let searchText = prefix;
-    if (field === 'subdomain') {
-      searchText = currentHost;
-    } else if (field === 'path-segment' && prefix === '/') {
-      searchText = currentHost;
-    }
+    const searchText = field === 'path-segment' && prefix === '/' ? currentHost : prefix;
 
     const results = await browser.history.search({ text: searchText, maxResults: 50, startTime: 0 });
     const extracted = new Map<string, string>(); // value → title
@@ -38,14 +33,7 @@ export async function getHistorySuggestions(
       if (!item.url) continue;
       try {
         const url = new URL(item.url);
-        if (field === 'host') {
-          if (url.hostname && !extracted.has(url.hostname)) extracted.set(url.hostname, '');
-        } else if (field === 'subdomain') {
-          if (url.hostname.endsWith(`.${currentHost}`)) {
-            const sub = url.hostname.slice(0, -(currentHost.length + 1));
-            if (sub && !extracted.has(sub)) extracted.set(sub, '');
-          }
-        } else if (field === 'subdomain-segment') {
+        if (field === 'subdomain-segment') {
           if (url.hostname.endsWith(`.${prefix}`)) {
             const before = url.hostname.slice(0, -(prefix.length + 1));
             const seg = before.split('.')[0];
@@ -69,8 +57,6 @@ export async function getHistorySuggestions(
               extracted.set(seg, item.title ?? '');
             }
           }
-        } else if (field === 'path') {
-          if (url.hostname === currentHost && url.pathname && !extracted.has(url.pathname)) extracted.set(url.pathname, '');
         } else if (field === 'port') {
           if (url.hostname === currentHost && url.port && !extracted.has(url.port)) extracted.set(url.port, '');
         }
@@ -102,11 +88,12 @@ export type OriginEntry = { origin: string; protocol: string };
 // path (e.g. "/search") can also show up as swap targets — tolerated rather than adding
 // config or heuristics to filter it out.
 export async function getHistoryOrigins(path: string): Promise<OriginEntry[]> {
-  if (!path || path === '/') return [];
+  // Search with the normalized path too: a search for `/a/` would miss history at `/a?x=1`.
+  const normalizedPath = path.replace(/\/$/, '');
+  if (!normalizedPath) return [];
   try {
-    const results = await browser.history.search({ text: path, maxResults: 100, startTime: 0 });
+    const results = await browser.history.search({ text: normalizedPath, maxResults: 100, startTime: 0 });
     const seen = new Map<string, string>(); // origin → protocol
-    const normalizedPath = path.replace(/\/$/, '');
     for (const item of results) {
       if (!item.url) continue;
       try {
@@ -129,14 +116,15 @@ export async function getHistorySearchParams(
   path: string,
 ): Promise<Map<string, string[]>> {
   if (!hostname) return new Map();
+  const normalizedPath = path.replace(/\/$/, '');
   try {
-    const results = await browser.history.search({ text: `${hostname}${path}`, maxResults: 100, startTime: 0 });
+    const results = await browser.history.search({ text: `${hostname}${normalizedPath}`, maxResults: 100, startTime: 0 });
     const map = new Map<string, Set<string>>();
     for (const item of results) {
       if (!item.url) continue;
       try {
         const url = new URL(item.url);
-        if (url.hostname !== hostname || url.pathname.replace(/\/$/, '') !== path.replace(/\/$/, '')) continue;
+        if (url.hostname !== hostname || url.pathname.replace(/\/$/, '') !== normalizedPath) continue;
         url.searchParams.forEach((value, key) => {
           if (!map.has(key)) map.set(key, new Set());
           map.get(key)!.add(value);

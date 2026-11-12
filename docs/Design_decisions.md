@@ -4,24 +4,50 @@
 
 - **URL model**: `UrlModel` in `urlParser.ts` holds `subdomains[]`, `domain`, `port`, `pathSegments[]`,
   `searchParams[]`, `textFragments[]`, `mediaFragments[]`.
+- **Host split**: `parseUrl` uses `tldts-icann` (ICANN section of the Public Suffix List) to find the registrable
+  domain: `www.bbc.co.uk` → domain `bbc.co.uk`, chips `[www]`. Private suffixes are ignored, so `user.github.io` →
+  domain `github.io`, chip `user`. IPs, `localhost` and single-label hosts have no registrable domain, so the whole
+  hostname is the domain with no chips. The suffix list adds about 170 kB (77 kB gzip) to the shared chunk.
 - **Path encoding**: `parseUrl` decodes each segment with `decodeURIComponent`; `buildUrl` re-encodes with
-  `encodeURIComponent`.
+  `encodeURIComponent`. Empty segments are kept, so a trailing slash is a final `''` segment (`/a/` →
+  `['a', '']`), and the path editor shows it as a blank segment input. The root path `/` has no segments.
 - **Text fragments**: parsed from `#:~:text=prefix-,start,end,-suffix` per MDN spec.
 - **Media fragments**: `#t=N,M` (time), `#xywh=x,y,w,h` (spatial), `#track=value`.
 
 ## Business logic
 
 - **Apply flow**: `url-slice-app` keeps local model state in `appState`; Apply button calls
-  `browser.tabs.update({ url })`.
+  `browser.tabs.update({ url })` and awaits it. `dirty` is cleared before the call, so the tab update that the
+  navigation causes replaces the model. If the call fails, `dirty` becomes true again and Apply stays enabled.
+- **Tab tracking**: `currentUrl.ts` follows only the active tab of the window that holds the popup or side panel
+  (`browser.windows.getCurrent()`). Events from other windows are ignored. When the user has unapplied edits
+  (`dirty`), a same-tab page update (load complete or `pushState` URL change) updates only `committedModel` and
+  `title` (and `committedDisabledParams` if the page key changed), so the edits stay. A tab switch always loads the new tab's URL.
 - **Query param disabled state**: `search-params-editor` shows a checkbox per pair (default checked). The component
-  maintains a stable `_rows: [key, value, enabled][]` list that is reset from appState only when the page key
-  (hostname+path) changes — enabling/disabling within a session preserves visual order. Disabled pairs are excluded
-  from `buildUrl` and persisted to `localStorage` keyed by `hostname+path` so they survive popup close/reopen.
+  maintains a stable `_rows: { key, value, enabled }[]` list that is reset from appState when the page key
+  (hostname+path) changes, or when `model.searchParams` is an array that the rows did not produce (Reset or a page
+  update) — enabling/disabling within a session preserves visual order. Page updates and tab loads never filter
+  disabled pairs, so saved disabled duplicates (`x=1` twice, one disabled) stay. Reset restores
+  `committedDisabledParams` (the disabled list as loaded for `committedModel`) and saves it. Disabled pairs are excluded
+  from `buildUrl` and persisted to `browser.storage.session` keyed by the edited model's page key
+  (`hostname+path`), so they survive popup close/reopen but not a browser restart.
+- **Disabled state storage** (`pageStateStorage.ts`): disabled params and text fragments can hold secrets
+  (`token=`, `code=`), so they use `storage.session` (memory only, cleared when the browser closes; needs the
+  `storage` permission; Chrome allows it only in extension pages by default, which is where it is used). The load
+  is async: `currentUrl.ts` awaits it, drops a result that a later tab event superseded, and reads `dirty` after the
+  await. If the disabled lists change locally while the read is pending (this does not set `dirty`), the local
+  lists win when they are for the same page key. Writes are fire-and-forget. Editors save under the edited model's
+  page key, so the state follows Apply to a new path; an entry for a path that is never applied stays until the
+  browser restarts. Reset writes its snapshot under the `committedModel` key. Old versions used `localStorage`;
+  `removeLegacyDisabledState()` deletes the old keys that start with `disabled` on popup, side panel and options
+  page open (marked `ponytail:` for removal later).
   Both `model.searchParams` (enabled) and `appState.disabledParams` (disabled) are kept in sync via `_commitRows()`.
-- **Query param async render**: `search-params-editor` defers row rendering by one macrotask (`setTimeout(0)`) after
-  the page key changes, showing a "Loading N params…" placeholder first. Row rendering decodes each value (JSON/base64
-  probing per row), which is slow on URLs with many params (e.g. Google search); deferring it lets the rest of the
-  popup (host, port, path editors) paint first instead of blocking on this section.
+- **Query param render**: rows render in the same pass as the other editors (no deferral, no "Loading N params…"
+  state). `decodeValue` (JSON/base64 probing) is cached by value string in a module-level `Map`, so a re-render costs
+  only lookups. Measured in Node 25 with a Google-search-like URL of 30 params (long base64-like tokens, one JSON, one
+  base64 JSON): cold first decode 0.36–0.57 ms, cached about 0.003 ms, well under one 16 ms frame. The cache is
+  unbounded for one popup / side panel session (`ponytail:` comment). One `<datalist id="sp-keys">` holds the history
+  keys, and one `sp-vals-<i>` list per history key is shared by every row and history row with that key.
 - **GitHub query qualifiers**: on `github.com`, a param value that holds at least one `key:value` token (e.g.
   `q=is:issue state:open`) renders as a nested qualifier editor instead of one text input. `githubQuery.ts` splits
   on whitespace but keeps quoted spans (`label:"good first issue"`) whole; free text becomes a row with an empty
@@ -34,31 +60,44 @@
 ## State management
 
 - **Global state**: `appState.ts` holds a single plain object (`AppState`) with `model`, `committedModel`, `tabId`,
-  `error`, `dirty`, `disabledParams`, `disabledTextFragments`. Mutations go through `setState(patch)` which merges
+  `error`, `dirty`, `disabledParams`, `committedDisabledParams`, `disabledTextFragments`. Mutations go through `setState(patch)` which merges
   and fires a synchronous `change` event on an internal `EventTarget`.
 - **Component reactivity**: all components call `createRenderRoot() { return this; }` (light DOM, no shadow root) and
-  subscribe to the global bus via `subscribe(() => this.requestUpdate())`. Local UI state (suggestions, active tab,
+  subscribe to the global bus through `StoreController` (a Lit `ReactiveController` in `appState.ts`), which
+  subscribes on connect, unsubscribes on disconnect and calls `requestUpdate()` on each change. An optional
+  `onChange` callback runs first (`search-params-editor` syncs its rows, `origins-editor` refetches on a path change). Local UI state (suggestions, active tab,
   stable row order) uses Lit `@state()` properties. `tsconfig.json` sets `useDefineForClassFields: false` so that
   TypeScript experimental decorator accessors are not shadowed by class field initializers.
 
 ## History suggestions
 
 - **History suggestions**: `getHistorySuggestions(prefix, field, currentHost, excludeValue?)` queries
-  `browser.history.search` with 150ms debounce. Field values: `'host'`, `'path'`, `'port'`, `'subdomain-segment'`,
-  `'path-segment'`.
-- **Origin alternatives**: `getHistoryOrigins(path, currentOrigin)` searches history by path text, collects distinct `hostname:port` values (excluding the current origin) that have visited the same path. Used by the origins editor on connect.
+  `browser.history.search` with 150ms debounce. Field values: `'port'`, `'subdomain-segment'`, `'path-segment'`.
+- **Origin alternatives**: `getHistoryOrigins(path)` searches history by the path text (trailing slash removed),
+  and collects the distinct `hostname:port` values that have visited the same path. The origins editor removes the
+  current origin from the list. It fetches on connect and when the path changes.
 - **Subdomain suggestions**: `subdomain-segment` field receives the suffix to the right of the chip (e.g.
   `spec.whatwg.org`) and extracts just the leftmost segment before that suffix — matching path-segment depth logic.
 
 ## UX interactions
 
 - **Path segment editing**: editing a segment truncates all following segments (mirrors browser navigation).
+- **Host edits keep the path**: adding, editing or removing a subdomain chip does not change the path. The origins
+  editor also keeps the path.
+- **Clear path button**: the path editor header shows a "Clear" button (`aria-label="Clear path"`) when the path has
+  at least one segment (a trailing-slash `''` segment counts). It sets `pathSegments: []` and `dirty: true`.
+- **Header actions**: `.editor-header` is a flex row (`justify-content: space-between`), so a section action sits in
+  the title row, flush right: Clear path, and Disable all (shown when at least one param is enabled). Headers that
+  hold only text look the same as before.
 - **Path segment close button**: sits to the right of its input (`[input] [×] [/]`), truncating the path up to that
   segment on click.
 - **Domain host**: readonly plain text. Origin swapping is handled by the origins editor, not the domain field directly.
 - **Origins editor**: a `<select>` that appears beside the host+port editors (second column of a 2-column grid, spanning both rows) only when browser history contains visits to the same path on a different origin. The current origin is the first option (no decoration); alternatives follow. Selecting any option other than the current swaps subdomains + domain + port atomically. Hidden entirely when no alternatives exist.
 - **New subdomain chips**: inserted chips start blank so users can type the desired segment directly. Blank host
   chips are omitted from the built URL until populated.
+- **Invalid JSON value**: a JSON param textarea keeps the last valid value in the URL while its text does not
+  parse. On blur it gets `aria-invalid="true"`, a red border and a visible "Invalid JSON" message
+  (`aria-describedby`). The next input clears the error.
 - **Enter to apply**: pressing Enter in text-like fields applies the pending URL change when the app is dirty. Modifier
   Enter combinations and composition events are ignored.
 
@@ -70,7 +109,7 @@
   Deliberately simple: no `PerformanceObserver`, history, or aggregation — just the most recent render
   duration per part.
 - **On/off setting**: lives on the options page (`entrypoints/options/`), reached from chrome://extensions →
-  Details → "Extension options". It is persisted in `localStorage` under `perfTracking` (default on); the
+  Details → "Extension options". It is persisted in `localStorage` under `perfTracking` (default off; only the value `'on'` enables it); the
   options page and the popup share the extension origin, so plain `localStorage` needs no `browser.storage`.
   When off, `withPerf` calls the render fn directly without timing and the stored timings are cleared, so
   `perf-tracker` renders nothing. `perf-tracker` listens for the `storage` event because a sidebar left open
@@ -89,5 +128,6 @@
 - **Options page size**: Chrome sizes the embedded options dialog to its content (capped at roughly 600×600),
   so page CSS is the only lever. `options/index.html` sets `min-width: 400px` plus padding in a local `<style>`
   block, otherwise a page holding one checkbox renders as a cramped box.
-- **Add buttons**: `.btn-add` class in `style.css` styles the `+ Add param` and `+ Add text fragment` buttons with
+- **Muted buttons**: `.btn-muted` has `padding: 0` and a 24×24 px minimum size (WCAG 2.5.8 target size).
+- **Add buttons**: `.btn-add` class in `style.css` styles the `+ Add param`, `+ Add text fragment` and `+ Add time fragment` buttons with
   `color: LinkText` and a lighter `color-mix(in oklch, LinkText, Canvas 30%)` on hover.

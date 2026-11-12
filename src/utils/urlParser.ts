@@ -1,5 +1,6 @@
 import type { TextFragment, MediaFragment } from './fragmentCodec.ts'
 import { parseAllFragments } from './fragmentCodec.ts'
+import { parse as parseHost } from 'tldts-icann'
 
 export interface UrlModel {
   protocol: string
@@ -28,31 +29,17 @@ export function parseUrl(raw: string): UrlModel {
 
   const protocol = url.protocol
 
-  const hostname = url.hostname
-  let subdomains: string[] = []
-  let domain: string
-
-  const isIpv4 = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)
-  const isIpv6 = hostname.startsWith('[')
-  const isLocalhost = hostname === 'localhost'
-
-  if (isLocalhost || isIpv4 || isIpv6) {
-    domain = hostname
-    subdomains = []
-  } else {
-    const parts = hostname.split('.')
-    if (parts.length <= 2) {
-      domain = hostname
-      subdomains = []
-    } else {
-      domain = parts.slice(-2).join('.')
-      subdomains = parts.slice(0, -2)
-    }
-  }
+  // ICANN suffixes only: www.bbc.co.uk → bbc.co.uk + [www]; user.github.io → github.io + [user] (private
+  // suffixes such as github.io are ignored). IPs, localhost and single-label hosts have no registrable
+  // domain, so the whole hostname is the domain. tldts drops a trailing dot (`example.com.`); keep it.
+  const { domain: registrable, subdomain } = parseHost(url.hostname)
+  const domain = registrable ? registrable + (url.hostname.endsWith('.') ? '.' : '') : url.hostname
+  const subdomains = registrable && subdomain ? subdomain.split('.') : []
 
   const port = url.port
 
-  const pathSegments = url.pathname.split('/').filter((s) => s !== '').map((s) => {
+  // Empty segments are kept: a trailing slash is a final '' (the same as a new blank segment), so `/a/` and `//` round-trip.
+  const pathSegments = (url.pathname === '/' ? [] : url.pathname.slice(1).split('/')).map((s) => {
     try { return decodeURIComponent(s) } catch { return s }
   })
 
@@ -75,8 +62,13 @@ export function parseUrl(raw: string): UrlModel {
   }
 }
 
+// Blank subdomain chips (new, not typed yet) are left out.
+export function hostname(m: UrlModel): string {
+  return [...m.subdomains, m.domain].filter(Boolean).join('.')
+}
+
 export function pageKey(m: UrlModel): string {
-  const host = [...m.subdomains, m.domain].filter(Boolean).join('.')
+  const host = hostname(m)
   const path = m.pathSegments.length ? '/' + m.pathSegments.join('/') : ''
   return `${host}${path}`
 }
