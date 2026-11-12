@@ -1,4 +1,4 @@
-import { LitElement, html } from 'lit';
+import { LitElement, html, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, StoreController } from '../utils/appState.ts';
 import { isGitHubQuery, parseQualifiers, qualifierHistory, serializeQualifiers, type Qualifier } from '../utils/githubQuery.ts';
@@ -242,7 +242,7 @@ export class SearchParamsEditor extends LitElement {
 
     return html`
       <div class="param-row-json" ?data-disabled=${!enabled}>
-        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} aria-label="Include ${key}" class="param-checkbox-top" />
+        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} aria-label="Include ${key} #${index + 1}" class="param-checkbox-top" />
         <input
           class="mono param-key"
           .value=${key}
@@ -264,7 +264,7 @@ export class SearchParamsEditor extends LitElement {
                 list=${keyListId}
                 @input=${(e: Event) => edit(j, [(e.target as HTMLInputElement).value, qv])}
                 placeholder="qualifier"
-                aria-label="Qualifier ${j + 1} of ${key}"
+                aria-label="Qualifier ${j + 1} of ${key} #${index + 1}"
                 spellcheck="false"
               />
               <span>:</span>
@@ -274,18 +274,18 @@ export class SearchParamsEditor extends LitElement {
                 list=${`sp-qval-${index}-${j}`}
                 @input=${(e: Event) => edit(j, [qk, (e.target as HTMLInputElement).value])}
                 placeholder="value"
-                aria-label="Value of qualifier ${qk}"
+                aria-label="Value of qualifier ${j + 1} of ${key} #${index + 1}"
                 spellcheck="false"
               />
               <datalist id=${`sp-qval-${index}-${j}`}>
                 ${(history.get(qk) ?? []).map((s) => html`<option value=${s}></option>`)}
               </datalist>
-              <button @click=${() => this._setQualifiers(index, pairs.filter((_, i) => i !== j))} title="Delete qualifier" aria-label="Delete qualifier ${qk}" class="btn-muted">×</button>
+              <button @click=${() => this._setQualifiers(index, pairs.filter((_, i) => i !== j))} title="Delete qualifier" aria-label="Delete qualifier ${j + 1} of ${key} #${index + 1}" class="btn-muted">×</button>
             </div>
           `)}
           <button @click=${() => this._setQualifiers(index, [...pairs, ['', '']])} class="btn-add">+ Add qualifier</button>
         </div>
-        <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key}" class="btn-muted param-remove-top">×</button>
+        <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key} #${index + 1}" class="btn-muted param-remove-top">×</button>
       </div>
     `;
   }
@@ -311,7 +311,7 @@ export class SearchParamsEditor extends LitElement {
 
       return html`
         <div class="param-row-json" ?data-disabled=${!enabled}>
-          <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} aria-label="Include ${key}" class="param-checkbox-top" />
+          <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} aria-label="Include ${key} #${index + 1}" class="param-checkbox-top" />
           <input
             class="mono param-key"
             .value=${key}
@@ -329,23 +329,23 @@ export class SearchParamsEditor extends LitElement {
               class="mono param-json-textarea"
               .value=${displayValue}
               rows=${rows}
-              aria-label="JSON value of ${key}"
+              aria-label="JSON value of ${key} #${index + 1}"
               @input=${(e: Event) => this._onJsonValueChange(index, variant, e)}
               @blur=${(e: Event) => this._onJsonBlur(index, e)}
               aria-invalid=${isInvalid}
-              aria-describedby="sp-json-err-${index}"
+              aria-describedby=${isInvalid ? `sp-json-err-${index}` : nothing}
               spellcheck="false"
             ></textarea>
             ${isInvalid ? html`<span id="sp-json-err-${index}" class="param-json-error">Invalid JSON</span>` : ''}
           </div>
-          <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key}" class="btn-muted param-remove-top">×</button>
+          <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key} #${index + 1}" class="btn-muted param-remove-top">×</button>
         </div>
       `;
     }
 
     return html`
       <div class="param-row" ?data-disabled=${!enabled}>
-        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} aria-label="Include ${key}" class="param-checkbox" />
+        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} aria-label="Include ${key} #${index + 1}" class="param-checkbox" />
         <input
           class="mono param-key"
           .value=${key}
@@ -362,10 +362,10 @@ export class SearchParamsEditor extends LitElement {
           list=${this._valueListId(key)}
           @input=${(e: Event) => this._onValueChange(index, e)}
           placeholder="value"
-          aria-label="Value of ${key}"
+          aria-label="Value of ${key} #${index + 1}"
           spellcheck="false"
         />
-        <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key}" class="btn-muted">×</button>
+        <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key} #${index + 1}" class="btn-muted">×</button>
       </div>
     `;
   }

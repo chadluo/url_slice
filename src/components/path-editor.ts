@@ -117,7 +117,7 @@ export class PathEditor extends LitElement {
             <button
               @click=${() => this._truncateBefore(i)}
               title="Truncate path before this segment"
-              aria-label="Remove segment ${seg} and after"
+              aria-label="Remove segment ${i + 1} and after"
               class="btn-muted seg-remove"
             >×</button>
             </div>

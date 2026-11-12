@@ -94,7 +94,7 @@ export class HostEditor extends LitElement {
             <datalist id=${listId}>
               ${suggestions.map((s) => html`<option value=${s.value}>${s.title}</option>`)}
             </datalist>
-            <button @click=${() => this._removeSubdomain(i)} title="Remove subdomain" aria-label="Remove subdomain ${sub}" class="btn-muted chip-remove">×</button>
+            <button @click=${() => this._removeSubdomain(i)} title="Remove subdomain" aria-label="Remove subdomain ${sub} #${i + 1}" class="btn-muted chip-remove">×</button>
             <span class="mono chip-sep">.</span>
           `;
         })}
