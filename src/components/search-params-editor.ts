@@ -108,17 +108,33 @@ export class SearchParamsEditor extends LitElement {
     const k = pageKey(m);
     const pageChanged = k !== this._lastPageKey;
     if (!pageChanged && m.searchParams === this._syncedParams) return;
+    const dp = [...getState().disabledParams];
+    if (!pageChanged) {
+      // Reset or a page update put pairs back in the URL. Each pair occurrence that is new
+      // since the last rows takes back one disabled occurrence, so it shows once, as enabled.
+      const old = [...(this._syncedParams ?? [])];
+      for (const [k, v] of m.searchParams) {
+        const o = old.findIndex(([ok, ov]) => ok === k && ov === v);
+        if (o !== -1) { old.splice(o, 1); continue; }
+        const d = dp.findIndex(([dk, dv]) => dk === k && dv === v);
+        if (d !== -1) dp.splice(d, 1);
+      }
+    }
     this._syncedParams = m.searchParams;
     this._jsonEditValues = new Map();
     this._invalidRows = new Set();
     this._qualifierEdits = new Map();
-    // After Reset, a pair can be disabled and also back in the committed URL; show it once, as enabled.
-    const dp = getState().disabledParams.filter(([dk, dv]) => !m.searchParams.some(([ek, ev]) => ek === dk && ev === dv));
     this._rows = [
       ...m.searchParams.map(([key, val]): [string, string, boolean] => [key, val, true]),
       ...dp.map(([key, val]): [string, string, boolean] => [key, val, false]),
     ];
-    if (!pageChanged) return;
+    if (!pageChanged) {
+      if (dp.length !== getState().disabledParams.length) {
+        saveDisabledParams(m, dp);
+        setState({ disabledParams: dp });
+      }
+      return;
+    }
     this._lastPageKey = k;
     this._dismissedKeys = new Set();
     this._historyRowValues = new Map();
