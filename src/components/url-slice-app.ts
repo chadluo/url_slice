@@ -69,7 +69,9 @@ export class UrlSliceApp extends LitElement {
     try {
       await browser.tabs.update(tabId, { url: newUrl });
     } catch {
-      setState({ dirty: true });
+      // Only if the user is still on the same tab and edit; after a tab switch the edit is gone.
+      const now = getState();
+      if (now.tabId === tabId && now.model === model) setState({ dirty: true });
     }
   }
 
