@@ -5,7 +5,7 @@ import { isGitHubQuery, parseQualifiers, qualifierHistory, serializeQualifiers, 
 import { getHistorySearchParams } from '../utils/historySuggestions.ts';
 import { saveDisabledParams } from '../utils/pageStateStorage.ts';
 import { withPerf } from '../utils/perf.ts';
-import { pageKey, type UrlModel } from '../utils/urlParser.ts';
+import { hostname, pageKey, type UrlModel } from '../utils/urlParser.ts';
 import './search-params-editor.css';
 
 type DecodedValue =
@@ -133,12 +133,12 @@ export class SearchParamsEditor extends LitElement {
       this._ready = true;
     }, 0);
 
-    const hostname = [...m.subdomains, m.domain].filter(Boolean).join('.');
+    const host = hostname(m);
     const path = '/' + m.pathSegments.map(encodeURIComponent).join('/');
     if (this._historyFetchTimer !== null) clearTimeout(this._historyFetchTimer);
     this._historyFetchTimer = setTimeout(() => {
       this._historyFetchTimer = null;
-      getHistorySearchParams(hostname, path).then((map) => {
+      getHistorySearchParams(host, path).then((map) => {
         this._historyParams = map;
       });
     }, 0);
@@ -310,7 +310,7 @@ export class SearchParamsEditor extends LitElement {
   private _renderRow(key: string, value: string, enabled: boolean, index: number) {
     const m = this._model();
     const qualifiers = this._qualifierEdits.get(index)
-      ?? (isGitHubQuery([...m.subdomains, m.domain].filter(Boolean).join('.'), value) ? parseQualifiers(value) : null);
+      ?? (isGitHubQuery(hostname(m), value) ? parseQualifiers(value) : null);
     if (qualifiers) return this._renderQualifierRow(key, enabled, index, qualifiers);
 
     const decoded = decodeValue(value);

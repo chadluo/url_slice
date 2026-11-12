@@ -3,7 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
 import { getHistorySuggestions, createDebouncer, type HistorySuggestion } from '../utils/historySuggestions.ts';
 import { withPerf } from '../utils/perf.ts';
-import type { UrlModel } from '../utils/urlParser.ts';
+import { hostname, type UrlModel } from '../utils/urlParser.ts';
 import './port-editor.css';
 
 @customElement('port-editor')
@@ -34,8 +34,7 @@ export class PortEditor extends LitElement {
   private _fetchSuggestions() {
     this._debouncer.schedule(0, async () => {
       const m = this._model();
-      const host = [...m.subdomains, m.domain].filter(Boolean).join('.');
-      this._suggestions = await getHistorySuggestions(m.port, 'port', host);
+      this._suggestions = await getHistorySuggestions(m.port, 'port', hostname(m));
     });
   }
 

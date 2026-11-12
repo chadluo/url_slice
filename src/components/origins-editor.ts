@@ -3,8 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
 import { getHistoryOrigins, type OriginEntry } from '../utils/historySuggestions.ts';
 import { withPerf } from '../utils/perf.ts';
-import { parseUrl } from '../utils/urlParser.ts';
-import type { UrlModel } from '../utils/urlParser.ts';
+import { hostname, parseUrl, type UrlModel } from '../utils/urlParser.ts';
 import './origins-editor.css';
 
 @customElement('origins-editor')
@@ -37,8 +36,7 @@ export class OriginsEditor extends LitElement {
 
   private _currentOrigin(): string {
     const m = this._model();
-    const host = [...m.subdomains, m.domain].filter(Boolean).join('.');
-    return host + (m.port ? `:${m.port}` : '');
+    return hostname(m) + (m.port ? `:${m.port}` : '');
   }
 
   private _encodedPath(): string {

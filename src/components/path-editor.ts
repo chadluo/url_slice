@@ -3,7 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { getState, setState, subscribe } from '../utils/appState.ts';
 import { getHistorySuggestions, createDebouncer, type HistorySuggestion } from '../utils/historySuggestions.ts';
 import { withPerf } from '../utils/perf.ts';
-import type { UrlModel } from '../utils/urlParser.ts';
+import { hostname, type UrlModel } from '../utils/urlParser.ts';
 import './path-editor.css';
 
 @customElement('path-editor')
@@ -27,11 +27,6 @@ export class PathEditor extends LitElement {
 
   private _model(): UrlModel { return getState().model; }
 
-  private _hostname(): string {
-    const m = this._model();
-    return [...m.subdomains, m.domain].filter(Boolean).join('.');
-  }
-
   private _pathPrefix(upToIndex: number): string {
     const segs = this._model().pathSegments.slice(0, upToIndex);
     return segs.length === 0 ? '/' : '/' + segs.join('/') + '/';
@@ -41,7 +36,7 @@ export class PathEditor extends LitElement {
     this._debouncer.schedule(index, async () => {
       const prefix = this._pathPrefix(index);
       const currentSeg = this._model().pathSegments[index] ?? '';
-      const suggestions = await getHistorySuggestions(prefix, 'path-segment', this._hostname(), currentSeg);
+      const suggestions = await getHistorySuggestions(prefix, 'path-segment', hostname(this._model()), currentSeg);
       const updated = [...this._segmentSuggestions];
       while (updated.length <= index) updated.push([]);
       updated[index] = suggestions;

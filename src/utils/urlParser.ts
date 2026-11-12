@@ -76,8 +76,13 @@ export function parseUrl(raw: string): UrlModel {
   }
 }
 
+// Blank subdomain chips (new, not typed yet) are left out.
+export function hostname(m: UrlModel): string {
+  return [...m.subdomains, m.domain].filter(Boolean).join('.')
+}
+
 export function pageKey(m: UrlModel): string {
-  const host = [...m.subdomains, m.domain].filter(Boolean).join('.')
+  const host = hostname(m)
   const path = m.pathSegments.length ? '/' + m.pathSegments.join('/') : ''
   return `${host}${path}`
 }

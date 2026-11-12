@@ -1,4 +1,4 @@
-import type { UrlModel } from './urlParser.js'
+import { hostname, type UrlModel } from './urlParser.ts'
 import { serializeTextFragment, serializeMediaFragment } from './fragmentCodec.ts'
 
 export function buildFragment(model: UrlModel): string {
@@ -24,9 +24,8 @@ export function buildFragment(model: UrlModel): string {
 }
 
 export function buildUrl(model: UrlModel): string {
-  const hostname = [...model.subdomains, model.domain].filter(Boolean).join('.')
   const portSuffix = model.port ? ':' + model.port : ''
-  const origin = `${model.protocol}//${hostname}${portSuffix}`
+  const origin = `${model.protocol}//${hostname(model)}${portSuffix}`
 
   const path = '/' + model.pathSegments.map(encodeURIComponent).join('/')
 
