@@ -102,11 +102,12 @@ export type OriginEntry = { origin: string; protocol: string };
 // path (e.g. "/search") can also show up as swap targets — tolerated rather than adding
 // config or heuristics to filter it out.
 export async function getHistoryOrigins(path: string): Promise<OriginEntry[]> {
-  if (!path || path === '/') return [];
+  // Search with the normalized path too: a search for `/a/` would miss history at `/a?x=1`.
+  const normalizedPath = path.replace(/\/$/, '');
+  if (!normalizedPath) return [];
   try {
-    const results = await browser.history.search({ text: path, maxResults: 100, startTime: 0 });
+    const results = await browser.history.search({ text: normalizedPath, maxResults: 100, startTime: 0 });
     const seen = new Map<string, string>(); // origin → protocol
-    const normalizedPath = path.replace(/\/$/, '');
     for (const item of results) {
       if (!item.url) continue;
       try {
@@ -129,14 +130,15 @@ export async function getHistorySearchParams(
   path: string,
 ): Promise<Map<string, string[]>> {
   if (!hostname) return new Map();
+  const normalizedPath = path.replace(/\/$/, '');
   try {
-    const results = await browser.history.search({ text: `${hostname}${path}`, maxResults: 100, startTime: 0 });
+    const results = await browser.history.search({ text: `${hostname}${normalizedPath}`, maxResults: 100, startTime: 0 });
     const map = new Map<string, Set<string>>();
     for (const item of results) {
       if (!item.url) continue;
       try {
         const url = new URL(item.url);
-        if (url.hostname !== hostname || url.pathname.replace(/\/$/, '') !== path.replace(/\/$/, '')) continue;
+        if (url.hostname !== hostname || url.pathname.replace(/\/$/, '') !== normalizedPath) continue;
         url.searchParams.forEach((value, key) => {
           if (!map.has(key)) map.set(key, new Set());
           map.get(key)!.add(value);
