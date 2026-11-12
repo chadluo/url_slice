@@ -79,7 +79,7 @@
   Deliberately simple: no `PerformanceObserver`, history, or aggregation — just the most recent render
   duration per part.
 - **On/off setting**: lives on the options page (`entrypoints/options/`), reached from chrome://extensions →
-  Details → "Extension options". It is persisted in `localStorage` under `perfTracking` (default on); the
+  Details → "Extension options". It is persisted in `localStorage` under `perfTracking` (default off; only the value `'on'` enables it); the
   options page and the popup share the extension origin, so plain `localStorage` needs no `browser.storage`.
   When off, `withPerf` calls the render fn directly without timing and the stored timings are cleared, so
   `perf-tracker` renders nothing. `perf-tracker` listens for the `storage` event because a sidebar left open

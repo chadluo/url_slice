@@ -2,8 +2,8 @@ const _times: Record<string, number> = {};
 const _bus = new EventTarget();
 export const PERF_STORAGE_KEY = 'perfTracking';
 
-// localStorage is missing outside the extension (e.g. tests); default to on.
-let _enabled = read() !== 'off';
+// Off unless the user turned it on. localStorage is missing outside the extension (e.g. tests).
+let _enabled = read() === 'on';
 
 function read(): string | null {
   try {

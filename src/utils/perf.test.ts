@@ -4,6 +4,7 @@ import { getPerfTimes, isPerfEnabled, setPerfEnabled, withPerf } from './perf.js
 
 describe('withPerf', () => {
   it('records a duration and returns the wrapped result', () => {
+    setPerfEnabled(true)
     const result = withPerf('host', () => 'rendered')
     expect(result).toBe('rendered')
     expect(getPerfTimes().host).toBeGreaterThanOrEqual(0)
