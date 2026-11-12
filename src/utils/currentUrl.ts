@@ -3,12 +3,16 @@ import { getState, setState } from './appState.ts';
 import { loadPageState } from './pageStateStorage.ts';
 
 // keepEdits: a same-tab page update (load or pushState) must not delete unapplied edits.
-function showUrl(tabId: number | null, rawUrl: string, title: string, keepEdits: boolean): void {
+// seq: the caller's number from `latest`; a result that a later query or URL event superseded is dropped.
+async function showUrl(seq: number, tabId: number | null, rawUrl: string, title: string, keepEdits: boolean): Promise<void> {
   if (!/^(https?|file):/.test(rawUrl)) {
     setState({ tabId, error: 'Not available on browser internal pages.', dirty: false });
     return;
   }
   const model = parseUrl(rawUrl);
+  const pageState = await loadPageState(model);
+  if (seq !== latest) return;
+  // Read after the await, so edits made while storage loads are seen.
   const { dirty, tabId: currentTabId, committedModel } = getState();
   if (keepEdits && dirty && currentTabId === tabId) {
     // Same page: storage already holds this session's edits, so the load-time snapshot stays.
@@ -16,15 +20,14 @@ function showUrl(tabId: number | null, rawUrl: string, title: string, keepEdits:
     setState({
       committedModel: model,
       title,
-      ...(pageChanged && { committedDisabledParams: loadPageState(model).disabledParams }),
+      ...(pageChanged && { committedDisabledParams: pageState.disabledParams }),
     });
     return;
   }
-  const pageState = loadPageState(model);
   setState({ model, committedModel: model, tabId, title, error: null, dirty: false, ...pageState, committedDisabledParams: pageState.disabledParams });
 }
 
-// Bumped by each query and each URL event; a query result older than the latest one is dropped.
+// Bumped by each query and each URL event; a result older than the latest one is dropped.
 let latest = 0;
 
 async function fetchAndApply(keepEdits: boolean): Promise<void> {
@@ -40,7 +43,7 @@ async function fetchAndApply(keepEdits: boolean): Promise<void> {
       return;
     }
 
-    showUrl(tab.id ?? null, rawUrl, tab.title ?? '', keepEdits);
+    await showUrl(seq, tab.id ?? null, rawUrl, tab.title ?? '', keepEdits);
   } catch (err) {
     if (seq === latest) setState({ tabId: null, error: err instanceof Error ? err.message : 'Failed to parse URL' });
   }
@@ -57,8 +60,7 @@ export function initCurrentUrl(): () => void {
   const onUpdated: Parameters<typeof browser.tabs.onUpdated.addListener>[0] = (tabId, changeInfo, tab) => {
     if (!tab.active || tab.windowId !== windowId) return;
     if (changeInfo.url !== undefined) {
-      latest++;
-      showUrl(tabId, changeInfo.url, tab.title ?? '', true);
+      showUrl(++latest, tabId, changeInfo.url, tab.title ?? '', true);
     } else if (changeInfo.status === 'complete') {
       fetchAndApply(true);
     }

@@ -48,7 +48,7 @@ export class FragmentEditor extends LitElement {
   private _setModel(m: UrlModel) { setState({ model: m, dirty: true }); }
   private _setDisabled(frags: TextFragment[]) {
     setState({ disabledTextFragments: frags });
-    saveDisabledTextFragments(this._model(), frags);
+    saveDisabledTextFragments(getState().committedModel, frags);
   }
 
   // ── Text fragment handlers ──

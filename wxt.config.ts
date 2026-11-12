@@ -12,6 +12,6 @@ export default defineConfig({
     action: {
       default_title: 'url_slice',
     },
-    permissions: ['tabs', 'history', 'sidePanel'],
+    permissions: ['tabs', 'history', 'sidePanel', 'storage'],
   },
 });
