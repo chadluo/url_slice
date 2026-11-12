@@ -405,8 +405,8 @@ export class SearchParamsEditor extends LitElement {
       ${historyEntries.length > 0 ? html`
         <details>
           <summary class="history-summary">From history:</summary>
-          ${historyEntries.map(([key, value]) => {
-      const listId = `sp-hval-${key}`;
+          ${historyEntries.map(([key, value], i) => {
+      const listId = `sp-hval-${i}`;
       const suggestions = this._historyParams.get(key) ?? [];
       return html`
               <div class="history-row">
