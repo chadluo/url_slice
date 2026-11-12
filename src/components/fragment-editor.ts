@@ -120,6 +120,7 @@ export class FragmentEditor extends LitElement {
           placeholder="prefix"
           spellcheck="false"
           title="prefix"
+          aria-label="Text fragment prefix"
         />
         <span class="chip-sep">-,</span>
         <input
@@ -129,6 +130,7 @@ export class FragmentEditor extends LitElement {
           placeholder="text start"
           spellcheck="false"
           title="text start (required)"
+          aria-label="Text fragment start"
         />
         <span class="chip-sep">,</span>
         <input
@@ -138,6 +140,7 @@ export class FragmentEditor extends LitElement {
           placeholder="end"
           spellcheck="false"
           title="text end (optional)"
+          aria-label="Text fragment end"
         />
         <span class="chip-sep">,-</span>
         <input
@@ -147,6 +150,7 @@ export class FragmentEditor extends LitElement {
           placeholder="suffix"
           spellcheck="false"
           title="suffix"
+          aria-label="Text fragment suffix"
         />
         <button @click=${onRemove} aria-label="Remove text fragment ${frag.textStart}" class="btn-muted">×</button>
         ${frag.textStart ? html`
@@ -219,6 +223,7 @@ export class FragmentEditor extends LitElement {
           .value=${frag.value ?? ''}
           @change=${(e: Event) => onUpdate({ ...frag, value: (e.target as HTMLInputElement).value })}
           placeholder="value"
+          aria-label="${frag.type} value"
           spellcheck="false"
         />
         ${removeBtn}

@@ -242,6 +242,7 @@ export class SearchParamsEditor extends LitElement {
           .value=${key}
           @input=${(e: Event) => this._onKeyChange(index, e)}
           placeholder="key"
+          aria-label="Param ${index + 1} key"
           spellcheck="false"
         />
         <span class="param-eq-top">=</span>
@@ -257,6 +258,7 @@ export class SearchParamsEditor extends LitElement {
                 list=${keyListId}
                 @input=${(e: Event) => edit(j, [(e.target as HTMLInputElement).value, qv])}
                 placeholder="qualifier"
+                aria-label="Qualifier ${j + 1} of ${key}"
                 spellcheck="false"
               />
               <span>:</span>
@@ -266,6 +268,7 @@ export class SearchParamsEditor extends LitElement {
                 list=${`sp-qval-${index}-${j}`}
                 @input=${(e: Event) => edit(j, [qk, (e.target as HTMLInputElement).value])}
                 placeholder="value"
+                aria-label="Value of qualifier ${qk}"
                 spellcheck="false"
               />
               <datalist id=${`sp-qval-${index}-${j}`}>
@@ -308,6 +311,7 @@ export class SearchParamsEditor extends LitElement {
             .value=${key}
             @input=${(e: Event) => this._onKeyChange(index, e)}
             placeholder="key"
+          aria-label="Param ${index + 1} key"
             spellcheck="false"
           />
           <span class="param-eq-top">=</span>
@@ -319,6 +323,7 @@ export class SearchParamsEditor extends LitElement {
               class="mono param-json-textarea"
               .value=${displayValue}
               rows=${rows}
+              aria-label="JSON value of ${key}"
               @input=${(e: Event) => this._onJsonValueChange(index, variant, e)}
               ?data-invalid=${isInvalid}
               spellcheck="false"
@@ -338,6 +343,7 @@ export class SearchParamsEditor extends LitElement {
           list="sp-keys"
           @input=${(e: Event) => this._onKeyChange(index, e)}
           placeholder="key"
+          aria-label="Param ${index + 1} key"
           spellcheck="false"
         />
         <span>=</span>
@@ -347,6 +353,7 @@ export class SearchParamsEditor extends LitElement {
           list=${this._valueListId(key)}
           @input=${(e: Event) => this._onValueChange(index, e)}
           placeholder="value"
+          aria-label="Value of ${key}"
           spellcheck="false"
         />
         <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key}" class="btn-muted">×</button>
@@ -387,6 +394,7 @@ export class SearchParamsEditor extends LitElement {
                   list=${this._valueListId(key)}
                   @input=${(e: Event) => this._onHistoryValueChange(key, e)}
                   placeholder="value"
+                  aria-label="History value of ${key}"
                   spellcheck="false"
                 />
                 <button @click=${() => this._addFromHistory(key, value)} title="Add param" aria-label="Add param ${key}" class="btn-muted">+</button>

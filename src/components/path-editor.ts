@@ -103,6 +103,7 @@ export class PathEditor extends LitElement {
               @input=${(e: Event) => this._onSegmentInput(i, e)}
               @focus=${() => this._onSegmentFocus(i)}
               placeholder="segment"
+              aria-label="Path segment ${i + 1}"
             />
             <datalist id=${listId}>
               ${suggestions.map((s) => html`<option value=${s.value}>${s.title}</option>`)}
