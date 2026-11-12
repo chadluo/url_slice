@@ -31,9 +31,9 @@ export function parseUrl(raw: string): UrlModel {
 
   // ICANN suffixes only: www.bbc.co.uk → bbc.co.uk + [www]; user.github.io → github.io + [user] (private
   // suffixes such as github.io are ignored). IPs, localhost and single-label hosts have no registrable
-  // domain, so the whole hostname is the domain.
+  // domain, so the whole hostname is the domain. tldts drops a trailing dot (`example.com.`); keep it.
   const { domain: registrable, subdomain } = parseHost(url.hostname)
-  const domain = registrable ?? url.hostname
+  const domain = registrable ? registrable + (url.hostname.endsWith('.') ? '.' : '') : url.hostname
   const subdomains = registrable && subdomain ? subdomain.split('.') : []
 
   const port = url.port

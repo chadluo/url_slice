@@ -84,6 +84,7 @@ describe('buildUrl(parseUrl(u)) round-trip', () => {
     'https://example.com/a//b/',
     'https://example.com/',
     'https://www.bbc.co.uk/news',
+    'https://www.example.com./p',
     'https://user.github.io/repo/',
     'http://[::1]:8080/x',
   ])('%s', (u) => {
