@@ -40,6 +40,9 @@ button {
 }
 
 .editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   color: GrayText;
   font-weight: 500;
   user-select: none;

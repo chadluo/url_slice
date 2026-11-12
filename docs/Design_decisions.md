@@ -86,6 +86,9 @@
   editor also keeps the path.
 - **Clear path button**: the path editor header shows a "Clear" button (`aria-label="Clear path"`) when the path has
   at least one segment (a trailing-slash `''` segment counts). It sets `pathSegments: []` and `dirty: true`.
+- **Header actions**: `.editor-header` is a flex row (`justify-content: space-between`), so a section action sits in
+  the title row, flush right: Clear path, and Disable all (shown when at least one param is enabled). Headers that
+  hold only text look the same as before.
 - **Path segment close button**: sits to the right of its input (`[input] [×] [/]`), truncating the path up to that
   segment on click.
 - **Domain host**: readonly plain text. Origin swapping is handled by the origins editor, not the domain field directly.

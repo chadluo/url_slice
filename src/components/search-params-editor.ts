@@ -367,10 +367,10 @@ export class SearchParamsEditor extends LitElement {
     const historyEntries = this._historyEntries();
 
     return html`
-      <div class="editor-header">? Query params</div>
-      ${this._rows.some(r => r.enabled) ? html`
-        <button @click=${this._disableAll} class="btn-muted">Disable all</button>
-      ` : ''}
+      <div class="editor-header">
+        ? Query params
+        ${this._rows.some(r => r.enabled) ? html`<button @click=${this._disableAll} class="btn-muted">Disable all</button>` : ''}
+      </div>
 
       ${this._rows.map(({ key, value, enabled }, i) => this._renderRow(key, value, enabled, i))}
 
