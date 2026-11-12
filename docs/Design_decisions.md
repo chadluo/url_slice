@@ -19,8 +19,10 @@
   (`dirty`), a same-tab page update (load complete or `pushState` URL change) updates only `committedModel` and
   `title`, so the edits stay. A tab switch always loads the new tab's URL.
 - **Query param disabled state**: `search-params-editor` shows a checkbox per pair (default checked). The component
-  maintains a stable `_rows: [key, value, enabled][]` list that is reset from appState only when the page key
-  (hostname+path) changes — enabling/disabling within a session preserves visual order. Disabled pairs are excluded
+  maintains a stable `_rows: [key, value, enabled][]` list that is reset from appState when the page key
+  (hostname+path) changes, or when `model.searchParams` is an array that the rows did not produce (Reset or a page
+  update) — enabling/disabling within a session preserves visual order. On reset, a disabled pair that is also in
+  the URL shows once, as enabled. Disabled pairs are excluded
   from `buildUrl` and persisted to `localStorage` keyed by `hostname+path` so they survive popup close/reopen.
   Both `model.searchParams` (enabled) and `appState.disabledParams` (disabled) are kept in sync via `_commitRows()`.
 - **Query param async render**: `search-params-editor` defers row rendering by one macrotask (`setTimeout(0)`) after

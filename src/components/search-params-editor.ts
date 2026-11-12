@@ -74,6 +74,8 @@ export class SearchParamsEditor extends LitElement {
   @state() private _ready = false;
   private _unsub?: () => void;
   private _lastPageKey = '';
+  // The searchParams array the rows last produced or loaded. A different array means Reset or a page update.
+  private _syncedParams: [string, string][] | null = null;
   private _historyFetchTimer: ReturnType<typeof setTimeout> | null = null;
   private _readyTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -104,18 +106,22 @@ export class SearchParamsEditor extends LitElement {
   private _syncRows() {
     const m = this._model();
     const k = pageKey(m);
-    if (k === this._lastPageKey) return;
-    this._lastPageKey = k;
-    this._dismissedKeys = new Set();
-    this._historyRowValues = new Map();
+    const pageChanged = k !== this._lastPageKey;
+    if (!pageChanged && m.searchParams === this._syncedParams) return;
+    this._syncedParams = m.searchParams;
     this._jsonEditValues = new Map();
     this._invalidRows = new Set();
     this._qualifierEdits = new Map();
-    const dp = getState().disabledParams;
+    // After Reset, a pair can be disabled and also back in the committed URL; show it once, as enabled.
+    const dp = getState().disabledParams.filter(([dk, dv]) => !m.searchParams.some(([ek, ev]) => ek === dk && ev === dv));
     this._rows = [
       ...m.searchParams.map(([key, val]): [string, string, boolean] => [key, val, true]),
       ...dp.map(([key, val]): [string, string, boolean] => [key, val, false]),
     ];
+    if (!pageChanged) return;
+    this._lastPageKey = k;
+    this._dismissedKeys = new Set();
+    this._historyRowValues = new Map();
     this._historyParams = new Map();
 
     // Rendering rows decodes each value (JSON/base64 probing), which can be slow on
@@ -143,6 +149,7 @@ export class SearchParamsEditor extends LitElement {
     const enabled = this._rows.filter(r => r[2]).map(r => [r[0], r[1]] as [string, string]);
     const disabled = this._rows.filter(r => !r[2]).map(r => [r[0], r[1]] as [string, string]);
     const m = this._model();
+    this._syncedParams = enabled;
     setState({ model: { ...m, searchParams: enabled }, disabledParams: disabled, dirty: true });
     saveDisabledParams(m, disabled);
   }
