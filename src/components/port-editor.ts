@@ -64,11 +64,12 @@ export class PortEditor extends LitElement {
   }
 
   private _onInput(e: Event) {
-    const raw = (e.target as HTMLInputElement).value;
+    const input = e.target as HTMLInputElement;
+    const raw = input.value;
     if (raw === '') { this._setPort(''); return; }
-    if (!/^\d+$/.test(raw)) return;
     const n = parseInt(raw, 10);
-    if (n >= 1 && n <= 65535) this._setPort(raw);
+    if (/^\d+$/.test(raw) && n >= 1 && n <= 65535) this._setPort(raw);
+    else input.value = this._model().port;
   }
 
   override render() {
