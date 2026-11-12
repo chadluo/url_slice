@@ -65,9 +65,13 @@
   resize: vertical;
 }
 
-.param-json-textarea[data-invalid] {
+.param-json-textarea[aria-invalid="true"] {
   border: 1px solid red;
   outline-color: red;
+}
+
+.param-json-error {
+  color: red;
 }
 
 .param-eq-top {

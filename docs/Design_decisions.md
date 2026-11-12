@@ -92,6 +92,9 @@
 - **Origins editor**: a `<select>` that appears beside the host+port editors (second column of a 2-column grid, spanning both rows) only when browser history contains visits to the same path on a different origin. The current origin is the first option (no decoration); alternatives follow. Selecting any option other than the current swaps subdomains + domain + port atomically. Hidden entirely when no alternatives exist.
 - **New subdomain chips**: inserted chips start blank so users can type the desired segment directly. Blank host
   chips are omitted from the built URL until populated.
+- **Invalid JSON value**: a JSON param textarea keeps the last valid value in the URL while its text does not
+  parse. On blur it gets `aria-invalid="true"`, a red border and a visible "Invalid JSON" message
+  (`aria-describedby`). The next input clears the error.
 - **Enter to apply**: pressing Enter in text-like fields applies the pending URL change when the app is dirty. Modifier
   Enter combinations and composition events are ignored.
 

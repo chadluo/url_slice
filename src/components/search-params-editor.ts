@@ -209,14 +209,20 @@ export class SearchParamsEditor extends LitElement {
   private _onJsonValueChange(index: number, variant: 'urlsafe' | 'standard' | undefined, e: Event) {
     const text = (e.target as HTMLTextAreaElement).value;
     this._jsonEditValues = new Map(this._jsonEditValues).set(index, text);
+    const newInvalid = new Set(this._invalidRows);
+    newInvalid.delete(index);
+    this._invalidRows = newInvalid;
     try {
-      const parsed = JSON.parse(text);
-      const minified = JSON.stringify(parsed);
-      const rawValue = variant ? encodeToB64(minified, variant) : minified;
-      this._patchRow(index, { value: rawValue });
-      const newInvalid = new Set(this._invalidRows);
-      newInvalid.delete(index);
-      this._invalidRows = newInvalid;
+      const minified = JSON.stringify(JSON.parse(text));
+      this._patchRow(index, { value: variant ? encodeToB64(minified, variant) : minified });
+    } catch {
+      // The error shows on blur.
+    }
+  }
+
+  private _onJsonBlur(index: number, e: Event) {
+    try {
+      JSON.parse((e.target as HTMLTextAreaElement).value);
     } catch {
       this._invalidRows = new Set(this._invalidRows).add(index);
     }
@@ -325,9 +331,12 @@ export class SearchParamsEditor extends LitElement {
               rows=${rows}
               aria-label="JSON value of ${key}"
               @input=${(e: Event) => this._onJsonValueChange(index, variant, e)}
-              ?data-invalid=${isInvalid}
+              @blur=${(e: Event) => this._onJsonBlur(index, e)}
+              aria-invalid=${isInvalid}
+              aria-describedby="sp-json-err-${index}"
               spellcheck="false"
             ></textarea>
+            ${isInvalid ? html`<span id="sp-json-err-${index}" class="param-json-error">Invalid JSON</span>` : ''}
           </div>
           <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key}" class="btn-muted param-remove-top">×</button>
         </div>
