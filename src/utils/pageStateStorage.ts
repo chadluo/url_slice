@@ -37,11 +37,12 @@ export async function loadPageState(model: UrlModel): Promise<PageState> {
   }
 }
 
-// `committed` is the loaded page (committedModel), not the edited model: the state belongs to that page.
-export function saveDisabledParams(committed: UrlModel, params: [string, string][]): void {
-  write(`disabledParams:${pageKey(committed)}`, params);
+// Editors save under the edited model's key, so the state follows Apply to a new path.
+// An entry for a path that is never applied stays until the browser restarts.
+export function saveDisabledParams(model: UrlModel, params: [string, string][]): void {
+  write(`disabledParams:${pageKey(model)}`, params);
 }
 
-export function saveDisabledTextFragments(committed: UrlModel, frags: TextFragment[]): void {
-  write(`disabledTextFragments:${pageKey(committed)}`, frags);
+export function saveDisabledTextFragments(model: UrlModel, frags: TextFragment[]): void {
+  write(`disabledTextFragments:${pageKey(model)}`, frags);
 }

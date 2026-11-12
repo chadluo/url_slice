@@ -150,7 +150,7 @@ export class SearchParamsEditor extends LitElement {
     const m = this._model();
     this._syncedParams = enabled;
     setState({ model: { ...m, searchParams: enabled }, disabledParams: disabled, dirty: true });
-    saveDisabledParams(getState().committedModel, disabled);
+    saveDisabledParams(m, disabled);
   }
 
   private _toggleRow(index: number) {
