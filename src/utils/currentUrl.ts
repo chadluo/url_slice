@@ -35,9 +35,12 @@ async function fetchAndApply(): Promise<void> {
 
 export function initCurrentUrl(): () => void {
   fetchAndApply();
+  // Events before this resolves are ignored; the fetchAndApply above covers that gap.
+  let windowId: number | undefined;
+  browser.windows.getCurrent().then((w) => { windowId = w.id; });
 
   const onUpdated: Parameters<typeof browser.tabs.onUpdated.addListener>[0] = (tabId, changeInfo, tab) => {
-    if (!tab.active) return;
+    if (!tab.active || tab.windowId !== windowId) return;
     if (changeInfo.url !== undefined) {
       if (!/^(https?|ftp|file):/.test(changeInfo.url)) {
         setState({ tabId, error: 'Not available on browser internal pages.', dirty: false });
@@ -58,8 +61,8 @@ export function initCurrentUrl(): () => void {
     }
   };
 
-  const onActivated: Parameters<typeof browser.tabs.onActivated.addListener>[0] = () => {
-    fetchAndApply();
+  const onActivated: Parameters<typeof browser.tabs.onActivated.addListener>[0] = (info) => {
+    if (info.windowId === windowId) fetchAndApply();
   };
 
   browser.tabs.onUpdated.addListener(onUpdated);
