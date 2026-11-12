@@ -15,3 +15,10 @@
   padding: 0 6px;
   font-size: 1.25em;
 }
+
+/* Grows with the typed text. Without field-sizing support, the default input width applies. */
+.path-seg {
+  field-sizing: content;
+  min-inline-size: 10ch;
+  max-inline-size: 100%;
+}

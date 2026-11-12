@@ -94,8 +94,6 @@ export class PathEditor extends LitElement {
               list=${listId}
               @input=${(e: Event) => this._onSegmentInput(i, e)}
               @focus=${() => this._onSegmentFocus(i)}
-              size=${Math.max(seg.length, 8)}
-              style="width:${Math.max(seg.length, 8) + 2}ch"
               placeholder="segment"
             />
             <datalist id=${listId}>
