@@ -4,7 +4,7 @@ import { loadPageState } from './pageStateStorage.ts';
 
 // keepEdits: a same-tab page update (load or pushState) must not delete unapplied edits.
 function showUrl(tabId: number | null, rawUrl: string, title: string, keepEdits: boolean): void {
-  if (!/^(https?|ftp|file):/.test(rawUrl)) {
+  if (!/^(https?|file):/.test(rawUrl)) {
     setState({ tabId, error: 'Not available on browser internal pages.', dirty: false });
     return;
   }
