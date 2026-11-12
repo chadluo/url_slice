@@ -1,5 +1,5 @@
 import { LitElement, html } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 import { getState, setState, subscribe } from "../utils/appState.ts";
 import { initCurrentUrl } from "../utils/currentUrl.ts";
 import { buildUrl } from "../utils/urlBuilder.ts";
@@ -15,6 +15,8 @@ import "./url-slice-app.css";
 @customElement("url-slice-app")
 export class UrlSliceApp extends LitElement {
   @property({ type: String }) mode: "popup" | "sidebar" = "popup";
+  @state() private _copyStatus = "";
+  private _copyStatusTimer?: number;
 
   override createRenderRoot() {
     return this;
@@ -77,10 +79,21 @@ export class UrlSliceApp extends LitElement {
     setState({ model: { ...committedModel }, dirty: false });
   }
 
+  private async _copy(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      this._copyStatus = "Copied";
+    } catch {
+      this._copyStatus = "Copy failed";
+    }
+    clearTimeout(this._copyStatusTimer);
+    this._copyStatusTimer = window.setTimeout(() => (this._copyStatus = ""), 2000);
+  }
+
   private _handleCopy() {
     const { model } = getState();
     if (!model) return;
-    navigator.clipboard.writeText(buildUrl(model));
+    this._copy(buildUrl(model));
   }
 
   private _handleCopyMarkdown() {
@@ -88,7 +101,7 @@ export class UrlSliceApp extends LitElement {
     if (!model) return;
     const url = buildUrl(model);
     const text = title ? `[${title.replace(/[\\[\]]/g, "\\$&")}](${url})` : `<${url}>`;
-    navigator.clipboard.writeText(text);
+    this._copy(text);
   }
 
   override render() {
@@ -110,6 +123,7 @@ export class UrlSliceApp extends LitElement {
         <code class="mono url-display">${builtUrl}</code>
         <button @click=${this._handleCopy} title="Copy URL" class="btn-muted">📋</button>
         <button @click=${this._handleCopyMarkdown} title="Copy as Markdown" class="btn-muted">📝</button>
+        <span role="status">${this._copyStatus}</span>
       </div>
 
       <div class="editors-grid">
