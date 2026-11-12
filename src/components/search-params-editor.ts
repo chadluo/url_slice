@@ -134,7 +134,7 @@ export class SearchParamsEditor extends LitElement {
     }, 0);
 
     const hostname = [...m.subdomains, m.domain].filter(Boolean).join('.');
-    const path = '/' + m.pathSegments.map(encodeURIComponent).join('/') || '/';
+    const path = '/' + m.pathSegments.map(encodeURIComponent).join('/');
     if (this._historyFetchTimer !== null) clearTimeout(this._historyFetchTimer);
     this._historyFetchTimer = setTimeout(() => {
       this._historyFetchTimer = null;

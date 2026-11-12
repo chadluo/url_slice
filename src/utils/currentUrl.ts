@@ -50,7 +50,7 @@ async function fetchAndApply(keepEdits: boolean): Promise<void> {
     const rawUrl = tab?.url || tab?.pendingUrl || '';
 
     if (!tab || !rawUrl) {
-      setState({ model: undefined as any, tabId: tab?.id ?? null, error: 'Not available on browser internal pages.', dirty: false });
+      setState({ tabId: tab?.id ?? null, error: 'Not available on browser internal pages.', dirty: false });
       return;
     }
 

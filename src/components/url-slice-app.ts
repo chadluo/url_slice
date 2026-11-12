@@ -63,8 +63,8 @@ export class UrlSliceApp extends LitElement {
   }
 
   private async _handleApply() {
-    const { model, committedModel, tabId, dirty } = getState();
-    if (tabId === null || !model || !committedModel || !dirty) return;
+    const { model, tabId, dirty } = getState();
+    if (tabId === null || !dirty) return;
     const newUrl = buildUrl(model);
     // Cleared first so the navigation's own tab update replaces the model (see currentUrl.ts).
     setState({ dirty: false });
@@ -79,7 +79,6 @@ export class UrlSliceApp extends LitElement {
 
   private _handleReset() {
     const { committedModel, committedDisabledParams } = getState();
-    if (!committedModel) return;
     saveDisabledParams(committedModel, committedDisabledParams);
     setState({ model: { ...committedModel }, disabledParams: committedDisabledParams, dirty: false });
   }
@@ -96,14 +95,11 @@ export class UrlSliceApp extends LitElement {
   }
 
   private _handleCopy() {
-    const { model } = getState();
-    if (!model) return;
-    this._copy(buildUrl(model));
+    this._copy(buildUrl(getState().model));
   }
 
   private _handleCopyMarkdown() {
     const { model, title } = getState();
-    if (!model) return;
     const url = buildUrl(model);
     const text = title ? `[${title.replace(/[\\[\]]/g, "\\$&")}](${url})` : `<${url}>`;
     this._copy(text);
@@ -112,11 +108,11 @@ export class UrlSliceApp extends LitElement {
   override render() {
     const { model, error, dirty } = getState();
 
-    if (error || !model) {
+    if (error) {
       return html`
         <div class="url-error">
           <span style="font-size:2rem">🔒</span>
-          <p>${error ?? "Loading…"}</p>
+          <p>${error}</p>
         </div>
       `;
     }
