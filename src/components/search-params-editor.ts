@@ -59,11 +59,13 @@ function dropIndex<T>(map: Map<number, T>, index: number): Map<number, T> {
   return next;
 }
 
+type Row = { key: string; value: string; enabled: boolean };
+
 @customElement('search-params-editor')
 export class SearchParamsEditor extends LitElement {
   override createRenderRoot() { return this; }
 
-  @state() private _rows: Array<[string, string, boolean]> = [];
+  @state() private _rows: Row[] = [];
   @state() private _historyParams: Map<string, string[]> = new Map();
   @state() private _dismissedKeys: Set<string> = new Set();
   @state() private _historyRowValues: Map<string, string> = new Map();
@@ -109,8 +111,8 @@ export class SearchParamsEditor extends LitElement {
     this._invalidRows = new Set();
     this._qualifierEdits = new Map();
     this._rows = [
-      ...m.searchParams.map(([key, val]): [string, string, boolean] => [key, val, true]),
-      ...dp.map(([key, val]): [string, string, boolean] => [key, val, false]),
+      ...m.searchParams.map(([key, value]) => ({ key, value, enabled: true })),
+      ...dp.map(([key, value]) => ({ key, value, enabled: false })),
     ];
     if (!pageChanged) return;
     this._lastPageKey = k;
@@ -140,40 +142,34 @@ export class SearchParamsEditor extends LitElement {
   }
 
   private _commitRows() {
-    const enabled = this._rows.filter(r => r[2]).map(r => [r[0], r[1]] as [string, string]);
-    const disabled = this._rows.filter(r => !r[2]).map(r => [r[0], r[1]] as [string, string]);
+    const enabled = this._rows.filter(r => r.enabled).map(r => [r.key, r.value] as [string, string]);
+    const disabled = this._rows.filter(r => !r.enabled).map(r => [r.key, r.value] as [string, string]);
     const m = this._model();
     this._syncedParams = enabled;
     setState({ model: { ...m, searchParams: enabled }, disabledParams: disabled, dirty: true });
     saveDisabledParams(m, disabled);
   }
 
-  private _toggleRow(index: number) {
-    this._rows = this._rows.map((r, i): [string, string, boolean] =>
-      i === index ? [r[0], r[1], !r[2]] : r
-    );
+  private _patchRow(index: number, patch: Partial<Row>) {
+    this._rows = this._rows.map((r, i) => (i === index ? { ...r, ...patch } : r));
     this._commitRows();
   }
 
+  private _toggleRow(index: number) {
+    this._patchRow(index, { enabled: !this._rows[index]!.enabled });
+  }
+
   private _disableAll() {
-    this._rows = this._rows.map((r): [string, string, boolean] => [r[0], r[1], false]);
+    this._rows = this._rows.map((r) => ({ ...r, enabled: false }));
     this._commitRows();
   }
 
   private _onKeyChange(index: number, e: Event) {
-    const val = (e.target as HTMLInputElement).value;
-    this._rows = this._rows.map((r, i): [string, string, boolean] =>
-      i === index ? [val, r[1], r[2]] : r
-    );
-    this._commitRows();
+    this._patchRow(index, { key: (e.target as HTMLInputElement).value });
   }
 
   private _onValueChange(index: number, e: Event) {
-    const val = (e.target as HTMLInputElement).value;
-    this._rows = this._rows.map((r, i): [string, string, boolean] =>
-      i === index ? [r[0], val, r[2]] : r
-    );
-    this._commitRows();
+    this._patchRow(index, { value: (e.target as HTMLInputElement).value });
   }
 
   private _removeRow(index: number) {
@@ -192,7 +188,7 @@ export class SearchParamsEditor extends LitElement {
   }
 
   private _addParam() {
-    this._rows = [...this._rows, ['', '', true]];
+    this._rows = [...this._rows, { key: '', value: '', enabled: true }];
     this._commitRows();
     setTimeout(() => {
       const inputs = this.querySelectorAll<HTMLInputElement>('.param-key');
@@ -201,7 +197,7 @@ export class SearchParamsEditor extends LitElement {
   }
 
   private _historyEntries(): [string, string][] {
-    const activeKeys = new Set(this._rows.map(r => r[0]));
+    const activeKeys = new Set(this._rows.map(r => r.key));
     return Array.from(this._historyParams.entries())
       .filter(([k]) => !activeKeys.has(k) && !this._dismissedKeys.has(k))
       .map(([k, vals]) => [k, this._historyRowValues.get(k) ?? vals[0] ?? '']);
@@ -223,10 +219,7 @@ export class SearchParamsEditor extends LitElement {
       const parsed = JSON.parse(text);
       const minified = JSON.stringify(parsed);
       const rawValue = variant ? encodeToB64(minified, variant) : minified;
-      this._rows = this._rows.map((r, i): [string, string, boolean] =>
-        i === index ? [r[0], rawValue, r[2]] : r
-      );
-      this._commitRows();
+      this._patchRow(index, { value: rawValue });
       const newInvalid = new Set(this._invalidRows);
       newInvalid.delete(index);
       this._invalidRows = newInvalid;
@@ -238,10 +231,7 @@ export class SearchParamsEditor extends LitElement {
   private _setQualifiers(index: number, pairs: Qualifier[]) {
     this._qualifierEdits = new Map(this._qualifierEdits).set(index, pairs);
     const value = serializeQualifiers(pairs);
-    this._rows = this._rows.map((r, i): [string, string, boolean] =>
-      i === index ? [r[0], value, r[2]] : r
-    );
-    this._commitRows();
+    this._patchRow(index, { value });
   }
 
   private _renderQualifierRow(key: string, enabled: boolean, index: number, pairs: Qualifier[]) {
@@ -298,7 +288,7 @@ export class SearchParamsEditor extends LitElement {
   }
 
   private _addFromHistory(key: string, value: string) {
-    this._rows = [...this._rows, [key, value, true]];
+    this._rows = [...this._rows, { key, value, enabled: true }];
     this._commitRows();
   }
 
@@ -397,11 +387,11 @@ export class SearchParamsEditor extends LitElement {
 
     return html`
       <div class="editor-header">? Query params</div>
-      ${this._rows.some(r => r[2]) ? html`
+      ${this._rows.some(r => r.enabled) ? html`
         <button @click=${this._disableAll} class="btn-muted">Disable all</button>
       ` : ''}
 
-      ${this._rows.map(([key, value, enabled], i) => this._renderRow(key, value, enabled, i))}
+      ${this._rows.map(({ key, value, enabled }, i) => this._renderRow(key, value, enabled, i))}
 
       ${historyEntries.length > 0 ? html`
         <details>
