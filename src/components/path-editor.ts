@@ -54,6 +54,10 @@ export class PathEditor extends LitElement {
     setState({ model: { ...m, pathSegments: m.pathSegments.slice(0, index) }, dirty: true });
   }
 
+  private _clearPath() {
+    setState({ model: { ...this._model(), pathSegments: [] }, dirty: true });
+  }
+
   private async _addSegment() {
     const m = this._model();
     setState({ model: { ...m, pathSegments: [...m.pathSegments, ''] }, dirty: true });
@@ -78,7 +82,12 @@ export class PathEditor extends LitElement {
     const canAdd = !/\.\w+$/.test(m.pathSegments.at(-1) ?? '');
 
     return html`
-      <div class="editor-header">/ Path</div>
+      <div class="editor-header">
+        / Path
+        ${m.pathSegments.length > 0
+          ? html`<button @click=${this._clearPath} aria-label="Clear path" class="btn-muted">Clear</button>`
+          : ''}
+      </div>
       <div class="path-list">
         ${m.pathSegments.map((seg, i) => {
           const listId = `path-editor-seg-${i}`;

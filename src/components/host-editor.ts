@@ -39,7 +39,7 @@ export class HostEditor extends LitElement {
     const input = e.target as HTMLInputElement;
     const m = this._model();
     const updated = m.subdomains.map((s, i) => (i === index ? input.value : s));
-    this._update({ subdomains: updated, pathSegments: [] });
+    this._update({ subdomains: updated });
     const suffix = [...updated.slice(index + 1), m.domain].filter(Boolean).join('.');
     this._fetchSubdomainSuggestions(index, suffix);
   }
@@ -52,12 +52,12 @@ export class HostEditor extends LitElement {
 
   private _removeSubdomain(index: number) {
     const m = this._model();
-    this._update({ subdomains: m.subdomains.filter((_, i) => i !== index), pathSegments: [] });
+    this._update({ subdomains: m.subdomains.filter((_, i) => i !== index) });
   }
 
   private _addSubdomain() {
     const m = this._model();
-    this._update({ subdomains: ['', ...m.subdomains], pathSegments: [] });
+    this._update({ subdomains: ['', ...m.subdomains] });
   }
 
   private _datalistId(index = 0) {

@@ -78,6 +78,10 @@
 ## UX interactions
 
 - **Path segment editing**: editing a segment truncates all following segments (mirrors browser navigation).
+- **Host edits keep the path**: adding, editing or removing a subdomain chip does not change the path. The origins
+  editor also keeps the path.
+- **Clear path button**: the path editor header shows a "Clear" button (`aria-label="Clear path"`) when the path has
+  at least one segment (a trailing-slash `''` segment counts). It sets `pathSegments: []` and `dirty: true`.
 - **Path segment close button**: sits to the right of its input (`[input] [×] [/]`), truncating the path up to that
   segment on click.
 - **Domain host**: readonly plain text. Origin swapping is handled by the origins editor, not the domain field directly.
