@@ -21,13 +21,8 @@ function tryDecodeBase64Json(value: string): DecodedValue | null {
   if (!isLikelyBase64(value)) return null;
   for (const variant of ['urlsafe', 'standard'] as const) {
     try {
-      let b64 = value;
-      if (variant === 'urlsafe') b64 = value.replace(/-/g, '+').replace(/_/g, '/');
-      const pad = b64.length % 4;
-      if (pad === 2) b64 += '==';
-      else if (pad === 3) b64 += '=';
-      const decoded = atob(b64);
-      const parsed = JSON.parse(decoded);
+      const bytes = Uint8Array.fromBase64(value, { alphabet: variant === 'urlsafe' ? 'base64url' : 'base64' });
+      const parsed = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
       if (typeof parsed === 'object' && parsed !== null) {
         return { kind: 'json_base64', formatted: JSON.stringify(parsed, null, 2), rawB64: value, variant };
       }
@@ -50,9 +45,8 @@ function decodeValue(value: string): DecodedValue {
 }
 
 function encodeToB64(minified: string, variant: 'urlsafe' | 'standard'): string {
-  const b64 = btoa(minified);
-  if (variant === 'urlsafe') return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-  return b64;
+  const bytes = new TextEncoder().encode(minified);
+  return variant === 'urlsafe' ? bytes.toBase64({ alphabet: 'base64url', omitPadding: true }) : bytes.toBase64();
 }
 
 // Row-index-keyed local state must follow the rows when one is removed.
