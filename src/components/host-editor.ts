@@ -6,12 +6,6 @@ import { withPerf } from '../utils/perf.ts';
 import type { UrlModel } from '../utils/urlParser.ts';
 import './host-editor.css';
 
-const CHROME_PAGES = [
-  'extensions', 'downloads', 'settings', 'history', 'bookmarks',
-  'newtab', 'flags', 'version', 'about', 'blank', 'apps',
-  'accessibility', 'print', 'network-errors', 'update', 'credits',
-];
-
 @customElement('host-editor')
 export class HostEditor extends LitElement {
   override createRenderRoot() { return this; }
@@ -88,9 +82,7 @@ export class HostEditor extends LitElement {
       <div class="host-chips">
         <span class="mono chip-sep">${m.protocol}//</span>
 
-        ${m.protocol !== 'chrome:'
-        ? html`<button @click=${this._addSubdomain} title="Add subdomain">+</button>`
-        : ''}
+        <button @click=${this._addSubdomain} title="Add subdomain">+</button>
 
         ${m.subdomains.map((sub, i) => {
           const listId = this._datalistId(i);
@@ -115,17 +107,7 @@ export class HostEditor extends LitElement {
           `;
         })}
 
-        ${m.protocol === 'chrome:'
-        ? html`
-              <select
-                class="mono"
-                .value=${m.domain}
-                @change=${(e: Event) => this._update({ domain: (e.target as HTMLSelectElement).value })}
-              >
-                ${CHROME_PAGES.map((p) => html`<option value=${p} ?selected=${p === m.domain}>${p}</option>`)}
-              </select>
-            `
-        : html`<span class="mono">${m.domain}</span>`}
+        <span class="mono">${m.domain}</span>
       </div>
     `;
   }
