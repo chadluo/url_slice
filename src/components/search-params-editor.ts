@@ -345,40 +345,34 @@ export class SearchParamsEditor extends LitElement {
       `;
     }
 
-    const keyListId = `sp-key-${index}`;
-    const valListId = `sp-val-${index}`;
-    const keySuggestions = Array.from(this._historyParams.keys());
-    const valSuggestions = this._historyParams.get(key) ?? [];
-
     return html`
       <div class="param-row" ?data-disabled=${!enabled}>
         <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" class="param-checkbox" />
         <input
           class="mono param-key"
           .value=${key}
-          list=${keyListId}
+          list="sp-keys"
           @input=${(e: Event) => this._onKeyChange(index, e)}
           placeholder="key"
           spellcheck="false"
         />
-        <datalist id=${keyListId}>
-          ${keySuggestions.map((s) => html`<option value=${s}></option>`)}
-        </datalist>
         <span>=</span>
         <input
           class="mono param-value"
           .value=${value}
-          list=${valListId}
+          list=${this._valueListId(key)}
           @input=${(e: Event) => this._onValueChange(index, e)}
           placeholder="value"
           spellcheck="false"
         />
-        <datalist id=${valListId}>
-          ${valSuggestions.map((s) => html`<option value=${s}></option>`)}
-        </datalist>
         <button @click=${() => this._removeRow(index)} title="Delete param" class="btn-muted">×</button>
       </div>
     `;
+  }
+
+  // One value list per history key, shared by every row with that key. The index keeps the ID valid for any key.
+  private _valueListId(key: string): string {
+    return `sp-vals-${Array.from(this._historyParams.keys()).indexOf(key)}`;
   }
 
   override render() {
@@ -406,33 +400,33 @@ export class SearchParamsEditor extends LitElement {
       ${historyEntries.length > 0 ? html`
         <details>
           <summary class="history-summary">From history:</summary>
-          ${historyEntries.map(([key, value], i) => {
-      const listId = `sp-hval-${i}`;
-      const suggestions = this._historyParams.get(key) ?? [];
-      return html`
+          ${historyEntries.map(([key, value]) => html`
               <div class="history-row">
                 <span class="mono history-key">${key}</span>
                 <span>=</span>
                 <input
                   class="mono param-value"
                   .value=${value}
-                  list=${listId}
+                  list=${this._valueListId(key)}
                   @input=${(e: Event) => this._onHistoryValueChange(key, e)}
                   placeholder="value"
                   spellcheck="false"
                 />
-                <datalist id=${listId}>
-                  ${suggestions.map((s) => html`<option value=${s}></option>`)}
-                </datalist>
                 <button @click=${() => this._addFromHistory(key, value)} title="Add param" class="btn-muted">+</button>
                 <button @click=${() => this._dismissHistory(key)} title="Dismiss" class="btn-muted">×</button>
               </div>
-            `;
-    })}
+            `)}
         </details>
       ` : ''}
 
       <button @click=${this._addParam} class="btn-add">+ Add param</button>
+
+      <datalist id="sp-keys">
+        ${Array.from(this._historyParams.keys(), (k) => html`<option value=${k}></option>`)}
+      </datalist>
+      ${Array.from(this._historyParams.values(), (values, i) => html`
+        <datalist id="sp-vals-${i}">${values.map((v) => html`<option value=${v}></option>`)}</datalist>
+      `)}
     `;
   }
 }
