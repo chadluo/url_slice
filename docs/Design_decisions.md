@@ -67,7 +67,9 @@
 
 - **History suggestions**: `getHistorySuggestions(prefix, field, currentHost, excludeValue?)` queries
   `browser.history.search` with 150ms debounce. Field values: `'port'`, `'subdomain-segment'`, `'path-segment'`.
-- **Origin alternatives**: `getHistoryOrigins(path, currentOrigin)` searches history by path text, collects distinct `hostname:port` values (excluding the current origin) that have visited the same path. Used by the origins editor on connect.
+- **Origin alternatives**: `getHistoryOrigins(path)` searches history by the path text (trailing slash removed),
+  and collects the distinct `hostname:port` values that have visited the same path. The origins editor removes the
+  current origin from the list. It fetches on connect and when the path changes.
 - **Subdomain suggestions**: `subdomain-segment` field receives the suffix to the right of the chip (e.g.
   `spec.whatwg.org`) and extracts just the leftmost segment before that suffix — matching path-segment depth logic.
 
