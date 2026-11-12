@@ -17,9 +17,14 @@ function showUrl(tabId: number | null, rawUrl: string, title: string, keepEdits:
   setState({ model, committedModel: model, tabId, title, error: null, dirty: false, ...loadPageState(model) });
 }
 
+// Bumped by each query and each URL event; a query result older than the latest one is dropped.
+let latest = 0;
+
 async function fetchAndApply(keepEdits: boolean): Promise<void> {
+  const seq = ++latest;
   try {
     const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    if (seq !== latest) return;
     const tab = tabs[0];
     const rawUrl = tab?.url || tab?.pendingUrl || '';
 
@@ -30,7 +35,7 @@ async function fetchAndApply(keepEdits: boolean): Promise<void> {
 
     showUrl(tab.id ?? null, rawUrl, tab.title ?? '', keepEdits);
   } catch (err) {
-    setState({ tabId: null, error: err instanceof Error ? err.message : 'Failed to parse URL' });
+    if (seq === latest) setState({ tabId: null, error: err instanceof Error ? err.message : 'Failed to parse URL' });
   }
 }
 
@@ -45,6 +50,7 @@ export function initCurrentUrl(): () => void {
   const onUpdated: Parameters<typeof browser.tabs.onUpdated.addListener>[0] = (tabId, changeInfo, tab) => {
     if (!tab.active || tab.windowId !== windowId) return;
     if (changeInfo.url !== undefined) {
+      latest++;
       showUrl(tabId, changeInfo.url, tab.title ?? '', true);
     } else if (changeInfo.status === 'complete') {
       fetchAndApply(true);
