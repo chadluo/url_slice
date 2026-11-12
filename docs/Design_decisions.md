@@ -4,6 +4,10 @@
 
 - **URL model**: `UrlModel` in `urlParser.ts` holds `subdomains[]`, `domain`, `port`, `pathSegments[]`,
   `searchParams[]`, `textFragments[]`, `mediaFragments[]`.
+- **Host split**: `parseUrl` uses `tldts-icann` (ICANN section of the Public Suffix List) to find the registrable
+  domain: `www.bbc.co.uk` → domain `bbc.co.uk`, chips `[www]`. Private suffixes are ignored, so `user.github.io` →
+  domain `github.io`, chip `user`. IPs, `localhost` and single-label hosts have no registrable domain, so the whole
+  hostname is the domain with no chips. The suffix list adds about 170 kB (77 kB gzip) to the shared chunk.
 - **Path encoding**: `parseUrl` decodes each segment with `decodeURIComponent`; `buildUrl` re-encodes with
   `encodeURIComponent`. Empty segments are kept, so a trailing slash is a final `''` segment (`/a/` →
   `['a', '']`), and the path editor shows it as a blank segment input. The root path `/` has no segments.

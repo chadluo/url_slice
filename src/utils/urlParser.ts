@@ -1,5 +1,6 @@
 import type { TextFragment, MediaFragment } from './fragmentCodec.ts'
 import { parseAllFragments } from './fragmentCodec.ts'
+import { parse as parseHost } from 'tldts-icann'
 
 export interface UrlModel {
   protocol: string
@@ -28,27 +29,12 @@ export function parseUrl(raw: string): UrlModel {
 
   const protocol = url.protocol
 
-  const hostname = url.hostname
-  let subdomains: string[] = []
-  let domain: string
-
-  const isIpv4 = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)
-  const isIpv6 = hostname.startsWith('[')
-  const isLocalhost = hostname === 'localhost'
-
-  if (isLocalhost || isIpv4 || isIpv6) {
-    domain = hostname
-    subdomains = []
-  } else {
-    const parts = hostname.split('.')
-    if (parts.length <= 2) {
-      domain = hostname
-      subdomains = []
-    } else {
-      domain = parts.slice(-2).join('.')
-      subdomains = parts.slice(0, -2)
-    }
-  }
+  // ICANN suffixes only: www.bbc.co.uk → bbc.co.uk + [www]; user.github.io → github.io + [user] (private
+  // suffixes such as github.io are ignored). IPs, localhost and single-label hosts have no registrable
+  // domain, so the whole hostname is the domain.
+  const { domain: registrable, subdomain } = parseHost(url.hostname)
+  const domain = registrable ?? url.hostname
+  const subdomains = registrable && subdomain ? subdomain.split('.') : []
 
   const port = url.port
 

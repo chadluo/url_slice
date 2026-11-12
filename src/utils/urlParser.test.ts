@@ -34,6 +34,12 @@ describe('parseUrl – domain / subdomain splitting', () => {
     expect(m.port).toBe('3000')
   })
 
+  it('uses the ICANN suffix list for multi-part suffixes', () => {
+    const m = parseUrl('https://www.bbc.co.uk/')
+    expect(m.domain).toBe('bbc.co.uk')
+    expect(m.subdomains).toEqual(['www'])
+  })
+
   it('IPv4 address has no subdomains', () => {
     const m = parseUrl('http://192.168.1.1:8080/')
     expect(m.domain).toBe('192.168.1.1')
@@ -77,6 +83,9 @@ describe('buildUrl(parseUrl(u)) round-trip', () => {
     'https://docs.example.com/p/#xywh=0,0,100,50',
     'https://example.com/a//b/',
     'https://example.com/',
+    'https://www.bbc.co.uk/news',
+    'https://user.github.io/repo/',
+    'http://[::1]:8080/x',
   ])('%s', (u) => {
     expect(buildUrl(parseUrl(u))).toBe(u)
   })

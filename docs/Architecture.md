@@ -29,7 +29,7 @@ src/
     pageStateStorage.ts    # disabled params / text fragments per page in storage.session
     historySuggestions.ts  # browser.history.search helpers; createDebouncer (150ms)
     perf.ts                # withPerf — times a render fn; own store + bus, deliberately not appState
-    urlParser.ts           # parseUrl(raw) → UrlModel (path segments decoded); hostname(m), pageKey(m)
+    urlParser.ts           # parseUrl(raw) → UrlModel (tldts-icann host split, path segments decoded); hostname(m), pageKey(m)
     urlBuilder.ts          # buildUrl(model) → string (path segments re-encoded)
     fragmentCodec.ts       # serialize/parse TextFragment and MediaFragment
     githubQuery.ts         # parse/serialize GitHub search qualifiers (`is:open label:x`)

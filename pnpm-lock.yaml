@@ -11,6 +11,9 @@ importers:
       lit:
         specifier: ^3.3.3
         version: 3.3.3
+      tldts-icann:
+        specifier: ^7.4.22
+        version: 7.4.22
     devDependencies:
       typescript:
         specifier: ^7.0.2
@@ -998,6 +1001,12 @@ packages:
     resolution: {integrity: sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g==}
     engines: {node: '>=12.0.0'}
 
+  tldts-core@7.4.22:
+    resolution: {integrity: sha512-NRyhrlvJcTwvoRibE0dEZvp6C5RwV4RxpsX1zbkI1k7Fk2pzIhmQ+MvswJEd5KKl3VRFRMDTipXse/ejh/ld/w==}
+
+  tldts-icann@7.4.22:
+    resolution: {integrity: sha512-SWcypl1ggWod1UPpwYTd7I43+Rm+s/jOnz4WCtFIJHUOIc0zbfjwKR/BzReFEyhH+4+4voqvNIIH0RWbvO/FRA==}
+
   tslib@2.9.1:
     resolution: {integrity: sha512-a4Ux9VKuIMHsOS7ENbEq6hK2ZGYIT27Rtl0E4eD9KqwxhKiQeMZE/9xb3IdYwWaSOyIBQLExhQgXDTYoiCxnWA==}
 
@@ -1953,6 +1962,12 @@ snapshots:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.7)
       picomatch: 4.0.7
+
+  tldts-core@7.4.22: {}
+
+  tldts-icann@7.4.22:
+    dependencies:
+      tldts-core: 7.4.22
 
   tslib@2.9.1:
     optional: true

@@ -17,7 +17,8 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
-    "lit": "^3.3.3"
+    "lit": "^3.3.3",
+    "tldts-icann": "^7.4.22"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
