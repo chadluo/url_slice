@@ -82,7 +82,7 @@ export class UrlSliceApp extends LitElement {
     const { model, title } = getState();
     if (!model) return;
     const url = buildUrl(model);
-    const text = title ? `[${title}](${url})` : `<${url}>`;
+    const text = title ? `[${title.replace(/[\\[\]]/g, "\\$&")}](${url})` : `<${url}>`;
     navigator.clipboard.writeText(text);
   }
 
