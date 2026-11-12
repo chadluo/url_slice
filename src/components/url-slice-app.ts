@@ -2,6 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { getState, setState, subscribe } from "../utils/appState.ts";
 import { initCurrentUrl } from "../utils/currentUrl.ts";
+import { saveDisabledParams } from "../utils/pageStateStorage.ts";
 import { buildUrl } from "../utils/urlBuilder.ts";
 import "./fragment-editor.ts";
 import "./host-editor.ts";
@@ -76,9 +77,10 @@ export class UrlSliceApp extends LitElement {
   }
 
   private _handleReset() {
-    const { committedModel } = getState();
+    const { committedModel, committedDisabledParams } = getState();
     if (!committedModel) return;
-    setState({ model: { ...committedModel }, dirty: false });
+    saveDisabledParams(committedModel, committedDisabledParams);
+    setState({ model: { ...committedModel }, disabledParams: committedDisabledParams, dirty: false });
   }
 
   private async _copy(text: string) {

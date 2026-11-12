@@ -1,4 +1,4 @@
-import { parseUrl } from '../utils/urlParser.ts';
+import { pageKey, parseUrl } from '../utils/urlParser.ts';
 import { getState, setState } from './appState.ts';
 import { loadPageState } from './pageStateStorage.ts';
 
@@ -9,12 +9,19 @@ function showUrl(tabId: number | null, rawUrl: string, title: string, keepEdits:
     return;
   }
   const model = parseUrl(rawUrl);
-  const { dirty, tabId: currentTabId } = getState();
+  const { dirty, tabId: currentTabId, committedModel } = getState();
   if (keepEdits && dirty && currentTabId === tabId) {
-    setState({ committedModel: model, title });
+    // Same page: storage already holds this session's edits, so the load-time snapshot stays.
+    const pageChanged = pageKey(model) !== pageKey(committedModel);
+    setState({
+      committedModel: model,
+      title,
+      ...(pageChanged && { committedDisabledParams: loadPageState(model).disabledParams }),
+    });
     return;
   }
-  setState({ model, committedModel: model, tabId, title, error: null, dirty: false, ...loadPageState(model) });
+  const pageState = loadPageState(model);
+  setState({ model, committedModel: model, tabId, title, error: null, dirty: false, ...pageState, committedDisabledParams: pageState.disabledParams });
 }
 
 // Bumped by each query and each URL event; a query result older than the latest one is dropped.

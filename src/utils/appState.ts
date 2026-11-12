@@ -9,6 +9,8 @@ export type AppState = {
   error: string | null;
   dirty: boolean;
   disabledParams: [string, string][];
+  // disabledParams as loaded for committedModel; Reset restores it.
+  committedDisabledParams: [string, string][];
   disabledTextFragments: TextFragment[];
 };
 
@@ -20,6 +22,7 @@ const _state: AppState = {
   error: null,
   dirty: false,
   disabledParams: [],
+  committedDisabledParams: [],
   disabledTextFragments: [],
 };
 
