@@ -69,3 +69,13 @@ describe('buildUrl - host segments', () => {
     expect(buildUrl({ ...m, subdomains: ['', 'docs'] })).toBe('https://docs.example.com/')
   })
 })
+
+describe('buildUrl(parseUrl(u)) round-trip', () => {
+  it.each([
+    'https://www.example.com:8443/a%20b/c%2Fd/%E2%9C%93?q=1&q=2&x=a+b#:~:text=foo%2Dbar,baz%2Cqux',
+    'https://example.com/#t=10,20:~:text=pre-,start,end,-suf&text=two',
+    'https://docs.example.com/p#xywh=0,0,100,50',
+  ])('%s', (u) => {
+    expect(buildUrl(parseUrl(u))).toBe(u)
+  })
+})
