@@ -236,7 +236,7 @@ export class SearchParamsEditor extends LitElement {
 
     return html`
       <div class="param-row-json" ?data-disabled=${!enabled}>
-        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" class="param-checkbox-top" />
+        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} aria-label="Include ${key}" class="param-checkbox-top" />
         <input
           class="mono param-key"
           .value=${key}
@@ -302,7 +302,7 @@ export class SearchParamsEditor extends LitElement {
 
       return html`
         <div class="param-row-json" ?data-disabled=${!enabled}>
-          <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" class="param-checkbox-top" />
+          <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} aria-label="Include ${key}" class="param-checkbox-top" />
           <input
             class="mono param-key"
             .value=${key}
@@ -331,7 +331,7 @@ export class SearchParamsEditor extends LitElement {
 
     return html`
       <div class="param-row" ?data-disabled=${!enabled}>
-        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} title="${enabled ? 'Disable' : 'Enable'}" class="param-checkbox" />
+        <input type="checkbox" ?checked=${enabled} @change=${() => this._toggleRow(index)} aria-label="Include ${key}" class="param-checkbox" />
         <input
           class="mono param-key"
           .value=${key}

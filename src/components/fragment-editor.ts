@@ -112,7 +112,7 @@ export class FragmentEditor extends LitElement {
 
     return html`
       <div class="frag-text-row" ?data-disabled=${!enabled}>
-        <input type="checkbox" ?checked=${enabled} @change=${onToggle} />
+        <input type="checkbox" ?checked=${enabled} @change=${onToggle} aria-label="Include text fragment ${frag.textStart}" />
         <input
           class="mono tf-prefix"
           .value=${frag.prefix ?? ''}
