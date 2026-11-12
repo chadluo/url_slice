@@ -297,7 +297,7 @@ export class SearchParamsEditor extends LitElement {
           `)}
           <button @click=${() => this._setQualifiers(index, [...pairs, ['', '']])} class="btn-add">+ Add qualifier</button>
         </div>
-        <button @click=${() => this._removeRow(index)} title="Delete param" class="param-remove-top">×</button>
+        <button @click=${() => this._removeRow(index)} title="Delete param" class="btn-muted param-remove-top">×</button>
       </div>
     `;
   }
@@ -345,7 +345,7 @@ export class SearchParamsEditor extends LitElement {
               spellcheck="false"
             ></textarea>
           </div>
-          <button @click=${() => this._removeRow(index)} title="Delete param" class="param-remove-top">×</button>
+          <button @click=${() => this._removeRow(index)} title="Delete param" class="btn-muted param-remove-top">×</button>
         </div>
       `;
     }

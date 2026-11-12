@@ -75,12 +75,8 @@
 }
 
 .param-remove-top {
-  background: none;
-  border: none;
-  color: GrayText;
   flex-shrink: 0;
   margin-top: 3px;
-  padding: 0;
 }
 
 .history-row {

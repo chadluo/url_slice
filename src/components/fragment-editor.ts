@@ -266,7 +266,7 @@ export class FragmentEditor extends LitElement {
         <button @click=${this._addText} class="btn-add">+ Add text fragment</button>
       ` : html`
         ${m.mediaFragments.map((f, i) => this._renderMediaRow(f, i))}
-        <button @click=${this._addTime} class="btn-add-time">+ Add time fragment</button>
+        <button @click=${this._addTime} class="btn-add">+ Add time fragment</button>
       `}
     `;
   }

@@ -108,5 +108,5 @@
 - **Options page size**: Chrome sizes the embedded options dialog to its content (capped at roughly 600×600),
   so page CSS is the only lever. `options/index.html` sets `min-width: 400px` plus padding in a local `<style>`
   block, otherwise a page holding one checkbox renders as a cramped box.
-- **Add buttons**: `.btn-add` class in `style.css` styles the `+ Add param` and `+ Add text fragment` buttons with
+- **Add buttons**: `.btn-add` class in `style.css` styles the `+ Add param`, `+ Add text fragment` and `+ Add time fragment` buttons with
   `color: LinkText` and a lighter `color-mix(in oklch, LinkText, Canvas 30%)` on hover.
