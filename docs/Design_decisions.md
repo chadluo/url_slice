@@ -13,6 +13,10 @@
 
 - **Apply flow**: `url-slice-app` keeps local model state in `appState`; Apply button calls
   `browser.tabs.update({ url })`.
+- **Tab tracking**: `currentUrl.ts` follows only the active tab of the window that holds the popup or side panel
+  (`browser.windows.getCurrent()`). Events from other windows are ignored. When the user has unapplied edits
+  (`dirty`), a same-tab page update (load complete or `pushState` URL change) updates only `committedModel` and
+  `title`, so the edits stay. A tab switch always loads the new tab's URL.
 - **Query param disabled state**: `search-params-editor` shows a checkbox per pair (default checked). The component
   maintains a stable `_rows: [key, value, enabled][]` list that is reset from appState only when the page key
   (hostname+path) changes — enabling/disabling within a session preserves visual order. Disabled pairs are excluded
