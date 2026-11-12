@@ -31,7 +31,18 @@ function tryDecodeBase64Json(value: string): DecodedValue | null {
   return null;
 }
 
+// Each render decodes every row again (any editor's keystroke re-renders all rows), so keep results by value.
+// ponytail: unbounded, one entry per distinct value seen in this popup / side panel session; a side panel left
+// open for a long time with many edited values keeps growing. Add an LRU limit if that shows in memory.
+const decodeCache = new Map<string, DecodedValue>();
+
 function decodeValue(value: string): DecodedValue {
+  let decoded = decodeCache.get(value);
+  if (!decoded) decodeCache.set(value, (decoded = decodeUncached(value)));
+  return decoded;
+}
+
+function decodeUncached(value: string): DecodedValue {
   if (!value) return { kind: 'plain' };
   const b64 = tryDecodeBase64Json(value);
   if (b64) return b64;
