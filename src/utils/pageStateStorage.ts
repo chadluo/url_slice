@@ -10,10 +10,12 @@ export type PageState = {
 }
 
 // ponytail: legacy cleanup, delete after a few releases. Old versions kept this state in localStorage
-// (no expiry). Runs on popup / side panel open; old data stays on disk until then.
-try {
-  for (const k of Object.keys(localStorage)) if (k.startsWith('disabled')) localStorage.removeItem(k);
-} catch {}
+// (no expiry). Called on popup, side panel and options page open; old data stays on disk until then.
+export function removeLegacyDisabledState(): void {
+  try {
+    for (const k of Object.keys(localStorage)) if (k.startsWith('disabled')) localStorage.removeItem(k);
+  } catch {}
+}
 
 function write(storageKey: string, value: unknown[]): void {
   const done = value.length === 0

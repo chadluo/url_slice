@@ -2,7 +2,7 @@ import { LitElement, html } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { getState, setState, subscribe } from "../utils/appState.ts";
 import { initCurrentUrl } from "../utils/currentUrl.ts";
-import { saveDisabledParams } from "../utils/pageStateStorage.ts";
+import { removeLegacyDisabledState, saveDisabledParams } from "../utils/pageStateStorage.ts";
 import { buildUrl } from "../utils/urlBuilder.ts";
 import "./fragment-editor.ts";
 import "./host-editor.ts";
@@ -48,6 +48,7 @@ export class UrlSliceApp extends LitElement {
     this.addEventListener("keydown", this._handleKeydown);
     this._unsub = subscribe(() => this.requestUpdate());
     this._cleanupUrl = initCurrentUrl();
+    removeLegacyDisabledState();
   }
 
   override disconnectedCallback() {
