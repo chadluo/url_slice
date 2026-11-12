@@ -109,7 +109,7 @@ export class UrlSliceApp extends LitElement {
     if (error) {
       return html`
         <div class="url-error">
-          <span style="font-size:2rem">🔒</span>
+          <span style="font-size:2rem" aria-hidden="true">🔒</span>
           <p>${error}</p>
         </div>
       `;
