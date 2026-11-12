@@ -17,19 +17,14 @@ export type HistorySuggestion = { value: string; title: string };
 
 export async function getHistorySuggestions(
   prefix: string,
-  field: 'host' | 'path' | 'port' | 'subdomain' | 'path-segment' | 'subdomain-segment',
+  field: 'port' | 'path-segment' | 'subdomain-segment',
   currentHost: string,
   excludeValue?: string,
 ): Promise<HistorySuggestion[]> {
   if (!prefix || prefix.length < 1) return [];
 
   try {
-    let searchText = prefix;
-    if (field === 'subdomain') {
-      searchText = currentHost;
-    } else if (field === 'path-segment' && prefix === '/') {
-      searchText = currentHost;
-    }
+    const searchText = field === 'path-segment' && prefix === '/' ? currentHost : prefix;
 
     const results = await browser.history.search({ text: searchText, maxResults: 50, startTime: 0 });
     const extracted = new Map<string, string>(); // value → title
@@ -38,14 +33,7 @@ export async function getHistorySuggestions(
       if (!item.url) continue;
       try {
         const url = new URL(item.url);
-        if (field === 'host') {
-          if (url.hostname && !extracted.has(url.hostname)) extracted.set(url.hostname, '');
-        } else if (field === 'subdomain') {
-          if (url.hostname.endsWith(`.${currentHost}`)) {
-            const sub = url.hostname.slice(0, -(currentHost.length + 1));
-            if (sub && !extracted.has(sub)) extracted.set(sub, '');
-          }
-        } else if (field === 'subdomain-segment') {
+        if (field === 'subdomain-segment') {
           if (url.hostname.endsWith(`.${prefix}`)) {
             const before = url.hostname.slice(0, -(prefix.length + 1));
             const seg = before.split('.')[0];
@@ -69,8 +57,6 @@ export async function getHistorySuggestions(
               extracted.set(seg, item.title ?? '');
             }
           }
-        } else if (field === 'path') {
-          if (url.hostname === currentHost && url.pathname && !extracted.has(url.pathname)) extracted.set(url.pathname, '');
         } else if (field === 'port') {
           if (url.hostname === currentHost && url.port && !extracted.has(url.port)) extracted.set(url.port, '');
         }
