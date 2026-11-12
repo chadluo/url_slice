@@ -54,13 +54,12 @@ export class PathEditor extends LitElement {
     setState({ model: { ...m, pathSegments: m.pathSegments.slice(0, index) }, dirty: true });
   }
 
-  private _addSegment() {
+  private async _addSegment() {
     const m = this._model();
     setState({ model: { ...m, pathSegments: [...m.pathSegments, ''] }, dirty: true });
-    setTimeout(() => {
-      const inputs = this.querySelectorAll<HTMLInputElement>('input.path-seg');
-      inputs[inputs.length - 1]?.focus();
-    }, 0);
+    await this.updateComplete;
+    const inputs = this.querySelectorAll<HTMLInputElement>('input.path-seg');
+    inputs[inputs.length - 1]?.focus();
   }
 
   private _stepLast(delta: number) {

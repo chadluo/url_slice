@@ -187,13 +187,12 @@ export class SearchParamsEditor extends LitElement {
     this._commitRows();
   }
 
-  private _addParam() {
+  private async _addParam() {
     this._rows = [...this._rows, { key: '', value: '', enabled: true }];
     this._commitRows();
-    setTimeout(() => {
-      const inputs = this.querySelectorAll<HTMLInputElement>('.param-key');
-      inputs[inputs.length - 1]?.focus();
-    }, 0);
+    await this.updateComplete;
+    const inputs = this.querySelectorAll<HTMLInputElement>('.param-key');
+    inputs[inputs.length - 1]?.focus();
   }
 
   private _historyEntries(): [string, string][] {
