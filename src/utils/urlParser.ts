@@ -52,7 +52,8 @@ export function parseUrl(raw: string): UrlModel {
 
   const port = url.port
 
-  const pathSegments = url.pathname.split('/').filter((s) => s !== '').map((s) => {
+  // Empty segments are kept: a trailing slash is a final '' (the same as a new blank segment), so `/a/` and `//` round-trip.
+  const pathSegments = (url.pathname === '/' ? [] : url.pathname.slice(1).split('/')).map((s) => {
     try { return decodeURIComponent(s) } catch { return s }
   })
 

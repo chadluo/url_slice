@@ -5,7 +5,8 @@
 - **URL model**: `UrlModel` in `urlParser.ts` holds `subdomains[]`, `domain`, `port`, `pathSegments[]`,
   `searchParams[]`, `textFragments[]`, `mediaFragments[]`.
 - **Path encoding**: `parseUrl` decodes each segment with `decodeURIComponent`; `buildUrl` re-encodes with
-  `encodeURIComponent`.
+  `encodeURIComponent`. Empty segments are kept, so a trailing slash is a final `''` segment (`/a/` →
+  `['a', '']`), and the path editor shows it as a blank segment input. The root path `/` has no segments.
 - **Text fragments**: parsed from `#:~:text=prefix-,start,end,-suffix` per MDN spec.
 - **Media fragments**: `#t=N,M` (time), `#xywh=x,y,w,h` (spatial), `#track=value`.
 
