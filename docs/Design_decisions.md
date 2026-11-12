@@ -38,10 +38,12 @@
   `removeLegacyDisabledState()` deletes the old keys that start with `disabled` on popup, side panel and options
   page open (marked `ponytail:` for removal later).
   Both `model.searchParams` (enabled) and `appState.disabledParams` (disabled) are kept in sync via `_commitRows()`.
-- **Query param async render**: `search-params-editor` defers row rendering by one macrotask (`setTimeout(0)`) after
-  the page key changes, showing a "Loading N params…" placeholder first. Row rendering decodes each value (JSON/base64
-  probing per row), which is slow on URLs with many params (e.g. Google search); deferring it lets the rest of the
-  popup (host, port, path editors) paint first instead of blocking on this section.
+- **Query param render**: rows render in the same pass as the other editors (no deferral, no "Loading N params…"
+  state). `decodeValue` (JSON/base64 probing) is cached by value string in a module-level `Map`, so a re-render costs
+  only lookups. Measured in Node 25 with a Google-search-like URL of 30 params (long base64-like tokens, one JSON, one
+  base64 JSON): cold first decode 0.36–0.57 ms, cached about 0.003 ms, well under one 16 ms frame. The cache is
+  unbounded for one popup / side panel session (`ponytail:` comment). One `<datalist id="sp-keys">` holds the history
+  keys, and one `sp-vals-<i>` list per history key is shared by every row and history row with that key.
 - **GitHub query qualifiers**: on `github.com`, a param value that holds at least one `key:value` token (e.g.
   `q=is:issue state:open`) renders as a nested qualifier editor instead of one text input. `githubQuery.ts` splits
   on whitespace but keeps quoted spans (`label:"good first issue"`) whole; free text becomes a row with an empty

@@ -84,13 +84,11 @@ export class SearchParamsEditor extends LitElement {
   @state() private _invalidRows: Set<number> = new Set();
   // Held locally so blank qualifier rows survive; serialization drops them from the URL.
   @state() private _qualifierEdits: Map<number, Qualifier[]> = new Map();
-  @state() private _ready = false;
   private _store = new StoreController(this, () => this._syncRows());
   private _lastPageKey = '';
   // The searchParams array the rows last produced or loaded. A different array means Reset or a page update.
   private _syncedParams: [string, string][] | null = null;
   private _historyFetchTimer: ReturnType<typeof setTimeout> | null = null;
-  private _readyTimer: ReturnType<typeof setTimeout> | null = null;
 
   override connectedCallback() {
     super.connectedCallback();
@@ -102,10 +100,6 @@ export class SearchParamsEditor extends LitElement {
     if (this._historyFetchTimer !== null) {
       clearTimeout(this._historyFetchTimer);
       this._historyFetchTimer = null;
-    }
-    if (this._readyTimer !== null) {
-      clearTimeout(this._readyTimer);
-      this._readyTimer = null;
     }
   }
 
@@ -130,16 +124,6 @@ export class SearchParamsEditor extends LitElement {
     this._dismissedKeys = new Set();
     this._historyRowValues = new Map();
     this._historyParams = new Map();
-
-    // Rendering rows decodes each value (JSON/base64 probing), which can be slow on
-    // URLs with many params (e.g. Google search). Defer it a tick so the rest of the
-    // popup paints first instead of blocking on this section.
-    this._ready = false;
-    if (this._readyTimer !== null) clearTimeout(this._readyTimer);
-    this._readyTimer = setTimeout(() => {
-      this._readyTimer = null;
-      this._ready = true;
-    }, 0);
 
     const host = hostname(m);
     const path = '/' + m.pathSegments.map(encodeURIComponent).join('/');
@@ -380,13 +364,6 @@ export class SearchParamsEditor extends LitElement {
   }
 
   private _renderContent() {
-    if (!this._ready) {
-      return html`
-        <div class="editor-header">? Query params</div>
-        ${this._rows.length > 0 ? html`<div class="param-loading">Loading ${this._rows.length} param${this._rows.length === 1 ? '' : 's'}…</div>` : ''}
-      `;
-    }
-
     const historyEntries = this._historyEntries();
 
     return html`
