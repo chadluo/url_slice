@@ -78,8 +78,8 @@ export class PortEditor extends LitElement {
     return html`
       <div class="editor-header">: Port</div>
       <div class="port-controls">
-        <button @click=${this._decrementLarge} title="−1000">−1k</button>
-        <button @click=${this._decrement} title="−1">−</button>
+        <button @click=${this._decrementLarge} title="−1000" aria-label="Port −1000">−1k</button>
+        <button @click=${this._decrement} title="−1" aria-label="Port −1">−</button>
         <input
           class="mono port-input"
           inputmode="numeric"
@@ -93,8 +93,8 @@ export class PortEditor extends LitElement {
         <datalist id="port-editor-suggestions">
           ${this._suggestions.map((s) => html`<option value=${s.value}>${s.title}</option>`)}
         </datalist>
-        <button @click=${this._increment} title="+1">+</button>
-        <button @click=${this._incrementLarge} title="+1000">+1k</button>
+        <button @click=${this._increment} title="+1" aria-label="Port +1">+</button>
+        <button @click=${this._incrementLarge} title="+1000" aria-label="Port +1000">+1k</button>
       </div>
     `;
   }

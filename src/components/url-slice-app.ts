@@ -120,8 +120,8 @@ export class UrlSliceApp extends LitElement {
     return html`
       <div class="url-bar">
         <code class="mono url-display">${builtUrl}</code>
-        <button @click=${this._handleCopy} title="Copy URL" class="btn-muted">📋</button>
-        <button @click=${this._handleCopyMarkdown} title="Copy as Markdown" class="btn-muted">📝</button>
+        <button @click=${this._handleCopy} title="Copy URL" aria-label="Copy URL" class="btn-muted"><span aria-hidden="true">📋</span></button>
+        <button @click=${this._handleCopyMarkdown} title="Copy as Markdown" aria-label="Copy as Markdown" class="btn-muted"><span aria-hidden="true">📝</span></button>
         <span role="status">${this._copyStatus}</span>
       </div>
 

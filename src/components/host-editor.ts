@@ -76,7 +76,7 @@ export class HostEditor extends LitElement {
       <div class="host-chips">
         <span class="mono chip-sep">${m.protocol}//</span>
 
-        <button @click=${this._addSubdomain} title="Add subdomain">+</button>
+        <button @click=${this._addSubdomain} title="Add subdomain" aria-label="Add subdomain">+</button>
 
         ${m.subdomains.map((sub, i) => {
           const listId = this._datalistId(i);
@@ -94,7 +94,7 @@ export class HostEditor extends LitElement {
             <datalist id=${listId}>
               ${suggestions.map((s) => html`<option value=${s.value}>${s.title}</option>`)}
             </datalist>
-            <button @click=${() => this._removeSubdomain(i)} title="Remove subdomain" class="btn-muted chip-remove">×</button>
+            <button @click=${() => this._removeSubdomain(i)} title="Remove subdomain" aria-label="Remove subdomain ${sub}" class="btn-muted chip-remove">×</button>
             <span class="mono chip-sep">.</span>
           `;
         })}

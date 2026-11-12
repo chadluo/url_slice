@@ -271,12 +271,12 @@ export class SearchParamsEditor extends LitElement {
               <datalist id=${`sp-qval-${index}-${j}`}>
                 ${(history.get(qk) ?? []).map((s) => html`<option value=${s}></option>`)}
               </datalist>
-              <button @click=${() => this._setQualifiers(index, pairs.filter((_, i) => i !== j))} title="Delete qualifier" class="btn-muted">×</button>
+              <button @click=${() => this._setQualifiers(index, pairs.filter((_, i) => i !== j))} title="Delete qualifier" aria-label="Delete qualifier ${qk}" class="btn-muted">×</button>
             </div>
           `)}
           <button @click=${() => this._setQualifiers(index, [...pairs, ['', '']])} class="btn-add">+ Add qualifier</button>
         </div>
-        <button @click=${() => this._removeRow(index)} title="Delete param" class="btn-muted param-remove-top">×</button>
+        <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key}" class="btn-muted param-remove-top">×</button>
       </div>
     `;
   }
@@ -324,7 +324,7 @@ export class SearchParamsEditor extends LitElement {
               spellcheck="false"
             ></textarea>
           </div>
-          <button @click=${() => this._removeRow(index)} title="Delete param" class="btn-muted param-remove-top">×</button>
+          <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key}" class="btn-muted param-remove-top">×</button>
         </div>
       `;
     }
@@ -349,7 +349,7 @@ export class SearchParamsEditor extends LitElement {
           placeholder="value"
           spellcheck="false"
         />
-        <button @click=${() => this._removeRow(index)} title="Delete param" class="btn-muted">×</button>
+        <button @click=${() => this._removeRow(index)} title="Delete param" aria-label="Delete param ${key}" class="btn-muted">×</button>
       </div>
     `;
   }
@@ -389,8 +389,8 @@ export class SearchParamsEditor extends LitElement {
                   placeholder="value"
                   spellcheck="false"
                 />
-                <button @click=${() => this._addFromHistory(key, value)} title="Add param" class="btn-muted">+</button>
-                <button @click=${() => this._dismissHistory(key)} title="Dismiss" class="btn-muted">×</button>
+                <button @click=${() => this._addFromHistory(key, value)} title="Add param" aria-label="Add param ${key}" class="btn-muted">+</button>
+                <button @click=${() => this._dismissHistory(key)} title="Dismiss" aria-label="Dismiss ${key}" class="btn-muted">×</button>
               </div>
             `)}
         </details>

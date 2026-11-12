@@ -109,13 +109,14 @@ export class PathEditor extends LitElement {
             </datalist>
             ${i === m.pathSegments.length - 1 && /^\d+$/.test(seg)
               ? html`
-                  <button @click=${() => this._stepLast(-1)} title="−1">-1</button>
-                  <button @click=${() => this._stepLast(1)} title="+1">+1</button>
+                  <button @click=${() => this._stepLast(-1)} aria-label="Last segment -1">-1</button>
+                  <button @click=${() => this._stepLast(1)} aria-label="Last segment +1">+1</button>
                 `
               : ''}
             <button
               @click=${() => this._truncateBefore(i)}
               title="Truncate path before this segment"
+              aria-label="Remove segment ${seg} and after"
               class="btn-muted seg-remove"
             >×</button>
             </div>
@@ -123,7 +124,7 @@ export class PathEditor extends LitElement {
         })}
         ${canAdd
           ? html`<div class="path-row"><span class="mono chip-sep">/</span><button
-              @click=${this._addSegment} title="Add path segment" class="seg-add">+</button></div>`
+              @click=${this._addSegment} title="Add path segment" aria-label="Add path segment" class="seg-add">+</button></div>`
           : ''}
       </div>
     `;

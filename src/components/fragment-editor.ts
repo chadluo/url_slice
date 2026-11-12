@@ -148,7 +148,7 @@ export class FragmentEditor extends LitElement {
           spellcheck="false"
           title="suffix"
         />
-        <button @click=${onRemove} class="btn-muted">×</button>
+        <button @click=${onRemove} aria-label="Remove text fragment ${frag.textStart}" class="btn-muted">×</button>
         ${frag.textStart ? html`
           <span class="mono frag-preview">text=${serializeTextFragment(frag)}</span>
         ` : ''}
@@ -158,7 +158,7 @@ export class FragmentEditor extends LitElement {
 
   private _renderMediaRow(frag: MediaFragment, index: number) {
     const onUpdate = (updated: MediaFragment) => this._updateMediaFrag(index, updated);
-    const removeBtn = html`<button @click=${() => this._removeMediaFrag(index)} class="btn-muted">×</button>`;
+    const removeBtn = html`<button @click=${() => this._removeMediaFrag(index)} aria-label="Remove ${frag.type} fragment" class="btn-muted">×</button>`;
 
     if (frag.type === 'time') {
       return html`
