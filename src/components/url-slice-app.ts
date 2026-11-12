@@ -58,12 +58,17 @@ export class UrlSliceApp extends LitElement {
     return target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement;
   }
 
-  private _handleApply() {
+  private async _handleApply() {
     const { model, committedModel, tabId, dirty } = getState();
     if (tabId === null || !model || !committedModel || !dirty) return;
     const newUrl = buildUrl(model);
+    // Cleared first so the navigation's own tab update replaces the model (see currentUrl.ts).
     setState({ dirty: false });
-    browser.tabs.update(tabId, { url: newUrl });
+    try {
+      await browser.tabs.update(tabId, { url: newUrl });
+    } catch {
+      setState({ dirty: true });
+    }
   }
 
   private _handleReset() {

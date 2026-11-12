@@ -12,7 +12,8 @@
 ## Business logic
 
 - **Apply flow**: `url-slice-app` keeps local model state in `appState`; Apply button calls
-  `browser.tabs.update({ url })`.
+  `browser.tabs.update({ url })` and awaits it. `dirty` is cleared before the call, so the tab update that the
+  navigation causes replaces the model. If the call fails, `dirty` becomes true again and Apply stays enabled.
 - **Tab tracking**: `currentUrl.ts` follows only the active tab of the window that holds the popup or side panel
   (`browser.windows.getCurrent()`). Events from other windows are ignored. When the user has unapplied edits
   (`dirty`), a same-tab page update (load complete or `pushState` URL change) updates only `committedModel` and
