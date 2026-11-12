@@ -35,10 +35,12 @@ async function fetchAndApply(keepEdits: boolean): Promise<void> {
 }
 
 export function initCurrentUrl(): () => void {
-  fetchAndApply(false);
-  // Events before this resolves are ignored; the fetchAndApply above covers that gap.
+  // Events are ignored until windowId is known; the first query runs after that, so it sees their result.
   let windowId: number | undefined;
-  browser.windows.getCurrent().then((w) => { windowId = w.id; });
+  browser.windows.getCurrent().then((w) => {
+    windowId = w.id;
+    fetchAndApply(false);
+  });
 
   const onUpdated: Parameters<typeof browser.tabs.onUpdated.addListener>[0] = (tabId, changeInfo, tab) => {
     if (!tab.active || tab.windowId !== windowId) return;
