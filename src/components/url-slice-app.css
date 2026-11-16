@@ -71,15 +71,20 @@ url-slice-app[mode="popup"] {
   gap: 8px;
 }
 
-.btn-apply {
+.btn-apply,
+.btn-new-tab {
   flex: 1;
   padding: 6px 16px;
+}
+
+.btn-apply {
   background-color: AccentColor;
   color: AccentColorText;
   border: none;
 }
 
-.btn-apply:disabled {
+.btn-apply:disabled,
+.btn-new-tab:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }

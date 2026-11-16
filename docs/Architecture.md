@@ -5,7 +5,7 @@ src/
   assets/
     style.css              # global: color-scheme, font-family, .mono, .btn-add, .btn-muted
   components/
-    url-slice-app.ts       # root custom element; mode=popup|sidebar; Apply/Reset/Copy
+    url-slice-app.ts       # root custom element; mode=popup|sidebar; Apply/Open in new tab/Reset/Copy
     host-editor.ts         # protocol + subdomain chips (per-segment suggestions) + readonly domain
     port-editor.ts         # section header + −/+ stepper + numeric input + history datalist
     origins-editor.ts      # <select> of other origins in history with the same path; swaps host + port

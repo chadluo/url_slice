@@ -30,12 +30,18 @@ export class UrlSliceApp extends LitElement {
       event.defaultPrevented ||
       event.isComposing ||
       event.key !== "Enter" ||
-      event.altKey ||
-      event.ctrlKey ||
-      event.metaKey ||
-      event.shiftKey ||
       !this._isApplyTextField(event.target)
     ) {
+      return;
+    }
+
+    if (event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+      event.preventDefault();
+      this._handleOpenNewTab();
+      return;
+    }
+
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) {
       return;
     }
 
@@ -60,7 +66,11 @@ export class UrlSliceApp extends LitElement {
     return target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement;
   }
 
-  private async _handleApply() {
+  private async _handleApply(event?: MouseEvent) {
+    if (event && (event.altKey || event.metaKey || event.ctrlKey)) {
+      await this._handleOpenNewTab();
+      return;
+    }
     const { model, tabId, dirty } = getState();
     if (tabId === null || !dirty) return;
     const newUrl = buildUrl(model);
@@ -72,6 +82,26 @@ export class UrlSliceApp extends LitElement {
       // Only if the user is still on the same tab and edit; after a tab switch the edit is gone.
       const now = getState();
       if (now.tabId === tabId && now.model === model) setState({ dirty: true });
+    }
+  }
+
+  private async _handleOpenNewTab() {
+    const { model, tabId, dirty } = getState();
+    if (!dirty) return;
+    const newUrl = buildUrl(model);
+    setState({ dirty: false });
+    try {
+      await browser.tabs.create({
+        url: newUrl,
+        ...(tabId !== null ? { openerTabId: tabId } : {}),
+      });
+    } catch {
+      try {
+        await browser.tabs.create({ url: newUrl });
+      } catch {
+        const now = getState();
+        if (now.tabId === tabId && now.model === model) setState({ dirty: true });
+      }
     }
   }
 
@@ -139,7 +169,7 @@ export class UrlSliceApp extends LitElement {
 
       <div class="action-bar">
         <button @click=${this._handleApply} ?disabled=${!dirty} class="btn-apply">Apply</button>
-
+        <button @click=${this._handleOpenNewTab} ?disabled=${!dirty} class="btn-new-tab">Open in new tab</button>
         <button @click=${this._handleReset} class="btn-reset">Reset</button>
       </div>
 

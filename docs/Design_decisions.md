@@ -19,6 +19,10 @@
 - **Apply flow**: `url-slice-app` keeps local model state in `appState`; Apply button calls
   `browser.tabs.update({ url })` and awaits it. `dirty` is cleared before the call, so the tab update that the
   navigation causes replaces the model. If the call fails, `dirty` becomes true again and Apply stays enabled.
+- **Open in new tab flow**: "Open in new tab" button creates a new tab with the built URL via
+  `browser.tabs.create({ url, openerTabId: tabId })` without modifying the current tab. Disabled when `!dirty`. On
+  success, `dirty` is cleared; if tab creation fails, `dirty` is restored. Also triggered via Alt+Enter in text fields,
+  or by Alt/Cmd/Ctrl-clicking Apply.
 - **Tab tracking**: `currentUrl.ts` follows only the active tab of the window that holds the popup or side panel
   (`browser.windows.getCurrent()`). Events from other windows are ignored. When the user has unapplied edits
   (`dirty`), a same-tab page update (load complete or `pushState` URL change) updates only `committedModel` and
@@ -98,8 +102,9 @@
 - **Invalid JSON value**: a JSON param textarea keeps the last valid value in the URL while its text does not
   parse. On blur it gets `aria-invalid="true"`, a red border and a visible "Invalid JSON" message
   (`aria-describedby`). The next input clears the error.
-- **Enter to apply**: pressing Enter in text-like fields applies the pending URL change when the app is dirty. Modifier
-  Enter combinations and composition events are ignored.
+- **Enter to apply / Alt+Enter for new tab**: pressing Enter in text-like fields applies the pending URL change when the
+  app is dirty. Alt+Enter opens the modified URL in a new tab without altering the current tab. Other modifier
+  combinations and composition events are ignored.
 
 ## Performance tracking
 
