@@ -79,9 +79,15 @@ url-slice-app[mode="popup"] {
   border: none;
 }
 
-.btn-apply:disabled {
+.btn-apply:disabled,
+.btn-new-tab:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn-new-tab {
+  padding: 6px 16px;
+  white-space: nowrap;
 }
 
 .btn-reset {
