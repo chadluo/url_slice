@@ -71,13 +71,9 @@ url-slice-app[mode="popup"] {
   gap: 8px;
 }
 
-.btn-apply,
-.btn-new-tab {
+.btn-apply {
   flex: 1;
   padding: 6px 16px;
-}
-
-.btn-apply {
   background-color: AccentColor;
   color: AccentColorText;
   border: none;
@@ -87,6 +83,11 @@ url-slice-app[mode="popup"] {
 .btn-new-tab:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.btn-new-tab {
+  padding: 6px 16px;
+  white-space: nowrap;
 }
 
 .btn-reset {

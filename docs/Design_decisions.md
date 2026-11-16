@@ -134,5 +134,7 @@
   so page CSS is the only lever. `options/index.html` sets `min-width: 400px` plus padding in a local `<style>`
   block, otherwise a page holding one checkbox renders as a cramped box.
 - **Muted buttons**: `.btn-muted` has `padding: 0` and a 24×24 px minimum size (WCAG 2.5.8 target size).
+- **Action bar button sizing**: `Apply` has `flex: 1` so it expands to fill remaining space as the widest primary
+  action. `Open in new tab` and `Reset` maintain their intrinsic fit-content widths with `white-space: nowrap`.
 - **Add buttons**: `.btn-add` class in `style.css` styles the `+ Add param`, `+ Add text fragment` and `+ Add time fragment` buttons with
   `color: LinkText` and a lighter `color-mix(in oklch, LinkText, Canvas 30%)` on hover.
