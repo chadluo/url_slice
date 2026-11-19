@@ -93,6 +93,10 @@
 - **Header actions**: `.editor-header` is a flex row (`justify-content: space-between`), so a section action sits in
   the title row, flush right: Clear path, and Disable all (shown when at least one param is enabled). Headers that
   hold only text look the same as before.
+- **Append/Detach .md toggle**: the path editor header shows an "Append .md" button (before Clear, both in a
+  right-aligned `.header-actions` group, 16px gap) when the path has a non-empty segment. It acts on the last segment; a
+  trailing slash (empty last segment) is removed first, so `/a/` becomes `/a.md`. If that segment already ends
+  in `.md`, the button reads "Detach .md" and removes the suffix. For sites that serve a Markdown version.
 - **Path segment close button**: sits to the right of its input (`[input] [×] [/]`), truncating the path up to that
   segment on click.
 - **Domain host**: readonly plain text. Origin swapping is handled by the origins editor, not the domain field directly.

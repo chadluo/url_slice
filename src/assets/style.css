@@ -67,3 +67,7 @@ button {
 .chip-sep {
   color: GrayText;
 }
+.header-actions {
+  display: flex;
+  gap: 16px;
+}

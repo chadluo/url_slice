@@ -58,6 +58,20 @@ export class PathEditor extends LitElement {
     setState({ model: { ...this._model(), pathSegments: [] }, dirty: true });
   }
 
+  // A trailing slash (empty last segment) is dropped, so the toggle acts on the segment before it.
+  private _mdTarget(): string[] {
+    const segs = this._model().pathSegments;
+    return segs.at(-1) === '' ? segs.slice(0, -1) : segs;
+  }
+
+  private _toggleMd() {
+    const segs = [...this._mdTarget()];
+    const i = segs.length - 1;
+    const s = segs[i] ?? '';
+    segs[i] = s.endsWith('.md') ? s.slice(0, -3) : s + '.md';
+    setState({ model: { ...this._model(), pathSegments: segs }, dirty: true });
+  }
+
   private async _addSegment() {
     const m = this._model();
     setState({ model: { ...m, pathSegments: [...m.pathSegments, ''] }, dirty: true });
@@ -79,14 +93,21 @@ export class PathEditor extends LitElement {
 
   private _renderContent() {
     const m = this._model();
+    const last = this._mdTarget().at(-1);
+    const hasMd = last?.endsWith('.md');
     const canAdd = !/\.\w+$/.test(m.pathSegments.at(-1) ?? '');
 
     return html`
       <div class="editor-header">
         / Path
+        <span class="header-actions">
+        ${last
+          ? html`<button @click=${this._toggleMd} aria-label="${hasMd ? 'Detach' : 'Append'} .md ${hasMd ? 'from' : 'to'} last segment" class="btn-link">${hasMd ? 'Detach' : 'Append'} .md</button>`
+          : ''}
         ${m.pathSegments.length > 0
           ? html`<button @click=${this._clearPath} aria-label="Clear path" class="btn-link">Clear</button>`
           : ''}
+        </span>
       </div>
       <div class="path-list">
         ${m.pathSegments.map((seg, i) => {
