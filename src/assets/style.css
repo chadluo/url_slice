@@ -11,15 +11,24 @@ body {
   font-family: monospace;
 }
 
-.btn-add {
+.btn-add,
+.btn-link {
   cursor: pointer;
   background: none;
   border: none;
   color: LinkText;
+}
+
+.btn-add {
   margin-top: 4px;
 }
 
-.btn-add:hover {
+.btn-link {
+  padding: 0;
+}
+
+.btn-add:hover,
+.btn-link:hover {
   color: color-mix(in oklch, LinkText, Canvas 30%);
 }
 
@@ -35,6 +44,10 @@ button {
   min-inline-size: 24px;
   min-block-size: 24px;
   transition: transform 80ms ease;
+}
+
+.btn-muted:hover {
+  color: color-mix(in oklch, GrayText, CanvasText 55%);
 }
 
 .btn-muted:active {

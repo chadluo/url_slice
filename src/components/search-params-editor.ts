@@ -385,7 +385,7 @@ export class SearchParamsEditor extends LitElement {
     return html`
       <div class="editor-header">
         ? Query params
-        ${this._rows.some(r => r.enabled) ? html`<button @click=${this._disableAll} class="btn-muted">Disable all</button>` : ''}
+        ${this._rows.some(r => r.enabled) ? html`<button @click=${this._disableAll} class="btn-link">Disable all</button>` : ''}
       </div>
 
       ${this._rows.map(({ key, value, enabled }, i) => this._renderRow(key, value, enabled, i))}
